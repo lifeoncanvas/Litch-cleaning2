@@ -1,13 +1,109 @@
-body {
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+:root {
+  /* Brand Colors from LICHT MARKETING logo */
+  --bg-white: #ffffff;
+  --bg-offwhite: #f8fafc;
+  --bg-slate: #f1f5f9;
+  
+  --navy: #10264A;
+  --navy-dark: #09121D;
+  --navy-light: #1A3D6B;
+  --navy-muted: rgba(16, 38, 74, 0.7);
+  
+  --black: #101114;
+  --teal: #1599AC;
+  --teal-light: #e0f6f9;
+  --teal-glow: rgba(21, 153, 172, 0.25);
+  
+  /* Slate & Muted tones */
+  --slate-dark: #334155;
+  --slate-mid: #64748B;
+  --slate-light: #94A3B8;
+  --slate-subtle: #cbd5e1;
+  --border-light: rgba(16, 38, 74, 0.08);
+  --border-medium: rgba(16, 38, 74, 0.15);
+  --border-dark: rgba(255, 255, 255, 0.12);
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing & Borders */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(16, 38, 74, 0.04);
+  --shadow-md: 0 8px 24px rgba(16, 38, 74, 0.07);
+  --shadow-lg: 0 16px 40px rgba(16, 38, 74, 0.1);
+  --shadow-dark: 0 20px 48px rgba(0, 0, 0, 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-white);
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+input, select, textarea, button {
+  font-family: var(--font-body);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--teal);
 }
