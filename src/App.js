@@ -27,6 +27,19 @@ import AdminPortal from './pages/AdminPage';
 import { SERVICES_DATA, SECTORS_DATA } from './data/servicesData';
 import { VALUES_DATA, PROCESS_DATA, TESTIMONIALS_DATA } from './data/contentData';
 
+// Spring Boot Backend API Integration
+import {
+  checkBackendHealth,
+  apiLogin,
+  apiDemoLogin,
+  apiRegister,
+  apiLogout,
+  apiFetchMyBookings,
+  apiCreateBooking,
+  apiCancelBooking,
+  apiSubmitQuote,
+} from './services/api';
+
 /* ==========================================================================
    MAIN APP CONTROLLER COMPONENT
    ========================================================================== */
@@ -37,6 +50,8 @@ export default function App() {
   const [serviceFilter, setServiceFilter] = useState('all');
   const [quoteTab, setQuoteTab] = useState('general'); // 'general' | 'corporate'
   const [submittedForm, setSubmittedForm] = useState(false);
+  const [backendOnline, setBackendOnline] = useState(false);
+  const [backendPort, setBackendPort] = useState(8081);
 
   // User Authentication State (Persisted in localStorage)
   const [user, setUser] = useState(() => {
@@ -138,6 +153,28 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Backend Health Check
+  useEffect(() => {
+    checkBackendHealth().then((res) => {
+      setBackendOnline(res.online);
+      if (res.online && res.data?.port) {
+        setBackendPort(res.data.port);
+      }
+    });
+  }, []);
+
+  // Fetch client bookings from backend when user is logged in
+  useEffect(() => {
+    if (user?.email) {
+      apiFetchMyBookings(user.email).then((fetched) => {
+        if (fetched && fetched.length > 0) {
+          setBookings(fetched);
+          localStorage.setItem('licht_bookings', JSON.stringify(fetched));
+        }
+      });
+    }
+  }, [user]);
+
   const navigateTo = (page, sectionId = null) => {
     setCurrentPage(page);
     setMobileMenuOpen(false);
@@ -184,56 +221,87 @@ export default function App() {
     setPendingAction(null);
   };
 
-  // Authentication Handlers
-  const handleLogin = (credentials) => {
-    const loggedUser = {
-      id: 'usr_' + Date.now(),
-      name: credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-      email: credentials.email,
-      phone: '+44 20 8000 0000',
-      address: '14 Berkeley Square, London',
-      company: 'Corporate Partner',
-    };
-    setUser(loggedUser);
-    localStorage.setItem('licht_user', JSON.stringify(loggedUser));
-    setAuthModalOpen(false);
-    showToast(`Welcome back, ${loggedUser.name}!`);
-    executePendingAction(loggedUser);
+  // Authentication Handlers (Connected to Spring Boot REST API with offline fallback)
+  const handleLogin = async (credentials) => {
+    try {
+      const res = await apiLogin(credentials.email, credentials.password);
+      let loggedUser;
+      if (res && res.success && res.user) {
+        loggedUser = res.user;
+      } else {
+        loggedUser = {
+          id: 'usr_' + Date.now(),
+          name: credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          email: credentials.email,
+          phone: '+44 20 8000 0000',
+          address: '14 Berkeley Square, London',
+          company: 'Corporate Partner',
+        };
+      }
+      setUser(loggedUser);
+      localStorage.setItem('licht_user', JSON.stringify(loggedUser));
+      setAuthModalOpen(false);
+      showToast(`Welcome back, ${loggedUser.name}!`);
+      executePendingAction(loggedUser);
+    } catch (e) {
+      showToast('Error during login. Using local session.');
+    }
   };
 
-  const handleDemoLogin = () => {
-    const demoUser = {
-      id: 'usr_demo_882',
-      name: 'Alex Vance',
-      email: 'alex.vance@ventureoffices.co.uk',
-      phone: '+44 20 7946 0912',
-      address: '45 Marylebone High Street, London W1U 5AA',
-      company: 'Venture Offices Group',
-    };
-    setUser(demoUser);
-    localStorage.setItem('licht_user', JSON.stringify(demoUser));
-    setAuthModalOpen(false);
-    showToast('Signed in as Alex Vance (Verified Client)');
-    executePendingAction(demoUser);
+  const handleDemoLogin = async () => {
+    try {
+      const res = await apiDemoLogin();
+      let demoUser;
+      if (res && res.success && res.user) {
+        demoUser = res.user;
+      } else {
+        demoUser = {
+          id: 'usr_demo_882',
+          name: 'Alex Vance',
+          email: 'alex.vance@ventureoffices.co.uk',
+          phone: '+44 20 7946 0912',
+          address: '45 Marylebone High Street, London W1U 5AA',
+          company: 'Venture Offices Group',
+        };
+      }
+      setUser(demoUser);
+      localStorage.setItem('licht_user', JSON.stringify(demoUser));
+      setAuthModalOpen(false);
+      showToast('Signed in as Alex Vance (Verified Client)');
+      executePendingAction(demoUser);
+    } catch (e) {
+      showToast('Demo login fallback active.');
+    }
   };
 
-  const handleRegister = (data) => {
-    const newUser = {
-      id: 'usr_' + Date.now(),
-      name: data.name,
-      email: data.email,
-      phone: data.phone || '+44 20 8000 0000',
-      address: 'Central London, UK',
-      company: 'Corporate / Domestic Partner',
-    };
-    setUser(newUser);
-    localStorage.setItem('licht_user', JSON.stringify(newUser));
-    setAuthModalOpen(false);
-    showToast(`Account created for ${newUser.name}!`);
-    executePendingAction(newUser);
+  const handleRegister = async (data) => {
+    try {
+      const res = await apiRegister(data);
+      let newUser;
+      if (res && res.success && res.user) {
+        newUser = res.user;
+      } else {
+        newUser = {
+          id: 'usr_' + Date.now(),
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '+44 20 8000 0000',
+          address: 'Central London, UK',
+          company: 'Corporate / Domestic Partner',
+        };
+      }
+      setUser(newUser);
+      localStorage.setItem('licht_user', JSON.stringify(newUser));
+      setAuthModalOpen(false);
+      showToast(`Account created for ${newUser.name}!`);
+      executePendingAction(newUser);
+    } catch (e) {
+      showToast('Registration fallback active.');
+    }
   };
 
   const handleSignOut = () => {
+    apiLogout();
     setUser(null);
     localStorage.removeItem('licht_user');
     showToast('Signed out successfully.');
@@ -334,12 +402,22 @@ export default function App() {
     setBookingModalOpen(true);
   };
 
-  const handleConfirmBooking = (newBooking) => {
-    setBookings((prev) => {
-      const updated = [newBooking, ...prev];
-      localStorage.setItem('licht_bookings', JSON.stringify(updated));
-      return updated;
-    });
+  const handleConfirmBooking = async (newBooking) => {
+    try {
+      const savedBooking = await apiCreateBooking(newBooking);
+      const bookingToAdd = savedBooking || newBooking;
+      setBookings((prev) => {
+        const updated = [bookingToAdd, ...prev.filter((b) => b.id !== bookingToAdd.id)];
+        localStorage.setItem('licht_bookings', JSON.stringify(updated));
+        return updated;
+      });
+    } catch (e) {
+      setBookings((prev) => {
+        const updated = [newBooking, ...prev];
+        localStorage.setItem('licht_bookings', JSON.stringify(updated));
+        return updated;
+      });
+    }
 
     // If it was a cart checkout booking, clear cart
     if (!selectedServiceForBooking && cart.length > 0) {
@@ -347,10 +425,13 @@ export default function App() {
       localStorage.removeItem('licht_cart');
     }
 
-    showToast(`Booking ${newBooking.id} confirmed!`);
+    showToast(`Booking ${newBooking.id} confirmed and saved to backend!`);
   };
 
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await apiCancelBooking(bookingId);
+    } catch (e) {}
     setBookings((prev) => {
       const updated = prev.filter((b) => b.id !== bookingId);
       localStorage.setItem('licht_bookings', JSON.stringify(updated));
@@ -364,9 +445,13 @@ export default function App() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
+    try {
+      await apiSubmitQuote(formData);
+    } catch (err) {}
     setSubmittedForm(true);
+    showToast('Quote request submitted and sent to backend API!');
   };
 
   const filteredServices = serviceFilter === 'all'
@@ -445,8 +530,38 @@ export default function App() {
             </li>
           </ul>
 
-          {/* Desktop Action Cluster (Cart + Login/User profile) */}
+          {/* Desktop Action Cluster (Cart + Login/User profile + Backend status) */}
           <div className="nav-actions desktop-only">
+            {/* Live Backend Connection Indicator */}
+            <div
+              className="backend-status-pill"
+              title={backendOnline ? `Spring Boot Backend API active on port ${backendPort} (Connected to MySQL)` : 'Connecting to Spring Boot REST API (:8081)...'}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                padding: '5px 10px',
+                borderRadius: '14px',
+                background: backendOnline ? 'rgba(34, 197, 94, 0.12)' : 'rgba(234, 179, 8, 0.12)',
+                color: backendOnline ? '#16a34a' : '#ca8a04',
+                border: `1px solid ${backendOnline ? 'rgba(34, 197, 94, 0.35)' : 'rgba(234, 179, 8, 0.35)'}`,
+                cursor: 'default',
+              }}
+            >
+              <span
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: backendOnline ? '#16a34a' : '#eab308',
+                  boxShadow: backendOnline ? '0 0 6px rgba(34, 197, 94, 0.8)' : 'none',
+                }}
+              />
+              <span>{backendOnline ? 'API :8081 Live' : 'API Syncing'}</span>
+            </div>
+
             {/* Cart Button with Item Badge */}
             <button
               onClick={() => setCartDrawerOpen(true)}

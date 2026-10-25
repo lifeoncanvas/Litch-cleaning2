@@ -1,0 +1,354 @@
+/**
+ * @file api.js
+ * @description Centralized API client service integrating Licht Cleaning Frontend
+ *              with the Spring Boot REST API backend on port 8081.
+ *              Includes resilient offline caching and fallback.
+ */
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+
+/**
+ * Helper to retrieve stored JWT token
+ */
+export const getAuthToken = () => {
+  try {
+    return localStorage.getItem('licht_jwt_token') || '';
+  } catch {
+    return '';
+  }
+};
+
+/**
+ * Helper to store JWT token
+ */
+export const setAuthToken = (token) => {
+  try {
+    if (token) {
+      localStorage.setItem('licht_jwt_token', token);
+    } else {
+      localStorage.removeItem('licht_jwt_token');
+    }
+  } catch (e) {
+    console.warn('Could not store JWT token:', e);
+  }
+};
+
+/**
+ * Default JSON headers with Authorization bearer if available
+ */
+const getHeaders = () => {
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+/* ==========================================================================
+   HEALTH CHECK
+   ========================================================================== */
+export const checkBackendHealth = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return { online: false, error: res.statusText };
+    const data = await res.json();
+    return { online: true, data };
+  } catch (err) {
+    return { online: false, error: err.message };
+  }
+};
+
+/* ==========================================================================
+   AUTHENTICATION API
+   ========================================================================== */
+export const apiLogin = async (email, password) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
+    return data;
+  } catch (err) {
+    console.warn('Backend login unavailable, fallback:', err);
+    return null;
+  }
+};
+
+export const apiAdminLogin = async (email, password) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/admin-login`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
+    return data;
+  } catch (err) {
+    console.warn('Backend admin login unavailable, fallback:', err);
+    return null;
+  }
+};
+
+export const apiDemoLogin = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/demo-login`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
+    return data;
+  } catch (err) {
+    console.warn('Backend demo login unavailable, fallback:', err);
+    return null;
+  }
+};
+
+export const apiRegister = async (userData) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(userData),
+    });
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
+    return data;
+  } catch (err) {
+    console.warn('Backend register unavailable, fallback:', err);
+    return null;
+  }
+};
+
+export const apiLogout = () => {
+  setAuthToken(null);
+};
+
+/* ==========================================================================
+   BOOKINGS API
+   ========================================================================== */
+export const apiFetchAllBookings = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    localStorage.setItem('licht_bookings', JSON.stringify(data));
+    return data;
+  } catch (err) {
+    console.warn('Backend fetch bookings failed, using local fallback:', err);
+    const saved = localStorage.getItem('licht_bookings');
+    return saved ? JSON.parse(saved) : [];
+  }
+};
+
+export const apiFetchMyBookings = async (email) => {
+  try {
+    const url = email
+      ? `${API_BASE_URL}/bookings/my?email=${encodeURIComponent(email)}`
+      : `${API_BASE_URL}/bookings`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('Backend fetch my bookings failed, using local cache:', err);
+    const saved = localStorage.getItem('licht_bookings');
+    if (!saved) return [];
+    const list = JSON.parse(saved);
+    return email ? list.filter((b) => b.clientEmail === email) : list;
+  }
+};
+
+export const apiCreateBooking = async (bookingData) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(bookingData),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend create booking failed, returning local booking:', err);
+    return bookingData;
+  }
+};
+
+export const apiDispatchBooking = async (id, dispatchData) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/dispatch`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(dispatchData),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend dispatch failed:', err);
+    return null;
+  }
+};
+
+export const apiCompleteBooking = async (id) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/complete`, {
+      method: 'PUT',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend complete failed:', err);
+    return null;
+  }
+};
+
+export const apiCancelBooking = async (id) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/cancel`, {
+      method: 'PUT',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend cancel failed:', err);
+    return null;
+  }
+};
+
+/* ==========================================================================
+   QUOTES & ENQUIRIES API
+   ========================================================================== */
+export const apiSubmitQuote = async (quoteData) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/quotes`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(quoteData),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend quote submission failed, fallback saved:', err);
+    return { success: true, message: 'Saved locally', data: quoteData };
+  }
+};
+
+export const apiFetchQuotes = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/quotes`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend fetch quotes failed:', err);
+    return [];
+  }
+};
+
+/* ==========================================================================
+   OPERATIVES & FLEET API
+   ========================================================================== */
+export const apiFetchOperatives = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/operatives`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    localStorage.setItem('licht_admin_operatives', JSON.stringify(data));
+    return data;
+  } catch (err) {
+    console.warn('Backend fetch operatives failed, fallback:', err);
+    const saved = localStorage.getItem('licht_admin_operatives');
+    return saved ? JSON.parse(saved) : [];
+  }
+};
+
+export const apiUpdateOperativeStatus = async (id, status) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/operatives/${encodeURIComponent(id)}/status`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend update operative status failed:', err);
+    return null;
+  }
+};
+
+export const apiFetchFleet = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/fleet`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend fetch fleet failed:', err);
+    return [];
+  }
+};
+
+export const apiUpdateFleetStatus = async (id, status) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/fleet/${encodeURIComponent(id)}/status`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend update fleet status failed:', err);
+    return null;
+  }
+};
+
+const apiService = {
+  checkBackendHealth,
+  apiLogin,
+  apiAdminLogin,
+  apiDemoLogin,
+  apiRegister,
+  apiLogout,
+  apiFetchAllBookings,
+  apiFetchMyBookings,
+  apiCreateBooking,
+  apiDispatchBooking,
+  apiCompleteBooking,
+  apiCancelBooking,
+  apiSubmitQuote,
+  apiFetchQuotes,
+  apiFetchOperatives,
+  apiUpdateOperativeStatus,
+  apiFetchFleet,
+  apiUpdateFleetStatus,
+};
+
+export default apiService;

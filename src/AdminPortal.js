@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
 
+// Spring Boot Backend API Integration
+import {
+  checkBackendHealth,
+  apiAdminLogin,
+  apiLogout,
+  apiFetchAllBookings,
+  apiDispatchBooking,
+  apiCompleteBooking,
+  apiFetchOperatives,
+  apiUpdateOperativeStatus,
+  apiFetchQuotes,
+} from './services/api';
+
 /* Initial Seeded Bookings if none exist */
 const INITIAL_DEMO_BOOKINGS = [
   {
@@ -157,8 +170,12 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
+  // Backend Health & Inbound Quotes State
+  const [backendStatus, setBackendStatus] = useState({ online: false, port: 8081 });
+  const [quotes, setQuotes] = useState([]);
+
   // Tab State
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'cleaners' | 'fleet' | 'overview'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'cleaners' | 'fleet' | 'quotes' | 'overview'
 
   // Data State
   const [bookings, setBookings] = useState(() => {
@@ -205,8 +222,27 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     } catch (e) {}
   }, [operatives]);
 
-  // Handle Admin Login
-  const handleAdminLogin = (e) => {
+  // Initial Data Sync from Spring Boot Backend
+  useEffect(() => {
+    checkBackendHealth().then((res) => {
+      setBackendStatus({ online: res.online, port: res.data?.port || 8081 });
+    });
+
+    apiFetchAllBookings().then((b) => {
+      if (b && b.length > 0) setBookings(b);
+    });
+
+    apiFetchOperatives().then((ops) => {
+      if (ops && ops.length > 0) setOperatives(ops);
+    });
+
+    apiFetchQuotes().then((q) => {
+      if (q && q.length > 0) setQuotes(q);
+    });
+  }, [adminUser]);
+
+  // Handle Admin Login (Spring Boot Backend API)
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
     setAuthError('');
 
@@ -215,6 +251,16 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       return;
     }
 
+    try {
+      const res = await apiAdminLogin(adminEmail, adminPassword);
+      if (res && res.success && res.user) {
+        setAdminUser(res.user);
+        localStorage.setItem('licht_admin_auth', JSON.stringify(res.user));
+        return;
+      }
+    } catch (err) {}
+
+    // Fallback if backend is offline
     if (adminEmail === 'admin@lichtmarketing.co.uk' && adminPassword === 'admin123') {
       const admin = {
         name: 'Marcus Shaw',
@@ -229,11 +275,20 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     }
   };
 
-  const handleQuickDemoAdminLogin = () => {
+  const handleQuickDemoAdminLogin = async () => {
+    try {
+      const res = await apiAdminLogin('admin@lichtmarketing.co.uk', 'admin123');
+      if (res && res.success && res.user) {
+        setAdminUser(res.user);
+        localStorage.setItem('licht_admin_auth', JSON.stringify(res.user));
+        return;
+      }
+    } catch (e) {}
+
     const admin = {
       name: 'Marcus Shaw',
       role: 'Operations Director',
-      email: 'marcus.shaw@lichtmarketing.co.uk',
+      email: 'admin@lichtmarketing.co.uk',
       loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setAdminUser(admin);
@@ -241,6 +296,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   };
 
   const handleAdminLogout = () => {
+    apiLogout();
     setAdminUser(null);
     localStorage.removeItem('licht_admin_auth');
   };
@@ -254,11 +310,19 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     setDispatchModalOpen(true);
   };
 
-  const confirmDispatchAndStartBooking = () => {
+  const confirmDispatchAndStartBooking = async () => {
     if (!selectedBookingForDispatch) return;
 
     const chosenCleaner = operatives.find(o => o.id === assignedCleanerId);
     const chosenVan = INITIAL_FLEET.find(v => v.id === assignedVanId);
+
+    try {
+      await apiDispatchBooking(selectedBookingForDispatch.id, {
+        cleanerId: assignedCleanerId,
+        vanId: assignedVanId,
+        eta: dispatchEta,
+      });
+    } catch (e) {}
 
     const updatedBookings = bookings.map(b => {
       if (b.id === selectedBookingForDispatch.id) {
@@ -288,8 +352,12 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   };
 
   // Mark Booking as Completed
-  const handleMarkCompleted = (bookingId) => {
+  const handleMarkCompleted = async (bookingId) => {
     const target = bookings.find(b => b.id === bookingId);
+    try {
+      await apiCompleteBooking(bookingId);
+    } catch (e) {}
+
     const updatedBookings = bookings.map(b => {
       if (b.id === bookingId) {
         return {
@@ -313,7 +381,10 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   };
 
   // Toggle Operative Status
-  const handleToggleOperativeStatus = (operativeId, newStatus) => {
+  const handleToggleOperativeStatus = async (operativeId, newStatus) => {
+    try {
+      await apiUpdateOperativeStatus(operativeId, newStatus);
+    } catch (e) {}
     setOperatives(prev => prev.map(o => o.id === operativeId ? { ...o, status: newStatus } : o));
   };
 
@@ -443,6 +514,34 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         </div>
 
         <div className="admin-nav-right">
+          {/* Live Spring Boot Backend Pill */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              padding: '6px 12px',
+              borderRadius: '20px',
+              background: backendStatus.online ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: backendStatus.online ? '#22c55e' : '#ef4444',
+              border: `1px solid ${backendStatus.online ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+            }}
+            title={backendStatus.online ? 'Spring Boot REST API is running and connected to MySQL licht_cleaning_db' : 'Connecting to Spring Boot REST API (:8081)...'}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: backendStatus.online ? '#22c55e' : '#ef4444',
+                boxShadow: backendStatus.online ? '0 0 6px #22c55e' : 'none',
+              }}
+            />
+            <span>API :8081 {backendStatus.online ? 'Connected' : 'Offline'}</span>
+          </div>
+
           <div className="admin-user-pill">
             <div className="admin-user-avatar">MS</div>
             <div>
@@ -496,6 +595,18 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         >
           <span>🚐 Fleet &amp; Equipment</span>
           <span className="admin-tab-count">{INITIAL_FLEET.length}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`admin-tab-btn ${activeTab === 'quotes' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('quotes');
+            apiFetchQuotes().then(setQuotes);
+          }}
+        >
+          <span>📨 Inbound Quotes</span>
+          <span className="admin-tab-count">{quotes.length}</span>
         </button>
 
         <button
@@ -849,7 +960,79 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </section>
         )}
 
-        {/* ── TAB 4: OVERVIEW ── */}
+        {/* ── TAB 4: INBOUND QUOTES ── */}
+        {activeTab === 'quotes' && (
+          <section>
+            <div className="admin-section-header">
+              <div>
+                <h2 className="admin-section-title">Inbound Quotes &amp; Enquiries</h2>
+                <p className="admin-section-subtitle">Real-time quote requests submitted by prospective clients through the web quotation form.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-action-btn secondary"
+                onClick={() => apiFetchQuotes().then(setQuotes)}
+              >
+                🔄 Refresh Quotes
+              </button>
+            </div>
+
+            <div className="admin-table-card">
+              {quotes.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--slate-mid)' }}>
+                  No quote enquiries submitted yet. When clients fill out the contact quotation form, they appear here instantly.
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="admin-data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Client / Company</th>
+                        <th>Service Requested</th>
+                        <th>Frequency &amp; Scale</th>
+                        <th>Contact Info</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quotes.map((q) => (
+                        <tr key={q.id}>
+                          <td style={{ fontWeight: 700, color: 'var(--navy)' }}>#{q.id}</td>
+                          <td>
+                            <strong>{q.name}</strong>
+                            {q.company && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>{q.company}</div>}
+                          </td>
+                          <td>{q.serviceType || 'General Cleaning'}</td>
+                          <td>
+                            <div>{q.frequency || 'One-Off'}</div>
+                            {q.propertySize && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>{q.propertySize}</div>}
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.82rem' }}>📧 {q.email}</div>
+                            {q.phone && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>📞 {q.phone}</div>}
+                            {q.postcode && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>📍 {q.postcode}</div>}
+                          </td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
+                            {q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-GB') : 'Today'}
+                          </td>
+                          <td>
+                            <span className="order-status-badge badge-blue">
+                              {q.status || 'New'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── TAB 5: OVERVIEW ── */}
         {activeTab === 'overview' && (
           <section>
             <div className="admin-section-header">
