@@ -131,6 +131,34 @@ export const apiRegister = async (userData) => {
   }
 };
 
+export const apiForgotPassword = async (email) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend forgot password unavailable:', err);
+    return { success: false, message: 'Could not connect to authentication server.' };
+  }
+};
+
+export const apiResetPassword = async (email, token, newPassword) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, token, newPassword }),
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend reset password unavailable:', err);
+    return { success: false, message: 'Could not connect to authentication server.' };
+  }
+};
+
 export const apiLogout = () => {
   setAuthToken(null);
 };

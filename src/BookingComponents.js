@@ -12,6 +12,7 @@
 
 import React, { useState } from 'react';
 import './Booking.css';
+import { apiForgotPassword, apiResetPassword } from './services/api';
 
 /* ==========================================================================
    1. TOAST NOTIFICATION COMPONENT
@@ -29,7 +30,7 @@ export function ToastNotification({ message, onClose }) {
 }
 
 /* ==========================================================================
-   2. AUTHENTICATION MODAL (LOGIN / REGISTER / QUICK DEMO)
+   2. AUTHENTICATION MODAL (LOGIN / REGISTER / QUICK DEMO / FORGOT / RESET)
    ========================================================================== */
 export function AuthModal({
   isOpen,
@@ -40,18 +41,29 @@ export function AuthModal({
   onLogin,
   onDemoLogin,
   onRegister,
+  onForgotPassword,
+  onResetPassword,
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [statusNotice, setStatusNotice] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Forgot / Reset password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setStatusNotice('');
 
     if (mode === 'login') {
       if (!email.trim() || !password.trim()) {
@@ -59,12 +71,79 @@ export function AuthModal({
         return;
       }
       onLogin({ email, password });
-    } else {
+    } else if (mode === 'register') {
       if (!name.trim() || !email.trim() || !password.trim()) {
         setError('Please complete all required fields.');
         return;
       }
       onRegister({ name, email, password, phone });
+    } else if (mode === 'forgot') {
+      const targetEmail = (forgotEmail || email).trim();
+      if (!targetEmail) {
+        setError('Please enter your account email address.');
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const handler = onForgotPassword || apiForgotPassword;
+        const res = await handler(targetEmail);
+        setIsLoading(false);
+        if (res && res.success) {
+          setStatusNotice(res.message || `A verification code has been dispatched to ${targetEmail} from info@lichtmarketinglimited.org.`);
+          setForgotEmail(targetEmail);
+          // If code was returned in dev payload, prefill
+          if (res.data && res.data.code) {
+            setResetCode(res.data.code);
+          }
+          setMode('reset');
+        } else {
+          setError(res?.message || 'Could not dispatch reset code. Please try again.');
+        }
+      } catch (err) {
+        setIsLoading(false);
+        setError('Error requesting password reset. Please try again.');
+      }
+    } else if (mode === 'reset') {
+      const targetEmail = (forgotEmail || email).trim();
+      if (!targetEmail || !resetCode.trim() || !newPassword.trim()) {
+        setError('Please enter the security verification code and new password.');
+        return;
+      }
+      if (newPassword.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError('Passwords do not match. Please re-enter.');
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const handler = onResetPassword || apiResetPassword;
+        const res = await handler(targetEmail, resetCode.trim(), newPassword);
+        setIsLoading(false);
+        if (res && res.success) {
+          setStatusNotice('✓ Password reset successfully! You can now sign in with your new password.');
+          setPassword(newPassword);
+          setEmail(targetEmail);
+          setMode('login');
+        } else {
+          setError(res?.message || 'Invalid or expired code. Please check and try again.');
+        }
+      } catch (err) {
+        setIsLoading(false);
+        setError('Error updating password. Please try again.');
+      }
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (mode) {
+      case 'register': return 'Create Client Account';
+      case 'forgot': return 'Reset Your Password';
+      case 'reset': return 'Set New Password';
+      case 'login':
+      default: return 'Client Sign In';
     }
   };
 
@@ -73,7 +152,7 @@ export function AuthModal({
       <div className="licht-modal-box" onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title">
-            {mode === 'login' ? 'Client Sign In' : 'Create Account'}
+            {getModalTitle()}
           </h2>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close">
             ✕
@@ -88,48 +167,100 @@ export function AuthModal({
             </div>
           )}
 
-          {/* Quick Demo Login Option */}
-          <div className="demo-login-box">
-            <div className="demo-login-info">
-              <div className="demo-login-title">
-                <span>⚡</span> Instant Demo Client Login
-              </div>
-              <div>Test the booking and cart flow with 1-click verified credentials.</div>
+          {statusNotice && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#166534', fontSize: '0.84rem', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span>✉️</span>
+              <span>{statusNotice}</span>
             </div>
-            <button
-              type="button"
-              onClick={onDemoLogin}
-              className="demo-quick-btn"
-            >
-              Sign In Demo
-            </button>
-          </div>
+          )}
 
-          {/* Mode Switcher */}
-          <div className="auth-tabs-row">
-            <button
-              type="button"
-              className={`auth-tab-btn ${mode === 'login' ? 'active' : ''}`}
-              onClick={() => { setMode('login'); setError(''); }}
-            >
-              Existing Client Sign In
-            </button>
-            <button
-              type="button"
-              className={`auth-tab-btn ${mode === 'register' ? 'active' : ''}`}
-              onClick={() => { setMode('register'); setError(''); }}
-            >
-              New Client Registration
-            </button>
-          </div>
+          {/* Quick Demo Login Option (Available on Login Mode) */}
+          {mode === 'login' && (
+            <div className="demo-login-box">
+              <div className="demo-login-info">
+                <div className="demo-login-title">
+                  <span>⚡</span> Instant Demo Client Login
+                </div>
+                <div>Test the booking and cart flow with 1-click verified credentials.</div>
+              </div>
+              <button
+                type="button"
+                onClick={onDemoLogin}
+                className="demo-quick-btn"
+              >
+                Sign In Demo
+              </button>
+            </div>
+          )}
+
+          {/* Mode Switcher for Login / Register */}
+          {(mode === 'login' || mode === 'register') && (
+            <div className="auth-tabs-row">
+              <button
+                type="button"
+                className={`auth-tab-btn ${mode === 'login' ? 'active' : ''}`}
+                onClick={() => { setMode('login'); setError(''); setStatusNotice(''); }}
+              >
+                Existing Client Sign In
+              </button>
+              <button
+                type="button"
+                className={`auth-tab-btn ${mode === 'register' ? 'active' : ''}`}
+                onClick={() => { setMode('register'); setError(''); setStatusNotice(''); }}
+              >
+                New Client Registration
+              </button>
+            </div>
+          )}
 
           {error && (
-            <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600 }}>
+            <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600, background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
               ⚠️ {error}
             </div>
           )}
 
+          {/* ── FORGOT PASSWORD BANNER ── */}
+          {mode === 'forgot' && (
+            <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📬</span>
+              <div>
+                <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '0.9rem', marginBottom: '4px' }}>
+                  Verification Code via Email
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#334155', lineHeight: 1.5 }}>
+                  Enter your registered email address. We will generate and dispatch a 6-digit security code directly from <strong>info@lichtmarketinglimited.org</strong> to verify your account identity.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── RESET PASSWORD BANNER ── */}
+          {mode === 'reset' && (
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🔐</span>
+              <div>
+                <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.9rem', marginBottom: '4px' }}>
+                  Enter Code from info@lichtmarketinglimited.org
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#334155', lineHeight: 1.5 }}>
+                  A verification code was dispatched to <strong>{forgotEmail || email || 'your email'}</strong>. Enter the 6-digit code below along with your new password.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── REGISTER NOTICE BANNER ── */}
+          {mode === 'register' && (
+            <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '1.2rem' }}>📧</span>
+              <div style={{ fontSize: '0.81rem', color: '#0f766e', lineHeight: 1.45 }}>
+                An official welcome confirmation email will be automatically sent to your registered address from <strong>info@lichtmarketinglimited.org</strong>.
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
+            {/* REGISTER FIELDS */}
             {mode === 'register' && (
               <>
                 <div className="form-group">
@@ -156,33 +287,190 @@ export function AuthModal({
               </>
             )}
 
-            <div className="form-group">
-              <label className="form-label">Email Address *</label>
-              <input
-                type="email"
-                required
-                className="form-input"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            {/* LOGIN & REGISTER EMAIL & PASSWORD */}
+            {(mode === 'login' || mode === 'register') && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    className="form-input"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-            <div className="form-group">
-              <label className="form-label">Password *</label>
-              <input
-                type="password"
-                required
-                className="form-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label className="form-label" style={{ margin: 0 }}>Password *</label>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotEmail(email);
+                          setMode('forgot');
+                          setError('');
+                          setStatusNotice('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#1599AC',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          padding: 0,
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Forgot Password?
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
 
-            <button type="submit" className="form-submit-btn">
-              {mode === 'login' ? 'Sign In & Continue →' : 'Create Account & Continue →'}
+            {/* FORGOT PASSWORD FORM */}
+            {mode === 'forgot' && (
+              <div className="form-group">
+                <label className="form-label">Registered Account Email *</label>
+                <input
+                  type="email"
+                  required
+                  className="form-input"
+                  placeholder="e.g. alex.vance@ventureoffices.co.uk"
+                  value={forgotEmail || email}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* RESET PASSWORD FORM */}
+            {mode === 'reset' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Account Email</label>
+                  <input
+                    type="email"
+                    required
+                    className="form-input"
+                    value={forgotEmail || email}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">6-Digit Security Verification Code *</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={10}
+                    className="form-input"
+                    placeholder="e.g. 671759"
+                    style={{ letterSpacing: '4px', fontSize: '1.2rem', fontWeight: 700, fontFamily: 'monospace' }}
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">New Password (min 6 characters) *</label>
+                  <input
+                    type="password"
+                    required
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password *</label>
+                  <input
+                    type="password"
+                    required
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* SUBMIT BUTTON */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="form-submit-btn"
+              style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            >
+              {isLoading ? 'Processing Dispatch...' : (
+                mode === 'login' ? 'Sign In & Continue →' :
+                mode === 'register' ? 'Create Account & Continue →' :
+                mode === 'forgot' ? 'Dispatch Security Code via Email →' :
+                'Set New Password & Sign In →'
+              )}
             </button>
+
+            {/* BACK LINKS FOR FORGOT / RESET */}
+            {(mode === 'forgot' || mode === 'reset') && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setError('');
+                    setStatusNotice('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  ← Return to Client Sign In
+                </button>
+
+                {mode === 'reset' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('forgot');
+                      setError('');
+                      setStatusNotice('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#1599AC',
+                      fontSize: '0.84rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    Resend Code
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </div>
@@ -296,7 +584,7 @@ export function BookingModal({
         notes,
         totalPrice: grandTotal,
         clientName: user?.name || 'Verified Client',
-        clientEmail: user?.email || 'client@lichtmarketing.co.uk',
+        clientEmail: user?.email || 'info@lichtmarketinglimited.org',
         createdAt: new Date().toLocaleDateString('en-GB'),
         status: 'Confirmed & Scheduled (Paid)',
       };

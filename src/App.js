@@ -280,6 +280,7 @@ export default function App() {
       let newUser;
       if (res && res.success && res.user) {
         newUser = res.user;
+        showToast(res.message || `Account created! Welcome email dispatched from info@lichtmarketinglimited.org.`);
       } else {
         newUser = {
           id: 'usr_' + Date.now(),
@@ -289,11 +290,11 @@ export default function App() {
           address: 'Central London, UK',
           company: 'Corporate / Domestic Partner',
         };
+        showToast(`Account created for ${newUser.name}! Welcome email dispatched from info@lichtmarketinglimited.org.`);
       }
       setUser(newUser);
       localStorage.setItem('licht_user', JSON.stringify(newUser));
       setAuthModalOpen(false);
-      showToast(`Account created for ${newUser.name}!`);
       executePendingAction(newUser);
     } catch (e) {
       showToast('Registration fallback active.');
@@ -1560,7 +1561,12 @@ export default function App() {
               <div className="footer-col-title">Contact &amp; Hours</div>
               <ul className="footer-links-list">
                 <li style={{ color: 'white', fontWeight: '700' }}>📞 020 8000 0000</li>
-                <li style={{ color: 'rgba(255,255,255,0.85)' }}>✉️ contact@lichtmarketing.co.uk</li>
+                <li style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  ✉️ <a href="mailto:info@lichtmarketinglimited.org" style={{ color: 'inherit', textDecoration: 'none' }}>info@lichtmarketinglimited.org</a>
+                </li>
+                <li style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                  🌐 <a href="https://lichtmarketinglimited.org" target="_blank" rel="noreferrer" style={{ color: 'var(--teal)', textDecoration: 'none' }}>lichtmarketinglimited.org</a>
+                </li>
                 <li style={{ marginTop: '10px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
                   Monday – Friday: 07:00 – 20:00<br />
                   Saturday: 08:00 – 17:00<br />
@@ -1572,7 +1578,7 @@ export default function App() {
 
           <div className="footer-bottom-bar">
             <div>
-              © {new Date().getFullYear()} LICHT MARKETING — Home &amp; Corporate Cleaning. All rights reserved.
+              © {new Date().getFullYear()} LICHT MARKETING LIMITED — Home &amp; Corporate Cleaning. All rights reserved.
             </div>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <button

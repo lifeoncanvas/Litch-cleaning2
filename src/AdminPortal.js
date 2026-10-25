@@ -261,7 +261,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     } catch (err) {}
 
     // Fallback if backend is offline
-    if (adminEmail === 'admin@lichtmarketing.co.uk' && adminPassword === 'admin123') {
+    if ((adminEmail === 'admin@lichtmarketinglimited.org' || adminEmail === 'info@lichtmarketinglimited.org' || adminEmail === 'admin@lichtmarketing.co.uk') && adminPassword === 'admin123') {
       const admin = {
         name: 'Marcus Shaw',
         role: 'Operations Director',
@@ -277,7 +277,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
   const handleQuickDemoAdminLogin = async () => {
     try {
-      const res = await apiAdminLogin('admin@lichtmarketing.co.uk', 'admin123');
+      const res = await apiAdminLogin('admin@lichtmarketinglimited.org', 'admin123');
       if (res && res.success && res.user) {
         setAdminUser(res.user);
         localStorage.setItem('licht_admin_auth', JSON.stringify(res.user));
@@ -288,7 +288,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     const admin = {
       name: 'Marcus Shaw',
       role: 'Operations Director',
-      email: 'admin@lichtmarketing.co.uk',
+      email: 'admin@lichtmarketinglimited.org',
       loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setAdminUser(admin);
@@ -460,7 +460,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 type="email"
                 required
                 className="admin-form-input"
-                placeholder="admin@lichtmarketing.co.uk"
+                placeholder="admin@lichtmarketinglimited.org"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
               />
@@ -477,7 +477,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 onChange={(e) => setAdminPassword(e.target.value)}
               />
               <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', marginTop: '4px' }}>
-                Hint: <code>admin@lichtmarketing.co.uk</code> / <code>admin123</code>
+                Hint: <code>admin@lichtmarketinglimited.org</code> / <code>admin123</code>
               </div>
             </div>
 
