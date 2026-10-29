@@ -63,6 +63,23 @@ export default function App() {
     }
   });
 
+  // Administrator Access Gate (Sharon Shelke + any user promoted to Admin)
+  const isAdmin = Boolean(
+    user && user.email && (
+      user.email.toLowerCase().trim() === 'sharonshelke1@gmail.com' ||
+      user.role === 'ROLE_ADMIN' ||
+      user.role === 'ADMIN' ||
+      (() => {
+        try {
+          const customAdmins = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
+          return Array.isArray(customAdmins) && customAdmins.map(e => (e || '').toLowerCase().trim()).includes(user.email.toLowerCase().trim());
+        } catch {
+          return false;
+        }
+      })()
+    )
+  );
+
   // Cleaning Cart State (Persisted in localStorage)
   const [cart, setCart] = useState(() => {
     try {
@@ -77,7 +94,13 @@ export default function App() {
   const [bookings, setBookings] = useState(() => {
     try {
       const saved = localStorage.getItem('licht_bookings');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = parsed.filter(b => !['LICHT-BK-9182', 'LICHT-BK-8431', 'LICHT-BK-7219'].includes(b.id));
+        localStorage.setItem('licht_bookings', JSON.stringify(cleaned));
+        return cleaned;
+      }
+      return [];
     } catch {
       return [];
     }
@@ -226,22 +249,47 @@ export default function App() {
     try {
       const res = await apiLogin(credentials.email, credentials.password);
       let loggedUser;
+      const emailLower = (credentials.email || '').trim().toLowerCase();
+      const dynamicAdmins = (() => {
+        try {
+          return JSON.parse(localStorage.getItem('licht_admin_emails') || '[]').map(e => (e || '').toLowerCase().trim());
+        } catch {
+          return [];
+        }
+      })();
+      const isAdminAccount = ['sharonshelke1@gmail.com', 'admin@lichtmarketinglimited.org', 'info@lichtmarketinglimited.org', ...dynamicAdmins].includes(emailLower);
+
       if (res && res.success && res.user) {
         loggedUser = res.user;
+        if (isAdminAccount) {
+          loggedUser.role = 'ROLE_ADMIN';
+        }
       } else {
         loggedUser = {
           id: 'usr_' + Date.now(),
-          name: credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          name: emailLower === 'sharonshelke1@gmail.com' ? 'Sharon Shelke' : credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
           email: credentials.email,
+          role: isAdminAccount ? 'ROLE_ADMIN' : 'ROLE_CLIENT',
           phone: '+44 20 8000 0000',
           address: '14 Berkeley Square, London',
-          company: 'Corporate Partner',
+          company: isAdminAccount ? 'Licht Marketing Limited' : 'Corporate Partner',
         };
       }
       setUser(loggedUser);
       localStorage.setItem('licht_user', JSON.stringify(loggedUser));
+
+      if (isAdminAccount) {
+        const adminAuthObj = {
+          name: loggedUser.name,
+          role: 'Operations Director',
+          email: loggedUser.email,
+          loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        localStorage.setItem('licht_admin_auth', JSON.stringify(adminAuthObj));
+      }
+
       setAuthModalOpen(false);
-      showToast(`Welcome back, ${loggedUser.name}!`);
+      showToast(`Welcome back, ${loggedUser.name}! Sign-in notification dispatched to ${loggedUser.email}.`);
       executePendingAction(loggedUser);
     } catch (e) {
       showToast('Error during login. Using local session.');
@@ -305,6 +353,7 @@ export default function App() {
     apiLogout();
     setUser(null);
     localStorage.removeItem('licht_user');
+    localStorage.removeItem('licht_admin_auth');
     showToast('Signed out successfully.');
   };
 
@@ -434,7 +483,7 @@ export default function App() {
       await apiCancelBooking(bookingId);
     } catch (e) {}
     setBookings((prev) => {
-      const updated = prev.filter((b) => b.id !== bookingId);
+      const updated = prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b));
       localStorage.setItem('licht_bookings', JSON.stringify(updated));
       return updated;
     });
@@ -459,8 +508,49 @@ export default function App() {
     ? SERVICES_DATA
     : SERVICES_DATA.filter(s => s.category === serviceFilter);
 
-  // Render Admin Portal if navigating to /admin
+  // Render Admin Portal if navigating to /admin (Protected: Only sharonshelke1@gmail.com)
   if (currentPage === 'admin') {
+    if (!isAdmin) {
+      return (
+        <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', background: '#f8fafc' }}>
+          <div style={{ maxWidth: '440px', background: '#fff', padding: '36px', borderRadius: '18px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
+            <span style={{ fontSize: '2.5rem' }}>ðŸ”’</span>
+            <h2 style={{ color: '#10264A', fontSize: '1.4rem', marginTop: '14px', marginBottom: '8px' }}>Restricted Operations Portal</h2>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '22px' }}>
+              This portal is strictly restricted to administrator <strong>sharonshelke1@gmail.com</strong>.
+            </p>
+            <button
+              onClick={() => {
+                navigateTo('home');
+                setAuthMode('login');
+                setAuthMessage('Sign in with sharonshelke1@gmail.com to access Operations Admin');
+                setAuthModalOpen(true);
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--navy)',
+                color: '#fff',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              Sign In as Administrator â†’
+            </button>
+            <button
+              onClick={() => navigateTo('home')}
+              style={{ background: 'none', border: 'none', color: 'var(--teal)', marginTop: '16px', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}
+            >
+              â† Return to Main Website
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <AdminPortal
         onExit={() => navigateTo('home')}
@@ -476,7 +566,7 @@ export default function App() {
 
   return (
     <div className="licht-editorial-app">
-      {/* ── 1. FIXED FLOATING NAVIGATION BAR ── */}
+      {/* â”€â”€ 1. FIXED FLOATING NAVIGATION BAR â”€â”€ */}
       <header className={`header-wrapper ${scrolled ? 'scrolled' : ''}`}>
         <nav className="nav-bar" aria-label="Main Navigation">
           {/* Brand Logo on the left */}
@@ -486,7 +576,7 @@ export default function App() {
             title="Licht Marketing Home"
             style={{ border: 'none', cursor: 'pointer' }}
           >
-            {/* EXACT LICHT MARKETING LOGO — 100% UNTOUCHED ORIGINAL */}
+            {/* EXACT LICHT MARKETING LOGO â€” 100% UNTOUCHED ORIGINAL */}
             <img
               src="/licht-logo.png"
               alt="LICHT MARKETING - Home & Corporate Cleaning"
@@ -529,21 +619,6 @@ export default function App() {
                 Contact
               </button>
             </li>
-            <li>
-              <button
-                onClick={() => navigateTo('admin')}
-                className={`nav-link ${currentPage === 'admin' ? 'active' : ''}`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  color: currentPage === 'admin' ? 'var(--teal)' : 'var(--navy)',
-                  fontWeight: 700,
-                }}
-              >
-                <span>⚡</span> Admin Portal
-              </button>
-            </li>
           </ul>
 
           {/* Desktop Action Cluster (Cart + Login/User profile + Backend status) */}
@@ -578,48 +653,47 @@ export default function App() {
               <span>{backendOnline ? 'API :8081 Live' : 'API Syncing'}</span>
             </div>
 
-            {/* Admin Management Portal Quick Access Button */}
-            <button
-              onClick={() => navigateTo('admin')}
-              className="nav-admin-quick-btn"
-              title="Open Operations Admin & Dispatch Portal"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(21, 153, 172, 0.12)',
-                color: 'var(--teal)',
-                border: '1.5px solid rgba(21, 153, 172, 0.35)',
-                padding: '7px 14px',
-                borderRadius: '14px',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <span>🔒</span> Admin / Manage
-            </button>
-
             {/* Cart Button with Item Badge */}
             <button
               onClick={() => setCartDrawerOpen(true)}
               className="nav-cart-btn"
               title="View Cleaning Cart"
             >
-              <span>🛒</span> Cart
+              <span>ðŸ›’</span> Cart
               {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
             </button>
 
             {/* Client Authentication Status & Primary Login CTA */}
             {user ? (
               <div className="nav-user-cluster">
+                {isAdmin && (
+                  <button
+                    onClick={() => navigateTo('admin')}
+                    className="nav-admin-quick-btn"
+                    title="Open Operations Admin & Dispatch Portal"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: 'rgba(21, 153, 172, 0.15)',
+                      color: 'var(--teal)',
+                      border: '1.5px solid var(--teal)',
+                      padding: '6px 12px',
+                      borderRadius: '12px',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>ðŸ”’</span> Admin Portal
+                  </button>
+                )}
                 <button
                   onClick={() => setMyBookingsModalOpen(true)}
                   className="nav-bookings-btn"
                   title="View My Bookings"
                 >
-                  📅 Bookings {bookings.length > 0 && <span className="cart-badge" style={{ background: 'var(--navy)' }}>{bookings.length}</span>}
+                  ðŸ“… Bookings {bookings.length > 0 && <span className="cart-badge" style={{ background: 'var(--navy)' }}>{bookings.length}</span>}
                 </button>
                 <div className="nav-user-pill">
                   <span className="user-avatar-circle">{user.name ? user.name[0].toUpperCase() : 'C'}</span>
@@ -711,7 +785,7 @@ export default function App() {
                     onClick={() => { setCartDrawerOpen(true); setMobileMenuOpen(false); }}
                     className="mobile-action-btn cart-btn"
                   >
-                    <span>🛒 View Cart</span>
+                    <span>ðŸ›’ View Cart</span>
                     {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
                   </button>
 
@@ -728,7 +802,7 @@ export default function App() {
                         onClick={() => { setMyBookingsModalOpen(true); setMobileMenuOpen(false); }}
                         className="mobile-action-btn bookings-btn"
                       >
-                        📅 My Bookings ({bookings.length})
+                        ðŸ“… My Bookings ({bookings.length})
                       </button>
                       <button
                         onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
@@ -748,23 +822,25 @@ export default function App() {
                       }}
                       className="mobile-action-btn login-btn"
                     >
-                      🔒 Sign In / Create Account
+                      ðŸ”’ Sign In / Create Account
                     </button>
                   )}
 
-                  <button
-                    onClick={() => { navigateTo('admin'); setMobileMenuOpen(false); }}
-                    className="mobile-action-btn admin-portal-btn"
-                    style={{
-                      background: 'rgba(21, 153, 172, 0.15)',
-                      color: 'var(--teal)',
-                      border: '1.5px solid var(--teal)',
-                      fontWeight: 700,
-                      marginTop: '10px',
-                    }}
-                  >
-                    <span>🔒 Staff &amp; Operations Admin Portal</span>
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => { navigateTo('admin'); setMobileMenuOpen(false); }}
+                      className="mobile-action-btn admin-portal-btn"
+                      style={{
+                        background: 'rgba(21, 153, 172, 0.15)',
+                        color: 'var(--teal)',
+                        border: '1.5px solid var(--teal)',
+                        fontWeight: 700,
+                        marginTop: '10px',
+                      }}
+                    >
+                      <span>ðŸ”’ Staff &amp; Operations Admin Portal</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </>
@@ -772,14 +848,14 @@ export default function App() {
         </nav>
       </header>
 
-      {/* ── 2. CONDITIONAL PAGE RENDERING: ABOUT US vs HOME ── */}
+      {/* â”€â”€ 2. CONDITIONAL PAGE RENDERING: ABOUT US vs HOME â”€â”€ */}
       {currentPage === 'about' ? (
         <AboutPage onNavigate={navigateTo} onInitiateBooking={handleInitiateBooking} />
       ) : (
-        /* ── HOME PAGE CONTENT ── */
+        /* â”€â”€ HOME PAGE CONTENT â”€â”€ */
         <main>
-          {/* ── HERO SECTION (EDITORIAL ARCHITECTURAL FRAME) ── */}
-          {/* ── HERO SECTION (NOVA-STYLE REFERENCE DESIGN) ── */}
+          {/* â”€â”€ HERO SECTION (EDITORIAL ARCHITECTURAL FRAME) â”€â”€ */}
+          {/* â”€â”€ HERO SECTION (NOVA-STYLE REFERENCE DESIGN) â”€â”€ */}
           <section id="hero" className="hero-wrapper" aria-label="Hero Section">
             <div className="nova-hero-frame">
               <img
@@ -790,7 +866,7 @@ export default function App() {
               <div className="nova-hero-ambient-glow" />
 
               <div className="nova-hero-grid">
-                {/* ── Left Column: Kicker, Headline, CTA, Dual Metrics ── */}
+                {/* â”€â”€ Left Column: Kicker, Headline, CTA, Dual Metrics â”€â”€ */}
                 <div className="nova-left-col">
                   <div>
                     <div className="nova-kicker">STANDARDS, NATURALLY</div>
@@ -803,7 +879,7 @@ export default function App() {
                       onClick={() => navigateTo('home', 'quote')}
                       className="nova-cta-btn"
                     >
-                      Get Early Access <span>→</span>
+                      Get Early Access <span>â†’</span>
                     </button>
                   </div>
 
@@ -817,7 +893,7 @@ export default function App() {
                       <div className="nova-stat-num">5-Step</div>
                       <div className="nova-stat-footer">
                         <span>Process</span>
-                        <span>→</span>
+                        <span>â†’</span>
                       </div>
                     </button>
                     <button
@@ -829,13 +905,13 @@ export default function App() {
                       <div className="nova-stat-num">100%</div>
                       <div className="nova-stat-footer">
                         <span>Details Matter</span>
-                        <span>→</span>
+                        <span>â†’</span>
                       </div>
                     </button>
                   </div>
                 </div>
 
-                {/* ── Right Column: Stacked White Cards ── */}
+                {/* â”€â”€ Right Column: Stacked White Cards â”€â”€ */}
                 <div className="nova-right-col">
                   {/* Top Card: See Features / Feels Effortless */}
                   <div className="nova-white-card">
@@ -916,12 +992,12 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 3. EDITORIAL WHITESPACE SECTION (MIDDLE OF REFERENCE IMAGE) ── */}
+          {/* â”€â”€ 3. EDITORIAL WHITESPACE SECTION (MIDDLE OF REFERENCE IMAGE) â”€â”€ */}
           <section id="about" className="editorial-middle-section" aria-label="Brand Overview">
             <div className="editorial-container">
               <div className="editorial-header-row">
                 <div className="editorial-mark-group">
-                  <span className="editorial-asterisk">✦</span>
+                  <span className="editorial-asterisk">âœ¦</span>
                   <div>
                     <span className="editorial-kicker-label">SHAPING PRISTINE SPACES</span>
                     <div className="editorial-main-headline">
@@ -943,14 +1019,14 @@ export default function App() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                 <a href="#services" className="editorial-left-link">
-                  OUR COMPREHENSIVE SERVICES ↗
+                  OUR COMPREHENSIVE SERVICES â†—
                 </a>
                 <button
                   onClick={() => navigateTo('about')}
                   className="editorial-left-link"
                   style={{ color: 'var(--teal)', borderColor: 'var(--teal)', cursor: 'pointer' }}
                 >
-                  LEARN MORE ABOUT US ↗
+                  LEARN MORE ABOUT US â†—
                 </button>
               </div>
 
@@ -998,7 +1074,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 4. "WE CLEAN. YOU RELAX. →" DARK SERVICE CARDS ── */}
+          {/* â”€â”€ 4. "WE CLEAN. YOU RELAX. â†’" DARK SERVICE CARDS â”€â”€ */}
           <section className="we-clean-section" aria-label="Core Pillars">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1007,7 +1083,7 @@ export default function App() {
                     WE CLEAN.<br />
                     <span className="center-headline-muted">YOU RELAX.</span>
                   </div>
-                  <span className="center-headline-arrow">→</span>
+                  <span className="center-headline-arrow">â†’</span>
                 </div>
                 <p className="center-subtext">
                   Comprehensive cleaning solutions engineered for corporate hygiene, seamless scheduling, and pristine environments.
@@ -1024,13 +1100,13 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">🏢</div>
+                    <div className="dark-card-icon-pill">ðŸ¢</div>
                     <span className="dark-card-num">01</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CORPORATE &amp; OFFICE</h3>
                     <p className="dark-card-desc">Scheduled workplace cleaning tailored to corporate headquarters and dynamic offices.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
+                    <div className="dark-card-arrow-circle">â†—</div>
                   </div>
                 </div>
 
@@ -1043,13 +1119,13 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">🏡</div>
+                    <div className="dark-card-icon-pill">ðŸ¡</div>
                     <span className="dark-card-num">02</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">HOME &amp; RESIDENTIAL</h3>
                     <p className="dark-card-desc">Meticulous housekeeping, deep kitchen sanitisation, and routine domestic care.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
+                    <div className="dark-card-arrow-circle">â†—</div>
                   </div>
                 </div>
 
@@ -1062,13 +1138,13 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">🩺</div>
+                    <div className="dark-card-icon-pill">ðŸ©º</div>
                     <span className="dark-card-num">03</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CARE &amp; HEALTHCARE</h3>
                     <p className="dark-card-desc">Infection control and hospital-standard hygiene for clinical and assisted living.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
+                    <div className="dark-card-arrow-circle">â†—</div>
                   </div>
                 </div>
 
@@ -1081,20 +1157,20 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">⚙️</div>
+                    <div className="dark-card-icon-pill">âš™ï¸</div>
                     <span className="dark-card-num">04</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">SPECIALIST &amp; POST-BUILD</h3>
                     <p className="dark-card-desc">Commercial floor restoration, steam extraction, and post-construction sparkle cleaning.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
+                    <div className="dark-card-arrow-circle">â†—</div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* ── 5. FULL SERVICES GRID ("CLEANING THAT FITS YOUR SPACE") ── */}
+          {/* â”€â”€ 5. FULL SERVICES GRID ("CLEANING THAT FITS YOUR SPACE") â”€â”€ */}
           <section id="services" className="services-full-section" aria-label="Services Grid">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1156,8 +1232,13 @@ export default function App() {
                           >
                             {service.title}
                           </h3>
-                          <span className="service-price-pill">From £{service.price}</span>
+                          <span className="service-price-pill">From Â£{service.price}</span>
                         </div>
+                        {service.pricingNote && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: 600, marginTop: '4px', marginBottom: '6px' }}>
+                            â„¹ï¸ {service.pricingNote}
+                          </div>
+                        )}
                         <p className="service-card-text">{service.desc}</p>
                       </div>
                       <div className="service-card-actions">
@@ -1166,7 +1247,7 @@ export default function App() {
                           className="service-book-btn"
                           onClick={() => handleInitiateBooking(service)}
                         >
-                          Book Now ↗
+                          Book Now â†—
                         </button>
                         <button
                           type="button"
@@ -1184,7 +1265,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 6. EDITORIAL SPLIT FEATURES (CORPORATE & RESIDENTIAL) ── */}
+          {/* â”€â”€ 6. EDITORIAL SPLIT FEATURES (CORPORATE & RESIDENTIAL) â”€â”€ */}
           <section className="feature-split-section" aria-label="Featured Service Sectors">
             <div className="editorial-container">
               {/* Corporate Feature */}
@@ -1210,7 +1291,7 @@ export default function App() {
                     Reliable cleaning services tailored to your workplace and business requirements. We support modern offices, financial institutions, and commercial facilities with discreet, uncompromising service.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('corporate')}>
-                    Request a Corporate Quote ↗
+                    Request a Corporate Quote â†—
                   </a>
                 </div>
               </div>
@@ -1227,7 +1308,7 @@ export default function App() {
                     Thoughtful, reliable cleaning for the spaces you call home. Experience the comfort of a spotless living room, pristine kitchen, and revitalised bathrooms serviced by background-checked cleaning professionals.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('general')}>
-                    Explore Home Cleaning ↗
+                    Explore Home Cleaning â†—
                   </a>
                 </div>
                 <div className="feature-panel-media">
@@ -1245,7 +1326,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 7. VISUAL SECTORS GRID (8 SECTORS — ALL CLEANING IN ACTION) ── */}
+          {/* â”€â”€ 7. VISUAL SECTORS GRID (8 SECTORS â€” ALL CLEANING IN ACTION) â”€â”€ */}
           <section id="sectors" className="sectors-section" aria-label="Sectors We Serve">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1273,7 +1354,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 8. WHY CHOOSE US ("THE DETAILS MATTER") ── */}
+          {/* â”€â”€ 8. WHY CHOOSE US ("THE DETAILS MATTER") â”€â”€ */}
           <section id="details-matter" className="why-us-section" aria-label="Why Choose Us">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1282,7 +1363,7 @@ export default function App() {
                   THE DETAILS MATTER.
                 </h2>
                 <p className="center-subtext">
-                  We believe true professionalism lies in the subtle nuances — the uncompromised corners, the verified staff, and the consistent reliability.
+                  We believe true professionalism lies in the subtle nuances â€” the uncompromised corners, the verified staff, and the consistent reliability.
                 </p>
               </div>
 
@@ -1298,7 +1379,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 9. OUR 5-STEP EDITORIAL PROCESS ── */}
+          {/* â”€â”€ 9. OUR 5-STEP EDITORIAL PROCESS â”€â”€ */}
           <section id="process" className="process-section" aria-label="Cleaning Process">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1323,7 +1404,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 10. INTERACTIVE QUOTE & CONTRACT ENQUIRY FORMS ── */}
+          {/* â”€â”€ 10. INTERACTIVE QUOTE & CONTRACT ENQUIRY FORMS â”€â”€ */}
           <section id="quote" className="quote-section" aria-label="Quote Request">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1356,7 +1437,7 @@ export default function App() {
                 <div className="quote-form-card">
                   {submittedForm ? (
                     <div className="form-success-banner">
-                      <div className="success-icon">✓</div>
+                      <div className="success-icon">âœ“</div>
                       <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '8px' }}>
                         Thank You! Your Enquiry Has Been Received.
                       </h3>
@@ -1509,7 +1590,7 @@ export default function App() {
 
                       <button type="submit" className="form-submit-btn">
                         <span>Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request</span>
-                        <span>→</span>
+                        <span>â†’</span>
                       </button>
                     </form>
                   )}
@@ -1518,24 +1599,24 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 11. STANDARDS, COMPLIANCE & TESTIMONIALS ── */}
+          {/* â”€â”€ 11. STANDARDS, COMPLIANCE & TESTIMONIALS â”€â”€ */}
           <section className="standards-section" aria-label="Compliance and Testimonials">
             <div className="editorial-container">
               <div className="standards-badge-cluster">
                 <div className="standard-badge-item">
-                  <span className="badge-check">✓</span>
+                  <span className="badge-check">âœ“</span>
                   <span className="badge-text">COSHH Certified &amp; Compliant</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">✓</span>
-                  <span className="badge-text">£10M Public &amp; Employers Liability</span>
+                  <span className="badge-check">âœ“</span>
+                  <span className="badge-text">Â£10M Public &amp; Employers Liability</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">✓</span>
+                  <span className="badge-check">âœ“</span>
                   <span className="badge-text">Enhanced DBS Vetted Cleaners</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">✓</span>
+                  <span className="badge-check">âœ“</span>
                   <span className="badge-text">Rigorous Health &amp; Safety Audits</span>
                 </div>
               </div>
@@ -1543,12 +1624,12 @@ export default function App() {
               <div className="testimonials-grid">
                 {TESTIMONIALS_DATA.map((t, idx) => (
                   <div key={idx} className="testimonial-card">
-                    <p className="testimonial-quote">“{t.quote}”</p>
+                    <p className="testimonial-quote">â€œ{t.quote}â€</p>
                     <div className="testimonial-client">
                       <div className="client-avatar">{t.name[0]}</div>
                       <div>
                         <div className="client-meta-name">{t.name}</div>
-                        <div className="client-meta-org">{t.role} · {t.company}</div>
+                        <div className="client-meta-org">{t.role} Â· {t.company}</div>
                       </div>
                     </div>
                   </div>
@@ -1559,7 +1640,7 @@ export default function App() {
         </main>
       )}
 
-      {/* ── 12. MINIMALIST EDITORIAL FOOTER ── */}
+      {/* â”€â”€ 12. MINIMALIST EDITORIAL FOOTER â”€â”€ */}
       <footer className="footer-editorial" aria-label="Site Footer">
         <div className="editorial-container">
           <div className="footer-top-row">
@@ -1595,7 +1676,7 @@ export default function App() {
                   padding: 0
                 }}
               >
-                Read Our Story &amp; Values →
+                Read Our Story &amp; Values â†’
               </button>
             </div>
 
@@ -1612,16 +1693,16 @@ export default function App() {
             <div>
               <div className="footer-col-title">Contact &amp; Hours</div>
               <ul className="footer-links-list">
-                <li style={{ color: 'white', fontWeight: '700' }}>📞 020 8000 0000</li>
+                <li style={{ color: 'white', fontWeight: '700' }}>ðŸ“ž 020 8000 0000</li>
                 <li style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  ✉️ <a href="mailto:info@lichtmarketinglimited.org" style={{ color: 'inherit', textDecoration: 'none' }}>info@lichtmarketinglimited.org</a>
+                  âœ‰ï¸ <a href="mailto:info@lichtmarketinglimited.org" style={{ color: 'inherit', textDecoration: 'none' }}>info@lichtmarketinglimited.org</a>
                 </li>
                 <li style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
-                  🌐 <a href="https://lichtmarketinglimited.org" target="_blank" rel="noreferrer" style={{ color: 'var(--teal)', textDecoration: 'none' }}>lichtmarketinglimited.org</a>
+                  ðŸŒ <a href="https://lichtmarketinglimited.org" target="_blank" rel="noreferrer" style={{ color: 'var(--teal)', textDecoration: 'none' }}>lichtmarketinglimited.org</a>
                 </li>
                 <li style={{ marginTop: '10px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Monday – Friday: 07:00 – 20:00<br />
-                  Saturday: 08:00 – 17:00<br />
+                  Monday â€“ Friday: 07:00 â€“ 20:00<br />
+                  Saturday: 08:00 â€“ 17:00<br />
                   Sunday: By Corporate Appointment
                 </li>
               </ul>
@@ -1630,25 +1711,9 @@ export default function App() {
 
           <div className="footer-bottom-bar">
             <div>
-              © {new Date().getFullYear()} LICHT MARKETING LIMITED — Home &amp; Corporate Cleaning. All rights reserved.
+              Â© {new Date().getFullYear()} LICHT MARKETING LIMITED â€” Home &amp; Corporate Cleaning. All rights reserved.
             </div>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <button
-                onClick={() => navigateTo('admin')}
-                className="footer-link-item"
-                style={{
-                  background: 'rgba(21, 153, 172, 0.15)',
-                  border: '1px solid rgba(21, 153, 172, 0.4)',
-                  color: 'var(--teal)',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer'
-                }}
-              >
-                🔒 Staff / Admin Portal
-              </button>
               <button onClick={() => navigateTo('about')} className="footer-link-item">About Licht Marketing</button>
               <a href="#privacy" className="footer-link-item">Privacy Policy</a>
               <a href="#terms" className="footer-link-item">Terms of Service</a>
@@ -1658,13 +1723,13 @@ export default function App() {
         </div>
       </footer>
 
-      {/* ── TOAST NOTIFICATIONS ── */}
+      {/* â”€â”€ TOAST NOTIFICATIONS â”€â”€ */}
       <ToastNotification
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />
 
-      {/* ── AUTHENTICATION MODAL (LOGIN / SIGN UP / QUICK DEMO) ── */}
+      {/* â”€â”€ AUTHENTICATION MODAL (LOGIN / SIGN UP / QUICK DEMO) â”€â”€ */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => {
@@ -1683,7 +1748,7 @@ export default function App() {
         }}
       />
 
-      {/* ── INTERACTIVE BOOKING FLOW MODAL ── */}
+      {/* â”€â”€ INTERACTIVE BOOKING FLOW MODAL â”€â”€ */}
       <BookingModal
         isOpen={bookingModalOpen}
         onClose={() => {
@@ -1697,7 +1762,7 @@ export default function App() {
         onViewBookings={() => setMyBookingsModalOpen(true)}
       />
 
-      {/* ── CLEANING CART DRAWER ── */}
+      {/* â”€â”€ CLEANING CART DRAWER â”€â”€ */}
       <CartDrawer
         isOpen={cartDrawerOpen}
         onClose={() => setCartDrawerOpen(false)}
@@ -1708,11 +1773,15 @@ export default function App() {
         onProceedCheckout={handleProceedCartCheckout}
       />
 
-      {/* ── CLIENT BOOKING HISTORY MODAL ── */}
+      {/* â”€â”€ CLIENT BOOKING HISTORY MODAL â”€â”€ */}
       <MyBookingsModal
         isOpen={myBookingsModalOpen}
         onClose={() => setMyBookingsModalOpen(false)}
-        bookings={bookings}
+        bookings={
+          user?.email && !isAdmin
+            ? bookings.filter((b) => (b.clientEmail || '').toLowerCase() === user.email.toLowerCase())
+            : bookings
+        }
         onCancelBooking={handleCancelBooking}
         onBookNew={() => {
           navigateTo('home', 'services');

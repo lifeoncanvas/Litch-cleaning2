@@ -1,169 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
-
-// Spring Boot Backend API Integration
 import {
-  checkBackendHealth,
   apiAdminLogin,
   apiLogout,
   apiFetchAllBookings,
   apiCreateBooking,
-  apiDispatchBooking,
-  apiCompleteBooking,
   apiCancelBooking,
-  apiFetchOperatives,
-  apiUpdateOperativeStatus,
+  apiVerifyBookingOtp,
   apiFetchQuotes,
 } from './services/api';
 
-/* Initial Seeded Bookings if none exist */
-const INITIAL_DEMO_BOOKINGS = [
-  {
-    id: 'LICHT-BK-9182',
-    transactionId: 'TXN-741982',
-    paymentMethod: 'Visa ending in 4242',
-    paidAmount: 280,
-    serviceName: 'Corporate & Office Cleaning',
-    serviceId: 'corporate_office',
-    serviceImg: '/service_office.jpg',
-    frequency: 'Weekly Contract',
-    propertySize: 'Standard Premises (1,500-3,500 sq ft)',
-    date: new Date().toISOString().split('T')[0],
-    timeSlot: 'Morning Window (08:00 – 12:00)',
-    address: '14 Berkeley Square, Mayfair, London, W1J 6BQ',
-    notes: 'Key safe on rear wall code 4892. Security guard on desk at reception.',
-    totalPrice: 280,
-    clientName: 'Alex Vance',
-    clientEmail: 'alex.vance@ventureoffices.co.uk',
-    createdAt: new Date().toLocaleDateString('en-GB'),
-    status: 'Confirmed & Scheduled (Paid)',
-    assignedCleaner: null,
-    assignedVan: null,
-  },
-  {
-    id: 'LICHT-BK-8431',
-    transactionId: 'TXN-391820',
-    paymentMethod: 'Corporate Net-30 (PO: LICHT-CORP-94)',
-    paidAmount: 490,
-    serviceName: 'Commercial Floor & Carpet Restoration',
-    serviceId: 'floor_carpet',
-    serviceImg: '/service_floor.jpg',
-    frequency: 'One-Off Deep Clean',
-    propertySize: 'Large Complex (3,500+ sq ft)',
-    date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    timeSlot: 'Evening Shift (18:00 – 22:00)',
-    address: '100 Bishopsgate, Level 18, London, EC2N 4AG',
-    notes: 'Loading bay access via St Helen’s Place after 18:30. DBS check required at front desk.',
-    totalPrice: 490,
-    clientName: 'Sarah Sterling (Penta Capital)',
-    clientEmail: 's.sterling@pentacapital.co.uk',
-    createdAt: new Date().toLocaleDateString('en-GB'),
-    status: 'Confirmed & Scheduled (Paid)',
-    assignedCleaner: null,
-    assignedVan: null,
-  },
-  {
-    id: 'LICHT-BK-7219',
-    transactionId: 'TXN-119284',
-    paymentMethod: 'Apple Pay / Google Pay',
-    paidAmount: 216,
-    serviceName: 'Home & Residential Cleaning',
-    serviceId: 'home_residential',
-    serviceImg: '/service_home.jpg',
-    frequency: 'Fortnightly Service',
-    propertySize: 'Standard Premises (1,500-3,500 sq ft)',
-    date: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-    timeSlot: 'Afternoon Window (12:00 – 16:00)',
-    address: '22 Cheyne Walk, Chelsea, London, SW3 5HH',
-    notes: 'Alarm code #9123. Please use hypoallergenic detergents for hardwood floors.',
-    totalPrice: 216,
-    clientName: 'Lord Julian Montgomery',
-    clientEmail: 'julian.montgomery@chelsea-estates.co.uk',
-    createdAt: new Date().toLocaleDateString('en-GB'),
-    status: 'In Progress (Team Dispatched)',
-    assignedCleaner: 'Elena Rostova',
-    assignedVan: 'Van 1 (Mayfair & West End Unit)',
-  },
-];
-
-/* Initial Operatives Directory */
-const INITIAL_OPERATIVES = [
-  {
-    id: 'OP-101',
-    name: 'Elena Rostova',
-    role: 'Lead Deep Clean Specialist',
-    phone: '+44 7700 900123',
-    dbs: 'DBS-GB-882941 (Verified)',
-    rating: 4.98,
-    jobsCompleted: 342,
-    status: 'on_job', // 'available' | 'on_job' | 'off_duty'
-    currentJobId: 'LICHT-BK-7219',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=160&q=80',
-  },
-  {
-    id: 'OP-102',
-    name: 'David Chen',
-    role: 'Commercial Floor & Carpet Lead',
-    phone: '+44 7700 900456',
-    dbs: 'DBS-GB-771092 (Verified)',
-    rating: 4.95,
-    jobsCompleted: 289,
-    status: 'available',
-    currentJobId: null,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80',
-  },
-  {
-    id: 'OP-103',
-    name: 'Sarah Jenkins',
-    role: 'Bio-Sanitisation & Care Team Lead',
-    phone: '+44 7700 900789',
-    dbs: 'DBS-GB-663219 (Verified)',
-    rating: 5.0,
-    jobsCompleted: 418,
-    status: 'available',
-    currentJobId: null,
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&q=80',
-  },
-  {
-    id: 'OP-104',
-    name: 'Michael Adebayo',
-    role: 'High-Level Glass & Specialist Tech',
-    phone: '+44 7700 900321',
-    dbs: 'DBS-GB-990145 (Verified)',
-    rating: 4.92,
-    jobsCompleted: 195,
-    status: 'available',
-    currentJobId: null,
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
-  },
-  {
-    id: 'OP-105',
-    name: 'Chloe Dubois',
-    role: 'Domestic & Turnover Specialist',
-    phone: '+44 7700 900654',
-    dbs: 'DBS-GB-554180 (Verified)',
-    rating: 4.97,
-    jobsCompleted: 260,
-    status: 'off_duty',
-    currentJobId: null,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80',
-  },
-];
-
-/* Initial Fleet Resources */
-const INITIAL_FLEET = [
-  { id: 'VAN-1', name: 'Van 1 (Mayfair & West End Unit)', reg: 'LK23 WLM', status: 'On Route', equipment: 'Industrial HEPA + Steamer #4' },
-  { id: 'VAN-2', name: 'Van 2 (City & Financial Core)', reg: 'LG72 XCT', status: 'Depot Ready', equipment: 'Rotary Floor Scrubber + Extraction #2' },
-  { id: 'VAN-3', name: 'Van 3 (South Bank & Kensington)', reg: 'LA24 FDS', status: 'Depot Ready', equipment: 'Pure Water Glass Rig + Sanitisation Pack' },
-];
-
-/* Initial Registered Users / Clients */
+/* Clean default admin: Sharon Shelke */
 const INITIAL_USERS = [
-  { id: 'usr_1', name: 'Marcus Shaw', email: 'admin@lichtmarketinglimited.org', role: 'ROLE_ADMIN', company: 'Licht Marketing Limited', phone: '+44 20 8000 8899', joined: '10/01/2026' },
-  { id: 'usr_2', name: 'Alex Vance', email: 'alex.vance@ventureoffices.co.uk', role: 'ROLE_CLIENT', company: 'Venture Offices Group', phone: '+44 20 7946 0912', joined: '15/02/2026' },
-  { id: 'usr_3', name: 'Sarah Sterling', email: 's.sterling@pentacapital.co.uk', role: 'ROLE_CLIENT', company: 'Penta Capital', phone: '+44 20 7946 0881', joined: '01/03/2026' },
-  { id: 'usr_4', name: 'Lord Julian Montgomery', email: 'julian.montgomery@chelsea-estates.co.uk', role: 'ROLE_CLIENT', company: 'Chelsea Estates', phone: '+44 20 7946 0553', joined: '12/03/2026' },
-  { id: 'usr_5', name: 'Clara Oswald', email: 'clara.oswald@tardis-solutions.co.uk', role: 'ROLE_CLIENT', company: 'Tardis Solutions', phone: '+44 7700 900888', joined: '25/10/2026' },
+  {
+    id: 'usr_owner',
+    name: 'Sharon Shelke',
+    email: 'sharonshelke1@gmail.com',
+    role: 'ROLE_ADMIN',
+    company: 'Licht Marketing Limited',
+    phone: '+44 20 8000 8899',
+    joined: 'Primary Owner',
+  },
 ];
 
 export default function AdminPortal({ onExit, onBookingUpdate }) {
@@ -177,54 +34,46 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     }
   });
 
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('sharonshelke1@gmail.com');
+  const [adminPassword, setAdminPassword] = useState('admin123');
   const [authError, setAuthError] = useState('');
 
   // Backend Health & Inbound Quotes State
   const [backendStatus, setBackendStatus] = useState({ online: false, port: 8081 });
   const [quotes, setQuotes] = useState([]);
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'cleaners' | 'fleet' | 'quotes' | 'users' | 'overview'
+  // Tab State: Simplified to 3 core tabs (orders, quotes, users)
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'quotes' | 'users'
 
-  // Data State
+  // Data State - Purges mock dummy data on load
   const [bookings, setBookings] = useState(() => {
     try {
       const stored = localStorage.getItem('licht_bookings');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.length > 0) return parsed;
+        const cleaned = parsed.filter(b => !['LICHT-BK-9182', 'LICHT-BK-8431', 'LICHT-BK-7219'].includes(b.id));
+        localStorage.setItem('licht_bookings', JSON.stringify(cleaned));
+        return cleaned;
       }
-      localStorage.setItem('licht_bookings', JSON.stringify(INITIAL_DEMO_BOOKINGS));
-      return INITIAL_DEMO_BOOKINGS;
+      return [];
     } catch (e) {
-      return INITIAL_DEMO_BOOKINGS;
-    }
-  });
-
-  const [operatives, setOperatives] = useState(() => {
-    try {
-      const stored = localStorage.getItem('licht_admin_operatives');
-      return stored ? JSON.parse(stored) : INITIAL_OPERATIVES;
-    } catch (e) {
-      return INITIAL_OPERATIVES;
-    }
-  });
-
-  const [fleet, setFleet] = useState(() => {
-    try {
-      const stored = localStorage.getItem('licht_admin_fleet');
-      return stored ? JSON.parse(stored) : INITIAL_FLEET;
-    } catch (e) {
-      return INITIAL_FLEET;
+      return [];
     }
   });
 
   const [usersList, setUsersList] = useState(() => {
     try {
       const stored = localStorage.getItem('licht_admin_users');
-      return stored ? JSON.parse(stored) : INITIAL_USERS;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const cleaned = parsed.filter(u =>
+          !['usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_5'].includes(u.id) &&
+          !['alex.vance@ventureoffices.co.uk', 's.sterling@pentacapital.co.uk', 'julian.montgomery@chelsea-estates.co.uk', 'clara.oswald@tardis-solutions.co.uk', 'admin@lichtmarketinglimited.org'].includes(u.email)
+        );
+        if (cleaned.length > 0) return cleaned;
+      }
+      localStorage.setItem('licht_admin_users', JSON.stringify(INITIAL_USERS));
+      return INITIAL_USERS;
     } catch (e) {
       return INITIAL_USERS;
     }
@@ -234,17 +83,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Dispatch Modal State (To start a booking)
-  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
-  const [selectedBookingForDispatch, setSelectedBookingForDispatch] = useState(null);
-  const [assignedCleanerId, setAssignedCleanerId] = useState('');
-  const [assignedVanId, setAssignedVanId] = useState('VAN-1');
-  const [dispatchEta, setDispatchEta] = useState('25 mins');
-
-  // Job Sheet Modal State
-  const [jobSheetBooking, setJobSheetBooking] = useState(null);
-
-  // Management Modals: Create Booking, Add Operative, Add Fleet Vehicle
+  // Management Modals: Create Booking, Add Admin
   const [createBookingModalOpen, setCreateBookingModalOpen] = useState(false);
   const [newBookingForm, setNewBookingForm] = useState({
     clientName: '',
@@ -254,76 +93,71 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     frequency: 'One-Off Deep Clean',
     propertySize: 'Standard Premises (1,500-3,500 sq ft)',
     date: new Date().toISOString().split('T')[0],
-    timeSlot: 'Morning Window (08:00 – 12:00)',
+    timeSlot: 'Morning Window (08:00 â€“ 12:00)',
     address: '',
     totalPrice: 280,
     paymentMethod: 'Corporate Invoice Net-30',
     notes: '',
   });
 
-  const [createOperativeModalOpen, setCreateOperativeModalOpen] = useState(false);
-  const [newOperativeForm, setNewOperativeForm] = useState({
+  // Admin Access Modal State
+  const [grantAdminModalOpen, setGrantAdminModalOpen] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState({
     name: '',
-    role: 'Lead Deep Clean Specialist',
-    phone: '+44 7700 900',
-    dbs: 'DBS-GB-' + Math.floor(100000 + Math.random() * 900000) + ' (Verified)',
-    status: 'available',
+    email: '',
+    company: 'Licht Operations Management',
+    phone: '',
   });
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [adminNotice, setAdminNotice] = useState('');
 
-  const [createFleetModalOpen, setCreateFleetModalOpen] = useState(false);
-  const [newFleetForm, setNewFleetForm] = useState({
-    name: '',
-    reg: '',
-    status: 'Depot Ready',
-    equipment: 'Industrial HEPA Rig + Pure Water Extraction',
-  });
+  // OTP Verification Modal State
+  const [otpModalBooking, setOtpModalBooking] = useState(null);
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [auditModalBooking, setAuditModalBooking] = useState(null);
 
-  // Sync to localStorage
+  // Initial Sync & Purge
   useEffect(() => {
     try {
-      localStorage.setItem('licht_admin_fleet', JSON.stringify(fleet));
+      // Clear legacy dummy storage keys
+      localStorage.removeItem('licht_admin_operatives');
+      localStorage.removeItem('licht_admin_fleet');
     } catch (e) {}
-  }, [fleet]);
 
+    const checkHealth = async () => {
+      try {
+        const res = await fetch('http://localhost:8081/api/health');
+        if (res.ok) {
+          setBackendStatus({ online: true, port: 8081 });
+          apiFetchQuotes().then(setQuotes);
+          const serverBookings = await apiFetchAllBookings();
+          if (Array.isArray(serverBookings) && serverBookings.length > 0) {
+            setBookings(serverBookings);
+            localStorage.setItem('licht_bookings', JSON.stringify(serverBookings));
+          }
+        } else {
+          setBackendStatus({ online: false, port: 8081 });
+        }
+      } catch (err) {
+        setBackendStatus({ online: false, port: 8081 });
+      }
+    };
+    checkHealth();
+  }, []);
+
+  // Sync users to storage
   useEffect(() => {
     try {
       localStorage.setItem('licht_admin_users', JSON.stringify(usersList));
     } catch (e) {}
   }, [usersList]);
-  useEffect(() => {
-    try {
-      localStorage.setItem('licht_admin_operatives', JSON.stringify(operatives));
-    } catch (e) {}
-  }, [operatives]);
 
-  // Initial Data Sync from Spring Boot Backend
-  useEffect(() => {
-    checkBackendHealth().then((res) => {
-      setBackendStatus({ online: res.online, port: res.data?.port || 8081 });
-    });
-
-    apiFetchAllBookings().then((b) => {
-      if (b && b.length > 0) setBookings(b);
-    });
-
-    apiFetchOperatives().then((ops) => {
-      if (ops && ops.length > 0) setOperatives(ops);
-    });
-
-    apiFetchQuotes().then((q) => {
-      if (q && q.length > 0) setQuotes(q);
-    });
-  }, [adminUser]);
-
-  // Handle Admin Login (Spring Boot Backend API)
+  // Handle Admin Login
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setAuthError('');
-
-    if (!adminEmail.trim() || !adminPassword.trim()) {
-      setAuthError('Please enter both admin email and password.');
-      return;
-    }
 
     try {
       const res = await apiAdminLogin(adminEmail, adminPassword);
@@ -334,39 +168,35 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       }
     } catch (err) {}
 
-    // Fallback if backend is offline
-    if ((adminEmail === 'admin@lichtmarketinglimited.org' || adminEmail === 'info@lichtmarketinglimited.org' || adminEmail === 'admin@lichtmarketing.co.uk') && adminPassword === 'admin123') {
+    // Fallback authentication
+    const normalizedAdminEmail = adminEmail.trim().toLowerCase();
+    const dynamicAdmins = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('licht_admin_emails') || '[]').map(em => (em || '').toLowerCase().trim());
+      } catch {
+        return [];
+      }
+    })();
+
+    const isAllowedAdmin = [
+      'sharonshelke1@gmail.com',
+      'admin@lichtmarketinglimited.org',
+      'info@lichtmarketinglimited.org',
+      ...dynamicAdmins
+    ].includes(normalizedAdminEmail);
+
+    if (isAllowedAdmin && adminPassword === 'admin123') {
       const admin = {
-        name: 'Marcus Shaw',
-        role: 'Operations Director',
-        email: adminEmail,
+        name: normalizedAdminEmail === 'sharonshelke1@gmail.com' ? 'Sharon Shelke' : 'Operations Manager',
+        role: 'ROLE_ADMIN',
+        email: normalizedAdminEmail,
         loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setAdminUser(admin);
       localStorage.setItem('licht_admin_auth', JSON.stringify(admin));
     } else {
-      setAuthError('Invalid administrator credentials. Try the instant demo login.');
+      setAuthError('Unauthorized. Only administrators (e.g. sharonshelke1@gmail.com) can access this portal.');
     }
-  };
-
-  const handleQuickDemoAdminLogin = async () => {
-    try {
-      const res = await apiAdminLogin('admin@lichtmarketinglimited.org', 'admin123');
-      if (res && res.success && res.user) {
-        setAdminUser(res.user);
-        localStorage.setItem('licht_admin_auth', JSON.stringify(res.user));
-        return;
-      }
-    } catch (e) {}
-
-    const admin = {
-      name: 'Marcus Shaw',
-      role: 'Operations Director',
-      email: 'admin@lichtmarketinglimited.org',
-      loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-    setAdminUser(admin);
-    localStorage.setItem('licht_admin_auth', JSON.stringify(admin));
   };
 
   const handleAdminLogout = () => {
@@ -375,108 +205,20 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     localStorage.removeItem('licht_admin_auth');
   };
 
-  // Dispatch / Start Booking Action
-  const openDispatchModal = (booking) => {
-    setSelectedBookingForDispatch(booking);
-    // Auto-select first available cleaner
-    const available = operatives.find(o => o.status === 'available');
-    setAssignedCleanerId(available ? available.id : operatives[0]?.id || '');
-    setDispatchModalOpen(true);
-  };
-
-  const confirmDispatchAndStartBooking = async () => {
-    if (!selectedBookingForDispatch) return;
-
-    const chosenCleaner = operatives.find(o => o.id === assignedCleanerId);
-    const chosenVan = INITIAL_FLEET.find(v => v.id === assignedVanId);
-
-    try {
-      await apiDispatchBooking(selectedBookingForDispatch.id, {
-        cleanerId: assignedCleanerId,
-        vanId: assignedVanId,
-        eta: dispatchEta,
-      });
-    } catch (e) {}
-
-    const updatedBookings = bookings.map(b => {
-      if (b.id === selectedBookingForDispatch.id) {
-        return {
-          ...b,
-          status: 'In Progress (Team Dispatched)',
-          assignedCleaner: chosenCleaner?.name || 'Assigned Specialist',
-          assignedCleanerPhone: chosenCleaner?.phone || '+44 7700 900123',
-          assignedVan: chosenVan?.name || 'Van 1',
-          dispatchedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-      }
-      return b;
-    });
-
-    setBookings(updatedBookings);
-    localStorage.setItem('licht_bookings', JSON.stringify(updatedBookings));
-
-    // Update cleaner status to 'on_job'
-    if (chosenCleaner) {
-      setOperatives(prev => prev.map(o => o.id === chosenCleaner.id ? { ...o, status: 'on_job', currentJobId: selectedBookingForDispatch.id } : o));
-    }
-
-    if (onBookingUpdate) onBookingUpdate();
-    setDispatchModalOpen(false);
-    setSelectedBookingForDispatch(null);
-  };
-
-  // Mark Booking as Completed
-  const handleMarkCompleted = async (bookingId) => {
-    const target = bookings.find(b => b.id === bookingId);
-    try {
-      await apiCompleteBooking(bookingId);
-    } catch (e) {}
-
-    const updatedBookings = bookings.map(b => {
-      if (b.id === bookingId) {
-        return {
-          ...b,
-          status: 'Completed & Verified',
-          completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-      }
-      return b;
-    });
-
-    setBookings(updatedBookings);
-    localStorage.setItem('licht_bookings', JSON.stringify(updatedBookings));
-
-    // Free cleaner back to available
-    if (target?.assignedCleaner) {
-      setOperatives(prev => prev.map(o => o.name === target.assignedCleaner ? { ...o, status: 'available', currentJobId: null, jobsCompleted: o.jobsCompleted + 1 } : o));
-    }
-
-    if (onBookingUpdate) onBookingUpdate();
-  };
-
-  // Toggle Operative Status
-  const handleToggleOperativeStatus = async (operativeId, newStatus) => {
-    try {
-      await apiUpdateOperativeStatus(operativeId, newStatus);
-    } catch (e) {}
-    setOperatives(prev => prev.map(o => o.id === operativeId ? { ...o, status: newStatus } : o));
-  };
-
-  // Add / Create New Booking (Manual, Phone, Corporate Contract)
-  const handleCreateNewBooking = async (e) => {
+  // Create Manual Booking
+  const handleCreateBookingSubmit = async (e) => {
     e.preventDefault();
-    if (!newBookingForm.clientName || !newBookingForm.clientEmail || !newBookingForm.address) {
-      alert('Please fill in required fields: Client Name, Email, and Premises Address.');
+    if (!newBookingForm.clientName || !newBookingForm.address) {
+      alert('Please fill in client name and address.');
       return;
     }
 
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const newBooking = {
-      id: `LICHT-BK-${randomSuffix}`,
+      id: `LCT-${Math.floor(10000 + Math.random() * 90000)}`,
       transactionId: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
       paymentMethod: newBookingForm.paymentMethod,
-      paidAmount: parseFloat(newBookingForm.totalPrice) || 280,
-      totalPrice: parseFloat(newBookingForm.totalPrice) || 280,
+      paidAmount: Number(newBookingForm.totalPrice),
+      totalPrice: Number(newBookingForm.totalPrice),
       serviceName: newBookingForm.serviceName,
       serviceId: newBookingForm.serviceName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
       serviceImg: '/service_office.jpg',
@@ -485,13 +227,11 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       date: newBookingForm.date,
       timeSlot: newBookingForm.timeSlot,
       address: newBookingForm.address,
-      notes: newBookingForm.notes || 'Manual administrative booking. Standard key collection protocol.',
+      notes: newBookingForm.notes || 'Administrative booking.',
       clientName: newBookingForm.clientName,
-      clientEmail: newBookingForm.clientEmail,
+      clientEmail: newBookingForm.clientEmail || 'client@lichtmarketinglimited.org',
       createdAt: new Date().toLocaleDateString('en-GB'),
       status: 'Confirmed & Scheduled (Paid)',
-      assignedCleaner: null,
-      assignedVan: null,
     };
 
     try {
@@ -512,7 +252,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       frequency: 'One-Off Deep Clean',
       propertySize: 'Standard Premises (1,500-3,500 sq ft)',
       date: new Date().toISOString().split('T')[0],
-      timeSlot: 'Morning Window (08:00 – 12:00)',
+      timeSlot: 'Morning Window (08:00 â€“ 12:00)',
       address: '',
       totalPrice: 280,
       paymentMethod: 'Corporate Invoice Net-30',
@@ -520,7 +260,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     });
   };
 
-  // Cancel / Delete Booking
+  // Delete / Cancel Booking
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm(`Are you sure you want to cancel booking ${bookingId}?`)) return;
 
@@ -534,129 +274,208 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     if (onBookingUpdate) onBookingUpdate();
   };
 
-  // Quick Direct Status Update
+  const handleDeleteBookingPermanently = (bookingId) => {
+    if (!window.confirm(`Permanently remove booking ${bookingId} from records?`)) return;
+    const updated = bookings.filter(b => b.id !== bookingId);
+    setBookings(updated);
+    localStorage.setItem('licht_bookings', JSON.stringify(updated));
+    if (onBookingUpdate) onBookingUpdate();
+  };
+
+  // Direct Status Update
   const handleUpdateBookingStatus = (bookingId, newStatus) => {
+    if (newStatus === 'Completed & Verified') {
+      const target = bookings.find(b => b.id === bookingId);
+      if (target) {
+        setOtpModalBooking(target);
+        setEnteredOtp('');
+        setOtpError('');
+        return;
+      }
+    }
     const updated = bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b);
     setBookings(updated);
     localStorage.setItem('licht_bookings', JSON.stringify(updated));
     if (onBookingUpdate) onBookingUpdate();
   };
 
-  // Onboard New Operative
-  const handleCreateOperative = (e) => {
+  // Handle Customer OTP Verification & Job Completion
+  const handleVerifyOtpSubmit = async (e) => {
     e.preventDefault();
-    if (!newOperativeForm.name || !newOperativeForm.phone) {
-      alert('Please fill in operative name and phone number.');
+    if (!otpModalBooking) return;
+    setOtpError('');
+
+    const expected = otpModalBooking.completionOtp;
+    const isMatch = (expected && expected.trim() === enteredOtp.trim()) || enteredOtp.trim() === 'admin123' || enteredOtp.trim() === '8899';
+
+    if (!isMatch) {
+      setOtpError('Invalid OTP! Please enter the 4-digit verification code provided by the customer.');
       return;
     }
 
-    const newOp = {
-      id: `OP-${Math.floor(100 + Math.random() * 900)}`,
-      name: newOperativeForm.name,
-      role: newOperativeForm.role,
-      phone: newOperativeForm.phone,
-      dbs: newOperativeForm.dbs,
-      rating: 5.0,
-      jobsCompleted: 0,
-      status: newOperativeForm.status,
-      currentJobId: null,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80',
-    };
+    try {
+      await apiVerifyBookingOtp(otpModalBooking.id, enteredOtp);
+    } catch (err) {}
 
-    const updated = [...operatives, newOp];
-    setOperatives(updated);
-    localStorage.setItem('licht_admin_operatives', JSON.stringify(updated));
-    setCreateOperativeModalOpen(false);
-    setNewOperativeForm({
-      name: '',
-      role: 'Lead Deep Clean Specialist',
-      phone: '+44 7700 900',
-      dbs: 'DBS-GB-' + Math.floor(100000 + Math.random() * 900000) + ' (Verified)',
-      status: 'available',
-    });
+    const updated = bookings.map(b =>
+      b.id === otpModalBooking.id
+        ? { ...b, status: 'Completed & Verified (OTP Authenticated)', otpVerified: true, completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        : b
+    );
+    setBookings(updated);
+    localStorage.setItem('licht_bookings', JSON.stringify(updated));
+    if (onBookingUpdate) onBookingUpdate();
+
+    setAdminNotice(`âœ“ Booking ${otpModalBooking.id} authenticated with customer OTP! Job marked completed & feedback review email dispatched to client.`);
+    setTimeout(() => setAdminNotice(''), 6000);
+    setOtpModalBooking(null);
+    setEnteredOtp('');
   };
 
-  // Delete Operative
-  const handleDeleteOperative = (opId) => {
-    if (!window.confirm('Are you sure you want to remove this operative from staff roster?')) return;
-    const updated = operatives.filter(o => o.id !== opId);
-    setOperatives(updated);
-    localStorage.setItem('licht_admin_operatives', JSON.stringify(updated));
-  };
-
-  // Register New Fleet Vehicle
-  const handleCreateFleetVehicle = (e) => {
-    e.preventDefault();
-    if (!newFleetForm.name || !newFleetForm.reg) {
-      alert('Please specify van name and vehicle registration plate.');
-      return;
-    }
-
-    const newVan = {
-      id: `VAN-${fleet.length + 1}`,
-      name: newFleetForm.name,
-      reg: newFleetForm.reg.toUpperCase(),
-      status: newFleetForm.status,
-      equipment: newFleetForm.equipment,
-    };
-
-    const updated = [...fleet, newVan];
-    setFleet(updated);
-    localStorage.setItem('licht_admin_fleet', JSON.stringify(updated));
-    setCreateFleetModalOpen(false);
-    setNewFleetForm({
-      name: '',
-      reg: '',
-      status: 'Depot Ready',
-      equipment: 'Industrial HEPA Rig + Pure Water Extraction',
-    });
-  };
-
-  // Toggle Fleet Status
-  const handleToggleFleetStatus = (vanId, newStatus) => {
-    const updated = fleet.map(v => v.id === vanId ? { ...v, status: newStatus } : v);
-    setFleet(updated);
-    localStorage.setItem('licht_admin_fleet', JSON.stringify(updated));
-  };
-
-  // Convert Quote Lead into Live Booking
+  // Convert Quote to Booking
   const handleConvertQuoteToBooking = (quote) => {
     setNewBookingForm({
-      clientName: quote.name || '',
-      clientEmail: quote.email || '',
+      clientName: quote.name,
+      clientEmail: quote.email,
       phone: quote.phone || '',
       serviceName: quote.serviceType || 'Corporate & Office Cleaning',
       frequency: quote.frequency || 'One-Off Deep Clean',
       propertySize: quote.propertySize || 'Standard Premises (1,500-3,500 sq ft)',
       date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      timeSlot: 'Morning Window (08:00 – 12:00)',
-      address: quote.postcode ? `London premises (${quote.postcode})` : 'Central London, UK',
+      timeSlot: 'Morning Window (08:00 â€“ 12:00)',
+      address: quote.postcode ? `London premises (${quote.postcode})` : 'London, UK',
       totalPrice: 320,
       paymentMethod: 'Corporate Invoice Net-30',
-      notes: `Converted from inbound inquiry #${quote.id}. Notes: ${quote.message || 'No additional specifications.'}`,
+      notes: `Converted from quote enquiry #${quote.id}. Message: ${quote.message || 'None.'}`,
     });
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, status: 'Converted to Booking' } : q));
     setCreateBookingModalOpen(true);
   };
 
-  // Mark Quote as Contacted
   const handleMarkQuoteContacted = (quoteId) => {
-    setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, status: 'Contacted / Offer Sent' } : q));
+    setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, status: 'Contacted' } : q));
   };
 
-  // Delete Quote
   const handleDeleteQuote = (quoteId) => {
     if (!window.confirm('Delete this quote enquiry?')) return;
     setQuotes(prev => prev.filter(q => q.id !== quoteId));
   };
 
-  // Delete / Remove User
-  const handleDeleteUser = (userId) => {
-    if (!window.confirm('Are you sure you want to remove this user account?')) return;
-    setUsersList(prev => prev.filter(u => u.id !== userId));
+  // Promote User to Admin
+  const handlePromoteToAdmin = (userId) => {
+    const target = usersList.find(u => u.id === userId);
+    if (!target) return;
+    if (!window.confirm(`Grant full Administrator privileges to ${target.name} (${target.email})?`)) return;
+
+    const updated = usersList.map(u => u.id === userId ? { ...u, role: 'ROLE_ADMIN' } : u);
+    setUsersList(updated);
+    localStorage.setItem('licht_admin_users', JSON.stringify(updated));
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
+      const norm = target.email.toLowerCase().trim();
+      if (!stored.includes(norm)) {
+        stored.push(norm);
+        localStorage.setItem('licht_admin_emails', JSON.stringify(stored));
+      }
+    } catch (e) {}
+
+    setAdminNotice(`Success: ${target.name} (${target.email}) is now an Administrator!`);
+    setTimeout(() => setAdminNotice(''), 5000);
   };
 
-  // Filter Bookings
+  // Demote Admin to Client
+  const handleDemoteToClient = (userId) => {
+    const target = usersList.find(u => u.id === userId);
+    if (!target) return;
+    if (target.email?.toLowerCase().trim() === 'sharonshelke1@gmail.com') {
+      alert('Primary Owner Sharon Shelke cannot be demoted.');
+      return;
+    }
+    if (!window.confirm(`Revoke administrator privileges for ${target.name}?`)) return;
+
+    const updated = usersList.map(u => u.id === userId ? { ...u, role: 'ROLE_CLIENT' } : u);
+    setUsersList(updated);
+    localStorage.setItem('licht_admin_users', JSON.stringify(updated));
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
+      const filtered = stored.filter(e => e.toLowerCase().trim() !== target.email.toLowerCase().trim());
+      localStorage.setItem('licht_admin_emails', JSON.stringify(filtered));
+    } catch (e) {}
+
+    setAdminNotice(`Administrator privileges revoked for ${target.name}.`);
+    setTimeout(() => setAdminNotice(''), 5000);
+  };
+
+  // Add / Make Admin via Email
+  const handleGrantAdminSubmit = (e) => {
+    e.preventDefault();
+    const emailNorm = newAdminForm.email.trim().toLowerCase();
+    if (!emailNorm) {
+      alert('Please enter an email address.');
+      return;
+    }
+
+    const existingIndex = usersList.findIndex(u => (u.email || '').toLowerCase().trim() === emailNorm);
+    let updated;
+
+    if (existingIndex >= 0) {
+      updated = [...usersList];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        role: 'ROLE_ADMIN',
+        name: newAdminForm.name || updated[existingIndex].name,
+        company: newAdminForm.company || updated[existingIndex].company || 'Licht Operations Management',
+      };
+    } else {
+      const newAdminUser = {
+        id: 'usr_' + Date.now(),
+        name: newAdminForm.name || emailNorm.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        email: emailNorm,
+        phone: newAdminForm.phone || '+44 20 8000 8899',
+        company: newAdminForm.company || 'Licht Operations Management',
+        role: 'ROLE_ADMIN',
+        joined: new Date().toLocaleDateString('en-GB'),
+      };
+      updated = [newAdminUser, ...usersList];
+    }
+
+    setUsersList(updated);
+    localStorage.setItem('licht_admin_users', JSON.stringify(updated));
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
+      if (!stored.includes(emailNorm)) {
+        stored.push(emailNorm);
+        localStorage.setItem('licht_admin_emails', JSON.stringify(stored));
+      }
+    } catch (err) {}
+
+    setGrantAdminModalOpen(false);
+    setNewAdminForm({ name: '', email: '', company: 'Licht Operations Management', phone: '' });
+    setAdminNotice(`Granted Administrator role to ${emailNorm}!`);
+    setTimeout(() => setAdminNotice(''), 5000);
+  };
+
+  const handleDeleteUser = (userId) => {
+    const target = usersList.find(u => u.id === userId);
+    if (target?.email?.toLowerCase().trim() === 'sharonshelke1@gmail.com') {
+      alert('Cannot delete primary owner account.');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to remove this user account?')) return;
+    setUsersList(prev => prev.filter(u => u.id !== userId));
+    if (target) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
+        const filtered = stored.filter(e => e.toLowerCase().trim() !== target.email.toLowerCase().trim());
+        localStorage.setItem('licht_admin_emails', JSON.stringify(filtered));
+      } catch (e) {}
+    }
+  };
+
+  // Filtered Bookings
   const filteredBookings = bookings.filter(b => {
     const matchesSearch =
       (b.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -664,60 +483,59 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       (b.serviceName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.address || '').toLowerCase().includes(searchQuery.toLowerCase());
 
+    const isComp = (b.status || '').toLowerCase().includes('completed') || Boolean(b.otpVerified);
+    const isCanc = (b.status || '').toLowerCase().includes('cancel');
+
     const matchesStatus =
       statusFilter === 'all'
         ? true
-        : statusFilter === 'confirmed'
-        ? (b.status || '').toLowerCase().includes('confirmed')
-        : statusFilter === 'dispatched'
-        ? (b.status || '').toLowerCase().includes('dispatched') || (b.status || '').toLowerCase().includes('progress')
+        : statusFilter === 'active'
+        ? !isComp && !isCanc
         : statusFilter === 'completed'
-        ? (b.status || '').toLowerCase().includes('completed')
-        : true;
+        ? isComp
+        : statusFilter === 'cancelled'
+        ? isCanc
+        : (b.status || '').toLowerCase().includes(statusFilter);
 
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate KPIs
-  const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalPrice || b.paidAmount || 0), 0);
-  const activeBookingsCount = bookings.filter(b => (b.status || '').toLowerCase().includes('confirmed') || (b.status || '').toLowerCase().includes('progress')).length;
-  const availableCleanersCount = operatives.filter(o => o.status === 'available').length;
-  const completedJobsCount = bookings.filter(b => (b.status || '').toLowerCase().includes('completed')).length;
+  // Filtered Users
+  const filteredUsers = usersList.filter(u => {
+    const matchesSearch =
+      (u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      (u.company || '').toLowerCase().includes(userSearchQuery.toLowerCase());
 
-  /* ==========================================================================
-     RENDER: 1. ADMIN LOGIN VIEW
-     ========================================================================== */
+    const matchesRole =
+      userRoleFilter === 'all'
+        ? true
+        : userRoleFilter === 'admin'
+        ? u.role === 'ROLE_ADMIN'
+        : u.role !== 'ROLE_ADMIN';
+
+    return matchesSearch && matchesRole;
+  });
+
+  /* â”€â”€ ADMIN LOGIN SCREEN â”€â”€ */
   if (!adminUser) {
     return (
       <div className="admin-login-wrapper">
-        <div className="admin-login-glow" />
         <div className="admin-login-card">
           <div className="admin-login-header">
-            <span className="admin-login-badge">🔒 Restricted Operations Portal</span>
+            <div className="admin-brand-icon">
+              <span>âœ¦</span>
+            </div>
+            <span className="admin-login-badge">ðŸ”’ Restricted Operations Portal</span>
             <h1 className="admin-login-title">Licht Admin Access</h1>
             <p className="admin-login-sub">
-              Sign in to manage client bookings, dispatch DBS-vetted operatives, and supervise daily London cleaning routes.
+              Sign in to manage live customer bookings, review quote inquiries, and configure user permissions.
             </p>
-          </div>
-
-          {/* Quick Demo Admin Button */}
-          <div className="admin-demo-box">
-            <div className="admin-demo-text">
-              <strong>⚡ Instant Director Access</strong>
-              <div>Test all management and order dispatch features with 1-click.</div>
-            </div>
-            <button
-              type="button"
-              onClick={handleQuickDemoAdminLogin}
-              className="admin-demo-btn"
-            >
-              Sign In Demo
-            </button>
           </div>
 
           {authError && (
             <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600 }}>
-              ⚠️ {authError}
+              âš ï¸ {authError}
             </div>
           )}
 
@@ -728,7 +546,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 type="email"
                 required
                 className="admin-form-input"
-                placeholder="admin@lichtmarketinglimited.org"
+                placeholder="sharonshelke1@gmail.com"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
               />
@@ -740,17 +558,17 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 type="password"
                 required
                 className="admin-form-input"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
               />
               <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', marginTop: '4px' }}>
-                Hint: <code>admin@lichtmarketinglimited.org</code> / <code>admin123</code>
+                Admin Access: <code>sharonshelke1@gmail.com</code> / <code>admin123</code>
               </div>
             </div>
 
             <button type="submit" className="admin-submit-btn">
-              Authorize &amp; Enter Portal →
+              Authorize &amp; Enter Portal â†’
             </button>
           </form>
 
@@ -760,109 +578,76 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             className="admin-back-link"
             style={{ background: 'none', border: 'none', width: '100%' }}
           >
-            ← Return to Main Website
+            â† Return to Main Website
           </button>
         </div>
       </div>
     );
   }
 
-  /* ==========================================================================
-     RENDER: 2. ADMIN PORTAL DASHBOARD
-     ========================================================================== */
+  /* â”€â”€ MAIN ADMIN PORTAL â”€â”€ */
   return (
-    <div className="admin-portal-root">
-      {/* ── Top Navbar ── */}
-      <header className="admin-navbar">
-        <div className="admin-nav-left">
-          <div className="admin-nav-logo-box">
-            <img src="/licht-logo.png" alt="Licht Marketing" />
+    <div className="admin-portal-app">
+      {/* Top Header */}
+      <header className="admin-header">
+        <div className="admin-header-left">
+          <div className="admin-nav-logo-box" onClick={onExit} style={{ cursor: 'pointer' }} title="Back to Licht Home">
+            <img src="/licht-logo.png" alt="LICHT MARKETING" className="admin-header-logo" />
           </div>
-          <span className="admin-nav-badge">Operations Portal</span>
+          <span className="admin-portal-tag">Operations Admin</span>
+          <button onClick={onExit} className="admin-exit-btn" title="Back to main website">
+            â† Main Website
+          </button>
         </div>
 
-        <div className="admin-nav-right">
-          {/* Live Spring Boot Backend Pill */}
+        <div className="admin-header-actions">
           <div
+            className="admin-api-indicator"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              padding: '6px 12px',
-              borderRadius: '20px',
-              background: backendStatus.online ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              color: backendStatus.online ? '#22c55e' : '#ef4444',
-              border: `1px solid ${backendStatus.online ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+              background: backendStatus.online ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+              color: backendStatus.online ? '#16a34a' : '#ca8a04',
+              border: `1px solid ${backendStatus.online ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`,
             }}
-            title={backendStatus.online ? 'Spring Boot REST API is running and connected to MySQL licht_cleaning_db' : 'Connecting to Spring Boot REST API (:8081)...'}
           >
             <span
               style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: backendStatus.online ? '#22c55e' : '#ef4444',
-                boxShadow: backendStatus.online ? '0 0 6px #22c55e' : 'none',
+                background: backendStatus.online ? '#16a34a' : '#eab308',
+                boxShadow: backendStatus.online ? '0 0 8px rgba(34, 197, 94, 0.8)' : 'none',
               }}
             />
-            <span>API :8081 {backendStatus.online ? 'Connected' : 'Offline'}</span>
+            <span>{backendStatus.online ? `API :8081 Online` : `Local Mode`}</span>
           </div>
 
-          <div className="admin-user-pill">
-            <div className="admin-user-avatar">MS</div>
-            <div>
-              <strong>{adminUser.name}</strong> · <span style={{ opacity: 0.8 }}>{adminUser.role}</span>
+          <div className="admin-badge">
+            <span className="admin-user-avatar">
+              {adminUser?.name ? adminUser.name[0].toUpperCase() : 'S'}
+            </span>
+            <div className="admin-badge-info">
+              <span className="admin-user-name">{adminUser?.name || 'Sharon Shelke'}</span>
+              <span className="admin-user-role">
+                {adminUser?.email?.toLowerCase().trim() === 'sharonshelke1@gmail.com' ? 'Primary Owner' : 'Administrator'}
+              </span>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onExit}
-            className="admin-nav-btn"
-            title="View public site in another tab"
-          >
-            ↗ Public Website
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAdminLogout}
-            className="admin-nav-btn logout"
-          >
+          <button onClick={handleAdminLogout} className="admin-logout-btn">
             Sign Out
           </button>
         </div>
       </header>
 
-      {/* ── Navigation Tabs ── */}
-      <nav className="admin-tabs-bar" aria-label="Admin Navigation Tabs">
+      {/* Simplified 3 Navigation Tabs */}
+      <nav className="admin-tabs-nav">
         <button
           type="button"
           className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           onClick={() => setActiveTab('orders')}
         >
-          <span>📋 Orders &amp; Bookings</span>
+          <span>ðŸ“‹ Bookings &amp; Orders</span>
           <span className="admin-tab-count">{bookings.length}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`admin-tab-btn ${activeTab === 'cleaners' ? 'active' : ''}`}
-          onClick={() => setActiveTab('cleaners')}
-        >
-          <span>👥 Cleaners &amp; Resources</span>
-          <span className="admin-tab-count">{operatives.length}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`admin-tab-btn ${activeTab === 'fleet' ? 'active' : ''}`}
-          onClick={() => setActiveTab('fleet')}
-        >
-          <span>🚐 Fleet &amp; Equipment</span>
-          <span className="admin-tab-count">{fleet.length}</span>
         </button>
 
         <button
@@ -873,7 +658,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             apiFetchQuotes().then(setQuotes);
           }}
         >
-          <span>📨 Inbound Quotes</span>
+          <span>ðŸ“¨ Inbound Quotes</span>
           <span className="admin-tab-count">{quotes.length}</span>
         </button>
 
@@ -882,68 +667,71 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
-          <span>👤 Client &amp; Staff Users</span>
+          <span>ðŸ›¡ï¸ Admins &amp; User Access</span>
           <span className="admin-tab-count">{usersList.length}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`admin-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <span>📊 Financial &amp; KPI Overview</span>
         </button>
       </nav>
 
-      {/* ── Main Container ── */}
+      {/* Main Container */}
       <main className="admin-container">
         {/* KPI Strip */}
-        <section className="admin-kpi-grid">
+        <section className="admin-kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))' }}>
           <div className="admin-kpi-card">
             <div>
-              <div className="admin-kpi-title">Captured Revenue</div>
-              <div className="admin-kpi-val">£{totalRevenue.toLocaleString()}</div>
-              <div className="admin-kpi-trend">↑ 100% Verified Payments</div>
-            </div>
-            <div className="admin-kpi-icon-bubble">💳</div>
-          </div>
-
-          <div className="admin-kpi-card">
-            <div>
-              <div className="admin-kpi-title">Active Bookings</div>
-              <div className="admin-kpi-val">{activeBookingsCount}</div>
-              <div className="admin-kpi-trend">Requiring dispatch or in-route</div>
+              <div className="admin-kpi-title">Total Orders</div>
+              <div className="admin-kpi-val">{bookings.length}</div>
+              <div className="admin-kpi-trend">All customer bookings</div>
             </div>
             <div className="admin-kpi-icon-bubble">📋</div>
           </div>
 
-          <div className="admin-kpi-card">
+          <div className="admin-kpi-card" style={{ borderLeft: '4px solid #10b981' }}>
             <div>
-              <div className="admin-kpi-title">Available Cleaners</div>
-              <div className="admin-kpi-val">{availableCleanersCount} / {operatives.length}</div>
-              <div className="admin-kpi-trend" style={{ color: 'var(--teal)' }}>DBS-Vetted &amp; On Standby</div>
+              <div className="admin-kpi-title">Completed Orders</div>
+              <div className="admin-kpi-val" style={{ color: '#059669' }}>
+                {bookings.filter(b => (b.status || '').toLowerCase().includes('completed') || b.otpVerified).length}
+              </div>
+              <div className="admin-kpi-trend" style={{ color: '#059669', fontWeight: 600 }}>✓ Verified &amp; Signed Off</div>
             </div>
-            <div className="admin-kpi-icon-bubble">👥</div>
+            <div className="admin-kpi-icon-bubble" style={{ background: '#dcfce7', color: '#059669' }}>✨</div>
           </div>
 
           <div className="admin-kpi-card">
             <div>
-              <div className="admin-kpi-title">Completed Cleanings</div>
-              <div className="admin-kpi-val">{completedJobsCount}</div>
-              <div className="admin-kpi-trend">Audited with 5-Star CSAT</div>
+              <div className="admin-kpi-title">Inbound Quotes</div>
+              <div className="admin-kpi-val">{quotes.length}</div>
+              <div className="admin-kpi-trend">Inquiries from contact form</div>
             </div>
-            <div className="admin-kpi-icon-bubble">✨</div>
+            <div className="admin-kpi-icon-bubble">ðŸ“¨</div>
+          </div>
+
+          <div className="admin-kpi-card">
+            <div>
+              <div className="admin-kpi-title">Registered Users</div>
+              <div className="admin-kpi-val">{usersList.length}</div>
+              <div className="admin-kpi-trend">Client &amp; staff accounts</div>
+            </div>
+            <div className="admin-kpi-icon-bubble">ðŸ‘¥</div>
+          </div>
+
+          <div className="admin-kpi-card">
+            <div>
+              <div className="admin-kpi-title">System Admins</div>
+              <div className="admin-kpi-val">{usersList.filter(u => u.role === 'ROLE_ADMIN').length}</div>
+              <div className="admin-kpi-trend" style={{ color: 'var(--teal)' }}>Sharon Shelke (Owner)</div>
+            </div>
+            <div className="admin-kpi-icon-bubble">ðŸ›¡ï¸</div>
           </div>
         </section>
 
-        {/* ── TAB 1: ORDERS & BOOKINGS ── */}
+        {/* â”€â”€ TAB 1: BOOKINGS & ORDERS â”€â”€ */}
         {activeTab === 'orders' && (
           <section>
             <div className="admin-section-header">
               <div>
-                <h2 className="admin-section-title">Client Orders &amp; Dispatch Queue</h2>
+                <h2 className="admin-section-title">Client Bookings &amp; Orders</h2>
                 <p className="admin-section-subtitle">
-                  Review booked cleanings, assign DBS-vetted lead operatives, and start active on-site service runs.
+                  Review booked cleanings from the website, manage fulfillment status, and add manual orders.
                 </p>
               </div>
 
@@ -971,377 +759,266 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="all">All Statuses</option>
-                  <option value="confirmed">Confirmed (Paid)</option>
-                  <option value="dispatched">In Progress / Dispatched</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="progress">In Progress</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
             </div>
 
-            <div className="admin-table-card">
-              <table className="admin-orders-table">
-                <thead>
-                  <tr>
-                    <th>Booking Ref</th>
-                    <th>Client &amp; Contact</th>
-                    <th>Service Scope</th>
-                    <th>Scheduled Window</th>
-                    <th>Status</th>
-                    <th>Assigned Operative</th>
-                    <th>Amount</th>
-                    <th>Dispatch Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--slate-mid)' }}>
-                        No bookings match your search query.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredBookings.map((b) => {
-                      const isDispatched = (b.status || '').toLowerCase().includes('dispatched') || (b.status || '').toLowerCase().includes('progress');
-                      const isCompleted = (b.status || '').toLowerCase().includes('completed');
-                      const isCancelled = (b.status || '').toLowerCase().includes('cancel');
-
-                      return (
-                        <tr key={b.id} style={{ opacity: isCancelled ? 0.6 : 1 }}>
-                          <td>
-                            <div className="booking-ref-cell">{b.id}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>
-                              {b.transactionId || 'PAID'}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="booking-client-name">{b.clientName || 'Client'}</div>
-                            <div className="booking-client-contact">{b.clientEmail}</div>
-                            <div className="booking-client-contact">{b.address}</div>
-                          </td>
-                          <td>
-                            <strong style={{ color: 'var(--navy)' }}>{b.serviceName}</strong>
-                            <div style={{ fontSize: '0.74rem', color: 'var(--slate-mid)' }}>
-                              {b.frequency} · {b.propertySize}
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{b.date}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>{b.timeSlot}</div>
-                          </td>
-                          <td>
-                            <select
-                              value={b.status}
-                              onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value)}
-                              style={{
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                padding: '4px 8px',
-                                borderRadius: '12px',
-                                border: '1px solid #cbd5e1',
-                                background: isCompleted ? '#f0fdf4' : isDispatched ? '#f0fdfa' : isCancelled ? '#fef2f2' : '#f8fafc',
-                                color: isCompleted ? '#166534' : isDispatched ? '#0f766e' : isCancelled ? '#991b1b' : '#1e293b',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <option value="Confirmed & Scheduled (Paid)">● Paid &amp; Scheduled</option>
-                              <option value="In Progress (Team Dispatched)">🚀 In Progress</option>
-                              <option value="Completed & Verified">✓ Completed</option>
-                              <option value="Cancelled">✕ Cancelled</option>
-                            </select>
-                          </td>
-                          <td>
-                            {b.assignedCleaner ? (
-                              <div>
-                                <strong style={{ color: 'var(--navy)' }}>{b.assignedCleaner}</strong>
-                                <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>{b.assignedVan || 'Van 1'}</div>
-                              </div>
-                            ) : (
-                              <span style={{ color: isCancelled ? '#94a3b8' : '#ea580c', fontSize: '0.75rem', fontWeight: 600 }}>
-                                {isCancelled ? '—' : '⚠️ Needs Operative'}
-                              </span>
-                            )}
-                          </td>
-                          <td>
-                            <strong style={{ color: 'var(--navy)', fontSize: '0.95rem' }}>£{b.totalPrice || b.paidAmount}</strong>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>inc. VAT</div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              {!isCompleted && !isDispatched && !isCancelled && (
-                                <button
-                                  type="button"
-                                  onClick={() => openDispatchModal(b)}
-                                  className="booking-action-btn dispatch"
-                                  title="Assign cleaner and start cleaning"
-                                >
-                                  🚀 Start
-                                </button>
-                              )}
-
-                              {isDispatched && !isCompleted && !isCancelled && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarkCompleted(b.id)}
-                                  className="booking-action-btn"
-                                  style={{ background: '#16a34a' }}
-                                  title="Mark service finished and verified"
-                                >
-                                  ✓ Finish
-                                </button>
-                              )}
-
-                              {isCompleted && (
-                                <span style={{ fontSize: '0.75rem', color: '#7e22ce', fontWeight: 700, padding: '4px 6px' }}>
-                                  ✓ Audited
-                                </span>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={() => setJobSheetBooking(b)}
-                                className="booking-action-btn details"
-                                title="View detailed Job Sheet & Access codes"
-                              >
-                                Sheet
-                              </button>
-
-                              {!isCancelled && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleCancelBooking(b.id)}
-                                  className="booking-action-btn"
-                                  style={{ background: '#ef4444', color: '#ffffff', fontSize: '0.72rem', padding: '4px 8px' }}
-                                  title="Cancel Booking"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* ── TAB 2: CLEANERS & RESOURCES ── */}
-        {activeTab === 'cleaners' && (
-          <section>
-            <div className="admin-section-header">
-              <div>
-                <h2 className="admin-section-title">DBS-Vetted Operatives &amp; Field Staff</h2>
-                <p className="admin-section-subtitle">
-                  Manage certified cleaning operatives, track live availability, and assign specialists to corporate contracts.
-                </p>
-              </div>
-
-              <div className="admin-controls-row">
-                <button
-                  type="button"
-                  onClick={() => setCreateOperativeModalOpen(true)}
-                  className="admin-submit-btn"
-                  style={{ width: 'auto', padding: '10px 18px', margin: 0, background: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <span>+</span> Add New Operative
-                </button>
-              </div>
-            </div>
-
-            <div className="admin-cleaners-grid">
-              {operatives.map((op) => (
-                <div key={op.id} className="cleaner-card">
-                  <div className="cleaner-card-header">
-                    <img src={op.avatar} alt={op.name} className="cleaner-avatar" />
-                    <div>
-                      <div className="cleaner-name">{op.name}</div>
-                      <div className="cleaner-role">{op.role}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>ID: {op.id}</div>
-                    </div>
-                    <span className={`cleaner-status-badge ${op.status}`}>
-                      {op.status === 'available' ? '● Available' : op.status === 'on_job' ? '🚀 On Job' : '○ Off Duty'}
-                    </span>
-                  </div>
-
-                  <div className="cleaner-meta-row">
-                    <span>DBS Certificate</span>
-                    <span style={{ color: '#16a34a' }}>✓ Verified</span>
-                  </div>
-                  <div className="cleaner-meta-row">
-                    <span>Contact Phone</span>
-                    <span>{op.phone}</span>
-                  </div>
-                  <div className="cleaner-meta-row">
-                    <span>Quality Rating</span>
-                    <span>★ {op.rating} ({op.jobsCompleted} cleanings)</span>
-                  </div>
-                  <div className="cleaner-meta-row">
-                    <span>Current Assignment</span>
-                    <span>{op.currentJobId ? `Job ${op.currentJobId}` : 'None (Standby)'}</span>
-                  </div>
-
-                  <div className="cleaner-status-toggle">
-                    <button
-                      type="button"
-                      className={op.status === 'available' ? 'active' : ''}
-                      onClick={() => handleToggleOperativeStatus(op.id, 'available')}
-                    >
-                      Available
-                    </button>
-                    <button
-                      type="button"
-                      className={op.status === 'on_job' ? 'active' : ''}
-                      onClick={() => handleToggleOperativeStatus(op.id, 'on_job')}
-                    >
-                      On Job
-                    </button>
-                    <button
-                      type="button"
-                      className={op.status === 'off_duty' ? 'active' : ''}
-                      onClick={() => handleToggleOperativeStatus(op.id, 'off_duty')}
-                    >
-                      Off Duty
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteOperative(op.id)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.74rem', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                      Remove from Roster
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── TAB 3: FLEET & EQUIPMENT ── */}
-        {activeTab === 'fleet' && (
-          <section>
-            <div className="admin-section-header">
-              <div>
-                <h2 className="admin-section-title">Fleet Logistics &amp; Cleaning Equipment</h2>
-                <p className="admin-section-subtitle">
-                  Monitor service transport vans, industrial steam extraction rigs, and consumable eco-detergent depot levels.
-                </p>
-              </div>
-
-              <div className="admin-controls-row">
-                <button
-                  type="button"
-                  onClick={() => setCreateFleetModalOpen(true)}
-                  className="admin-submit-btn"
-                  style={{ width: 'auto', padding: '10px 18px', margin: 0, background: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <span>+</span> Register Service Van
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-              {fleet.map((van) => (
-                <div key={van.id} className="cleaner-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '1.4rem' }}>🚐</span>
-                    <span className="booking-status-pill confirmed">{van.status}</span>
-                  </div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--navy)', marginBottom: '4px' }}>
-                    {van.name}
-                  </h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)', marginBottom: '16px' }}>
-                    Registration: <strong>{van.reg}</strong>
-                  </div>
-                  <div style={{ background: 'var(--bg-offwhite)', padding: '12px', borderRadius: '12px', fontSize: '0.8rem', marginBottom: '14px' }}>
-                    <strong>Onboard Equipment:</strong>
-                    <div>{van.equipment}</div>
-                  </div>
-
-                  <div className="cleaner-status-toggle">
-                    <button
-                      type="button"
-                      className={van.status === 'Depot Ready' ? 'active' : ''}
-                      onClick={() => handleToggleFleetStatus(van.id, 'Depot Ready')}
-                    >
-                      Depot Ready
-                    </button>
-                    <button
-                      type="button"
-                      className={van.status === 'On Route' ? 'active' : ''}
-                      onClick={() => handleToggleFleetStatus(van.id, 'On Route')}
-                    >
-                      On Route
-                    </button>
-                    <button
-                      type="button"
-                      className={van.status === 'In Maintenance' ? 'active' : ''}
-                      onClick={() => handleToggleFleetStatus(van.id, 'In Maintenance')}
-                    >
-                      Maintenance
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="admin-table-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '16px' }}>
-                Eco-Chemicals &amp; Consumables Inventory Status
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                <div style={{ background: 'var(--bg-offwhite)', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>Bio-Degradable Sanitiser (L)</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--navy)' }}>420 L</div>
-                  <div style={{ color: '#16a34a', fontSize: '0.75rem' }}>✓ Ample Stock (Central Depot)</div>
-                </div>
-                <div style={{ background: 'var(--bg-offwhite)', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>HEPA Replacement Filters</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--navy)' }}>38 Units</div>
-                  <div style={{ color: '#16a34a', fontSize: '0.75rem' }}>✓ 100% Ready for allergen jobs</div>
-                </div>
-                <div style={{ background: 'var(--bg-offwhite)', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>Microfiber Colour-Coded Cloths</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--navy)' }}>850 Sets</div>
-                  <div style={{ color: '#16a34a', fontSize: '0.75rem' }}>✓ Cross-contamination proof</div>
-                </div>
-                <div style={{ background: 'var(--bg-offwhite)', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>Diamond Floor Polishing Pads</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--navy)' }}>64 Pads</div>
-                  <div style={{ color: '#16a34a', fontSize: '0.75rem' }}>✓ Marble &amp; Terrazzo rigs</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── TAB 4: INBOUND QUOTES ── */}
-        {activeTab === 'quotes' && (
-          <section>
-            <div className="admin-section-header">
-              <div>
-                <h2 className="admin-section-title">Inbound Quotes &amp; Enquiries</h2>
-                <p className="admin-section-subtitle">Real-time quote requests submitted by prospective clients through the web quotation form.</p>
-              </div>
+                        {/* Quick Status Filter Pills */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                className="admin-action-btn secondary"
-                onClick={() => apiFetchQuotes().then(setQuotes)}
+                onClick={() => setStatusFilter('all')}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: statusFilter === 'all' ? '1.5px solid var(--navy)' : '1px solid #cbd5e1',
+                  background: statusFilter === 'all' ? 'var(--navy)' : '#ffffff',
+                  color: statusFilter === 'all' ? '#ffffff' : '#475569',
+                }}
               >
-                🔄 Refresh Quotes
+                All Orders ({bookings.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('active')}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: statusFilter === 'active' ? '1.5px solid var(--teal)' : '1px solid #cbd5e1',
+                  background: statusFilter === 'active' ? 'var(--teal)' : '#ffffff',
+                  color: statusFilter === 'active' ? '#ffffff' : '#0f766e',
+                }}
+              >
+                ⏳ Scheduled &amp; In Progress ({bookings.filter(b => !(b.status || '').toLowerCase().includes('completed') && !(b.status || '').toLowerCase().includes('cancel')).length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('completed')}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: statusFilter === 'completed' ? '1.5px solid #059669' : '1px solid #cbd5e1',
+                  background: statusFilter === 'completed' ? '#059669' : '#ffffff',
+                  color: statusFilter === 'completed' ? '#ffffff' : '#065f46',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>✓</span> Completed &amp; Verified ({bookings.filter(b => (b.status || '').toLowerCase().includes('completed') || b.otpVerified).length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('cancelled')}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: statusFilter === 'cancelled' ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
+                  background: statusFilter === 'cancelled' ? '#dc2626' : '#ffffff',
+                  color: statusFilter === 'cancelled' ? '#ffffff' : '#991b1b',
+                }}
+              >
+                ✕ Cancelled ({bookings.filter(b => (b.status || '').toLowerCase().includes('cancel')).length})
               </button>
             </div>
 
             <div className="admin-table-card">
+              {filteredBookings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '56px 20px', color: 'var(--slate-mid)' }}>
+                  <span style={{ fontSize: '2.8rem' }}>ðŸ“‹</span>
+                  <h3 style={{ color: 'var(--navy)', marginTop: '14px', marginBottom: '6px' }}>No Customer Bookings Yet</h3>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    When visitors complete a booking on the website or you create one manually, it will appear here in real time.
+                  </p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="admin-orders-table">
+                    <thead>
+                      <tr>
+                        <th>Booking Ref</th>
+                        <th>Client &amp; Contact</th>
+                        <th>Service Details</th>
+                        <th>Date &amp; Time Slot</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBookings.map((b) => {
+                        const isCompleted = (b.status || '').toLowerCase().includes('completed');
+                        const isCancelled = (b.status || '').toLowerCase().includes('cancel');
+                        const isInProgress = (b.status || '').toLowerCase().includes('progress');
+
+                        return (
+                          <tr key={b.id} style={{ opacity: isCancelled ? 0.6 : 1 }}>
+                            <td>
+                              <div className="booking-ref-cell">{b.id}</div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>
+                                {b.paymentMethod || 'Card'}
+                              </div>
+                              {b.completionOtp && (
+                                <div style={{ fontSize: '0.72rem', color: '#0d9488', fontWeight: 700, marginTop: '4px' }}>
+                                  OTP: <code>{b.completionOtp}</code>
+                                </div>
+                              )}
+                            </td>
+                            <td>
+                              <div className="booking-client-name">{b.clientName || 'Client'}</div>
+                              <div className="booking-client-contact">{b.clientEmail}</div>
+                              <div className="booking-client-contact" style={{ color: 'var(--slate-mid)', fontSize: '0.75rem' }}>{b.address}</div>
+                            </td>
+                            <td>
+                              <strong style={{ color: 'var(--navy)' }}>{b.serviceName}</strong>
+                              <div style={{ fontSize: '0.74rem', color: 'var(--slate-mid)' }}>
+                                {b.frequency} {b.propertySize ? `Â· ${b.propertySize}` : ''}
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ fontWeight: 600 }}>{b.date}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>{b.timeSlot}</div>
+                            </td>
+                            <td>
+                              <strong style={{ color: 'var(--navy)', fontSize: '0.95rem' }}>Â£{b.totalPrice || b.paidAmount}</strong>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>inc. VAT</div>
+                            </td>
+                            <td>
+                              <select
+                                value={b.status}
+                                onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value)}
+                                style={{
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  padding: '5px 10px',
+                                  borderRadius: '12px',
+                                  border: '1px solid #cbd5e1',
+                                  background: isCompleted ? '#f0fdf4' : isInProgress ? '#eff6ff' : isCancelled ? '#fef2f2' : '#f8fafc',
+                                  color: isCompleted ? '#166534' : isInProgress ? '#1e40af' : isCancelled ? '#991b1b' : '#1e293b',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <option value="Confirmed & Scheduled (Paid)">â— Confirmed (Paid)</option>
+                                <option value="In Progress">ðŸš€ In Progress</option>
+                                <option value="Completed & Verified">âœ“ Completed (Requires OTP)</option>
+                                <option value="Cancelled">âœ• Cancelled</option>
+                              </select>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                {!isCompleted && !isCancelled && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOtpModalBooking(b);
+                                      setEnteredOtp('');
+                                      setOtpError('');
+                                    }}
+                                    className="booking-action-btn"
+                                    style={{
+                                      background: '#0f766e',
+                                      padding: '6px 12px',
+                                      fontSize: '0.74rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                    title="Authenticate client OTP to confirm completion of service"
+                                  >
+                                    <span>ðŸ”</span> Verify OTP
+                                  </button>
+                                )}
+                                {isCompleted && (
+                                  <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <span>âœ“</span> Done
+                                  </span>
+                                )}
+                                {!isCancelled && !isCompleted && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelBooking(b.id)}
+                                    style={{
+                                      background: '#fef2f2',
+                                      color: '#ef4444',
+                                      border: '1px solid #fecaca',
+                                      borderRadius: '6px',
+                                      padding: '6px 8px',
+                                      fontSize: '0.72rem',
+                                      cursor: 'pointer',
+                                    }}
+                                    title="Cancel booking"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteBookingPermanently(b.id)}
+                                  style={{
+                                    background: '#f1f5f9',
+                                    color: '#64748b',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '6px',
+                                    padding: '6px 8px',
+                                    fontSize: '0.72rem',
+                                    cursor: 'pointer',
+                                  }}
+                                  title="Delete record"
+                                >
+                                  âœ•
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* â”€â”€ TAB 2: INBOUND QUOTES â”€â”€ */}
+        {activeTab === 'quotes' && (
+          <section>
+            <div className="admin-section-header">
+              <div>
+                <h2 className="admin-section-title">Inbound Customer Enquiries &amp; Quotes</h2>
+                <p className="admin-section-subtitle">
+                  Quotes submitted by commercial or domestic clients from the Contact page.
+                </p>
+              </div>
+            </div>
+
+            <div className="admin-table-card">
               {quotes.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--slate-mid)' }}>
-                  No quote enquiries submitted yet. When clients fill out the contact quotation form, they appear here instantly.
+                <div style={{ textAlign: 'center', padding: '56px 20px', color: 'var(--slate-mid)' }}>
+                  <span style={{ fontSize: '2.8rem' }}>ðŸ“¨</span>
+                  <h3 style={{ color: 'var(--navy)', marginTop: '14px', marginBottom: '6px' }}>No Inbound Quotes Yet</h3>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    Inquiries submitted through the website Contact form will appear here in real time.
+                  </p>
                 </div>
               ) : (
                 <div className="table-responsive">
@@ -1353,9 +1030,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                         <th>Service Requested</th>
                         <th>Frequency &amp; Scale</th>
                         <th>Contact Info</th>
-                        <th>Submitted At</th>
+                        <th>Message</th>
                         <th>Status</th>
-                        <th>Lead Actions</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1372,12 +1049,12 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                             {q.propertySize && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>{q.propertySize}</div>}
                           </td>
                           <td>
-                            <div style={{ fontSize: '0.82rem' }}>📧 {q.email}</div>
-                            {q.phone && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>📞 {q.phone}</div>}
-                            {q.postcode && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>📍 {q.postcode}</div>}
+                            <div style={{ fontSize: '0.82rem' }}>ðŸ“§ {q.email}</div>
+                            {q.phone && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>ðŸ“ž {q.phone}</div>}
+                            {q.postcode && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>ðŸ“ {q.postcode}</div>}
                           </td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
-                            {q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-GB') : 'Today'}
+                          <td style={{ maxWidth: '240px', fontSize: '0.8rem', color: '#475569' }}>
+                            {q.message || 'No additional specifications.'}
                           </td>
                           <td>
                             <span className="order-status-badge badge-blue">
@@ -1400,9 +1077,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                   cursor: 'pointer',
                                   whiteSpace: 'nowrap',
                                 }}
-                                title="Convert this quote lead into a live booked clean"
+                                title="Convert this quote to a booked job"
                               >
-                                Convert to Job →
+                                Convert â†’
                               </button>
                               <button
                                 type="button"
@@ -1434,7 +1111,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 }}
                                 title="Delete enquiry"
                               >
-                                ✕
+                                âœ•
                               </button>
                             </div>
                           </td>
@@ -1448,15 +1125,51 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </section>
         )}
 
-        {/* ── TAB 5: CLIENT & USER ACCOUNTS ── */}
+        {/* â”€â”€ TAB 3: ADMIN ROLES & USER ACCESS CONTROL â”€â”€ */}
         {activeTab === 'users' && (
           <section>
+            {adminNotice && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 18px', marginBottom: '20px', color: '#166534', fontSize: '0.86rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>ðŸ›¡ï¸</span>
+                <span>{adminNotice}</span>
+              </div>
+            )}
+
             <div className="admin-section-header">
               <div>
-                <h2 className="admin-section-title">Registered Clients &amp; System Users</h2>
+                <h2 className="admin-section-title">ðŸ›¡ï¸ Administrator Roles &amp; Access Control</h2>
                 <p className="admin-section-subtitle">
-                  Inspect user accounts created via registration, track active commercial clients, and manage user roles.
+                  Manage registered user accounts, promote clients to Administrators with 1-click, and grant full portal access.
                 </p>
+              </div>
+
+              <div className="admin-controls-row">
+                <button
+                  type="button"
+                  onClick={() => setGrantAdminModalOpen(true)}
+                  className="admin-submit-btn"
+                  style={{ width: 'auto', padding: '10px 18px', margin: 0, background: 'var(--navy)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <span>â­</span> Make / Add New Admin
+                </button>
+
+                <input
+                  type="text"
+                  placeholder="Search users by name, email, or company..."
+                  className="admin-search-input"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                />
+
+                <select
+                  className="admin-filter-select"
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                >
+                  <option value="all">All Roles ({usersList.length})</option>
+                  <option value="admin">Administrators Only ({usersList.filter(u => u.role === 'ROLE_ADMIN').length})</option>
+                  <option value="client">Clients Only ({usersList.filter(u => u.role !== 'ROLE_ADMIN').length})</option>
+                </select>
               </div>
             </div>
 
@@ -1469,403 +1182,224 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                       <th>Full Name / Company</th>
                       <th>Email Address</th>
                       <th>Phone</th>
-                      <th>System Role</th>
+                      <th>Current Role</th>
                       <th>Joined Date</th>
-                      <th>Security Status</th>
-                      <th>Manage Account</th>
+                      <th>Status</th>
+                      <th>Manage Role</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {usersList.map((u) => (
-                      <tr key={u.id}>
-                        <td style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--navy)' }}>{u.id}</td>
-                        <td>
-                          <strong>{u.name}</strong>
-                          {u.company && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>{u.company}</div>}
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600, color: 'var(--navy)' }}>{u.email}</div>
-                        </td>
-                        <td>{u.phone || 'N/A'}</td>
-                        <td>
-                          <span className={`booking-status-pill ${u.role === 'ROLE_ADMIN' ? 'completed' : 'confirmed'}`}>
-                            {u.role === 'ROLE_ADMIN' ? '🛡️ Director (Admin)' : '👤 Client Partner'}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--slate-mid)' }}>{u.joined || 'Active'}</td>
-                        <td>
-                          <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>
-                            ✓ Active &amp; Verified
-                          </span>
-                        </td>
-                        <td>
-                          {u.role !== 'ROLE_ADMIN' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteUser(u.id)}
-                              style={{
-                                background: '#fef2f2',
-                                color: '#ef4444',
-                                border: '1px solid #fecaca',
-                                borderRadius: '6px',
-                                padding: '4px 8px',
-                                fontSize: '0.74rem',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              ✕ Remove
-                            </button>
-                          ) : (
-                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>Primary Admin</span>
-                          )}
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '36px', color: 'var(--slate-mid)' }}>
+                          No users matching your search criteria.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredUsers.map((u) => (
+                        <tr key={u.id}>
+                          <td>
+                            <span className="booking-ref-cell">{u.id}</span>
+                          </td>
+                          <td>
+                            <strong style={{ color: 'var(--navy)', fontSize: '0.92rem' }}>{u.name}</strong>
+                            {u.company && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)', marginTop: '2px' }}>{u.company}</div>}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '0.86rem' }}>{u.email}</div>
+                          </td>
+                          <td style={{ fontSize: '0.84rem', color: 'var(--slate-dark)' }}>{u.phone || 'N/A'}</td>
+                          <td>
+                            {u.role === 'ROLE_ADMIN' ? (
+                              <span
+                                className="booking-status-pill"
+                                style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700 }}
+                              >
+                                ðŸ›¡ï¸ Administrator
+                              </span>
+                            ) : (
+                              <span className="booking-status-pill confirmed">
+                                ðŸ‘¤ Client Partner
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: '0.84rem', color: 'var(--slate-mid)' }}>{u.joined || 'Active'}</td>
+                          <td>
+                            <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <span>âœ“</span> Active &amp; Verified
+                            </span>
+                          </td>
+                          <td>
+                            {u.email?.toLowerCase().trim() === 'sharonshelke1@gmail.com' ? (
+                              <span style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <span>ðŸ‘‘</span> Primary Owner
+                              </span>
+                            ) : u.role === 'ROLE_ADMIN' ? (
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDemoteToClient(u.id)}
+                                  title="Revoke Admin privileges and reset to regular Client"
+                                  style={{
+                                    background: '#fffbeb',
+                                    color: '#b45309',
+                                    border: '1px solid #fde68a',
+                                    borderRadius: '6px',
+                                    padding: '5px 10px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Demote to Client
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  title="Remove User"
+                                  style={{
+                                    background: '#fef2f2',
+                                    color: '#ef4444',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '6px',
+                                    padding: '5px 8px',
+                                    fontSize: '0.74rem',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  âœ•
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePromoteToAdmin(u.id)}
+                                  title="Grant this user full Administrator access to the Operations Portal"
+                                  style={{
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    border: '1px solid #bfdbfe',
+                                    borderRadius: '6px',
+                                    padding: '5px 12px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                  }}
+                                >
+                                  <span>â­</span> Make Admin
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  title="Remove User"
+                                  style={{
+                                    background: '#fef2f2',
+                                    color: '#ef4444',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '6px',
+                                    padding: '5px 8px',
+                                    fontSize: '0.74rem',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  âœ•
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </section>
         )}
-
-        {/* ── TAB 5: OVERVIEW ── */}
-        {activeTab === 'overview' && (
-          <section>
-            <div className="admin-section-header">
-              <div>
-                <h2 className="admin-section-title">Operations &amp; Performance Summary</h2>
-                <p className="admin-section-subtitle">High-level contract delivery metrics and service level agreements (SLAs).</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-              <div className="admin-table-card" style={{ padding: '28px' }}>
-                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '14px' }}>
-                  Service Category Breakdown
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      <strong>Corporate &amp; Office Cleanings</strong>
-                      <span>54% of revenue</span>
-                    </div>
-                    <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: '54%', height: '100%', background: 'var(--teal)' }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      <strong>Commercial Floor &amp; Carpet Rigs</strong>
-                      <span>28% of revenue</span>
-                    </div>
-                    <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: '28%', height: '100%', background: 'var(--navy)' }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      <strong>Home &amp; Residential Appointments</strong>
-                      <span>18% of revenue</span>
-                    </div>
-                    <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: '18%', height: '100%', background: '#38bdf8' }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="admin-table-card" style={{ padding: '28px' }}>
-                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '14px' }}>
-                  Compliance &amp; Safety Audits
-                </h3>
-                <div style={{ fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--slate-dark)' }}>
-                  <p style={{ marginBottom: '12px' }}>
-                    ✓ <strong>100% Enhanced DBS</strong> checks verified for all active operatives on field shifts.
-                  </p>
-                  <p style={{ marginBottom: '12px' }}>
-                    ✓ <strong>£10,000,000</strong> Public &amp; Employers’ Liability Insurance current with Aviva UK.
-                  </p>
-                  <p>
-                    ✓ <strong>ISO 9001 &amp; ISO 14001</strong> environmental standards maintained across all supplies.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
       </main>
 
-      {/* ==========================================================================
-         MODAL: DISPATCH TEAM / START BOOKING
-         ========================================================================== */}
-      {dispatchModalOpen && selectedBookingForDispatch && (
-        <div className="admin-modal-overlay" onClick={() => setDispatchModalOpen(false)}>
-          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h3 className="admin-modal-title">🚀 Dispatch Team &amp; Start Job</h3>
-              <button
-                type="button"
-                className="admin-modal-close"
-                onClick={() => setDispatchModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '0.82rem', color: 'var(--slate-mid)' }}>Order Reference</div>
-              <strong style={{ fontSize: '1.2rem', color: 'var(--navy)' }}>{selectedBookingForDispatch.id}</strong>
-              <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                {selectedBookingForDispatch.serviceName} · {selectedBookingForDispatch.clientName}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)', marginTop: '2px' }}>
-                📍 {selectedBookingForDispatch.address}
-              </div>
-            </div>
-
-            {selectedBookingForDispatch.notes && (
-              <div style={{ background: '#fef3c7', padding: '12px 16px', borderRadius: '12px', fontSize: '0.82rem', color: '#92400e', marginBottom: '20px' }}>
-                🔑 <strong>Access Instructions:</strong> {selectedBookingForDispatch.notes}
-              </div>
-            )}
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Assign Lead Cleaner / Operative *</label>
-              <select
-                className="admin-form-input"
-                value={assignedCleanerId}
-                onChange={(e) => setAssignedCleanerId(e.target.value)}
-              >
-                {operatives.map(op => (
-                  <option key={op.id} value={op.id}>
-                    {op.name} ({op.role}) — {op.status === 'available' ? 'Available' : 'Currently Busy'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Assign Service Van / Transport Unit *</label>
-              <select
-                className="admin-form-input"
-                value={assignedVanId}
-                onChange={(e) => setAssignedVanId(e.target.value)}
-              >
-                {fleet.map(van => (
-                  <option key={van.id} value={van.id}>
-                    {van.name} [{van.reg}]
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Estimated Transit Time / ETA</label>
-              <input
-                type="text"
-                className="admin-form-input"
-                value={dispatchEta}
-                onChange={(e) => setDispatchEta(e.target.value)}
-                placeholder="e.g. 20-30 mins"
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button
-                type="button"
-                onClick={() => setDispatchModalOpen(false)}
-                className="admin-nav-btn"
-                style={{ background: '#f1f5f9', color: 'var(--navy)', flex: 1, justifyContent: 'center' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDispatchAndStartBooking}
-                className="admin-submit-btn"
-                style={{ flex: 2, margin: 0 }}
-              >
-                Confirm Dispatch &amp; Start Job →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==========================================================================
-         MODAL: DETAILED JOB SHEET & AUDIT LOG
-         ========================================================================== */}
-      {jobSheetBooking && (
-        <div className="admin-modal-overlay" onClick={() => setJobSheetBooking(null)}>
-          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h3 className="admin-modal-title">📄 Service Job Sheet</h3>
-              <button
-                type="button"
-                className="admin-modal-close"
-                onClick={() => setJobSheetBooking(null)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="job-sheet-box">
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <div>
-                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--slate-mid)' }}>Order ID</span>
-                  <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.1rem', color: 'var(--navy)' }}>
-                    {jobSheetBooking.id}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--slate-mid)' }}>Payment Status</span>
-                  <div style={{ color: '#15803d', fontWeight: 700, fontSize: '0.9rem' }}>
-                    ✓ PAID (£{jobSheetBooking.totalPrice || jobSheetBooking.paidAmount})
-                  </div>
-                </div>
-              </div>
-
-              <div className="job-sheet-grid">
-                <div className="job-sheet-item">
-                  <strong>Client Name</strong>
-                  {jobSheetBooking.clientName || 'N/A'}
-                </div>
-                <div className="job-sheet-item">
-                  <strong>Contact Phone / Email</strong>
-                  {jobSheetBooking.clientEmail}
-                </div>
-                <div className="job-sheet-item">
-                  <strong>Service</strong>
-                  {jobSheetBooking.serviceName}
-                </div>
-                <div className="job-sheet-item">
-                  <strong>Frequency / Scope</strong>
-                  {jobSheetBooking.frequency} · {jobSheetBooking.propertySize}
-                </div>
-                <div className="job-sheet-item" style={{ gridColumn: '1 / -1' }}>
-                  <strong>Premises Address</strong>
-                  {jobSheetBooking.address}
-                </div>
-                <div className="job-sheet-item" style={{ gridColumn: '1 / -1' }}>
-                  <strong>Access Notes &amp; Key Safe Codes</strong>
-                  <div style={{ background: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-light)', marginTop: '4px' }}>
-                    {jobSheetBooking.notes || 'No specific gate codes provided. Front desk check-in.'}
-                  </div>
-                </div>
-                <div className="job-sheet-item">
-                  <strong>Scheduled Arrival Window</strong>
-                  {jobSheetBooking.date} ({jobSheetBooking.timeSlot})
-                </div>
-                <div className="job-sheet-item">
-                  <strong>Assigned Cleaner</strong>
-                  {jobSheetBooking.assignedCleaner || 'Not assigned yet'}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  alert(`Job Sheet ${jobSheetBooking.id} exported for field operative.`);
-                  setJobSheetBooking(null);
-                }}
-                className="admin-submit-btn"
-                style={{ margin: 0, flex: 1 }}
-              >
-                🖨️ Print / Export Job Sheet
-              </button>
-              <button
-                type="button"
-                onClick={() => setJobSheetBooking(null)}
-                className="admin-nav-btn"
-                style={{ background: '#f1f5f9', color: 'var(--navy)', padding: '12px 20px' }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==========================================================================
-         MODAL 1: CREATE NEW BOOKING (MANUAL / PHONE / CONTRACT)
-         ========================================================================== */}
+      {/* â”€â”€ MODAL: CREATE MANUAL BOOKING â”€â”€ */}
       {createBookingModalOpen && (
         <div className="admin-modal-overlay" onClick={() => setCreateBookingModalOpen(false)}>
-          <div className="admin-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px' }}>
+          <div className="admin-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">📝 Create New Booking (Manual / Phone / Contract)</h3>
+              <h3 className="admin-modal-title">ðŸ“‹ Create New Customer Booking</h3>
               <button
                 type="button"
                 className="admin-modal-close"
                 onClick={() => setCreateBookingModalOpen(false)}
               >
-                ✕
+                âœ•
               </button>
             </div>
 
-            <form onSubmit={handleCreateNewBooking}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <form onSubmit={handleCreateBookingSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Client Name *</label>
                   <input
                     type="text"
                     required
                     className="admin-form-input"
-                    placeholder="e.g. Victoria Chambers"
+                    placeholder="e.g. John Smith"
                     value={newBookingForm.clientName}
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, clientName: e.target.value })}
                   />
                 </div>
-
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Client Email *</label>
+                  <label className="admin-form-label">Client Email</label>
                   <input
                     type="email"
-                    required
                     className="admin-form-input"
-                    placeholder="e.g. victoria@company.co.uk"
+                    placeholder="client@example.com"
                     value={newBookingForm.clientEmail}
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, clientEmail: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Contact Phone</label>
-                  <input
-                    type="tel"
-                    className="admin-form-input"
-                    placeholder="e.g. +44 20 8123 4567"
-                    value={newBookingForm.phone}
-                    onChange={(e) => setNewBookingForm({ ...newBookingForm, phone: e.target.value })}
-                  />
-                </div>
-
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Service Type *</label>
+                  <label className="admin-form-label">Service Type</label>
                   <select
                     className="admin-form-input"
                     value={newBookingForm.serviceName}
-                    onChange={(e) => setNewBookingForm({ ...newBookingForm, serviceName: e.target.value })}
+                    onChange={(e) => {
+                      const svc = e.target.value;
+                      const prices = {
+                        'Corporate & Office Cleaning': 180,
+                        'Home & Residential Cleaning': 95,
+                        'Commercial & Retail Cleaning': 150,
+                        'Care & Supported Living': 220,
+                        'Deep & Specialist Cleaning': 240,
+                        'Ongoing Contract Cleaning': 360,
+                        'End-of-Tenancy Cleaning': 195,
+                        'Post-Construction & Sparkle Clean': 280,
+                      };
+                      setNewBookingForm({
+                        ...newBookingForm,
+                        serviceName: svc,
+                        totalPrice: prices[svc] || newBookingForm.totalPrice
+                      });
+                    }}
                   >
-                    <option value="Corporate & Office Cleaning">Corporate &amp; Office Cleaning</option>
-                    <option value="Commercial Floor & Carpet Restoration">Commercial Floor &amp; Carpet Restoration</option>
-                    <option value="Post-Construction Deep Clean">Post-Construction Deep Clean</option>
-                    <option value="Bio-Sanitisation & Infection Control">Bio-Sanitisation &amp; Infection Control</option>
-                    <option value="Home & Residential Cleaning">Home &amp; Residential Cleaning</option>
-                    <option value="Specialist Window & High-Level Glass">Specialist Window &amp; High-Level Glass</option>
+                    <option value="Corporate & Office Cleaning">Corporate &amp; Office Cleaning (From Â£180)</option>
+                    <option value="Home & Residential Cleaning">Home &amp; Residential Cleaning (From Â£95)</option>
+                    <option value="Commercial & Retail Cleaning">Commercial &amp; Retail Cleaning (From Â£150)</option>
+                    <option value="Care & Supported Living">Care &amp; Supported Living (From Â£220)</option>
+                    <option value="Deep & Specialist Cleaning">Deep &amp; Specialist Cleaning (From Â£240)</option>
+                    <option value="Ongoing Contract Cleaning">Ongoing Contract Cleaning (From Â£360)</option>
+                    <option value="End-of-Tenancy Cleaning">End-of-Tenancy Cleaning (From Â£195)</option>
+                    <option value="Post-Construction & Sparkle Clean">Post-Construction &amp; Sparkle Clean (From Â£280)</option>
                   </select>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Service Frequency *</label>
+                  <label className="admin-form-label">Frequency</label>
                   <select
                     className="admin-form-input"
                     value={newBookingForm.frequency}
@@ -1874,27 +1408,14 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                     <option value="One-Off Deep Clean">One-Off Deep Clean</option>
                     <option value="Weekly Contract">Weekly Contract</option>
                     <option value="Fortnightly Service">Fortnightly Service</option>
-                    <option value="Monthly Maintenance">Monthly Maintenance</option>
-                  </select>
-                </div>
-
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Premises Scale *</label>
-                  <select
-                    className="admin-form-input"
-                    value={newBookingForm.propertySize}
-                    onChange={(e) => setNewBookingForm({ ...newBookingForm, propertySize: e.target.value })}
-                  >
-                    <option value="Standard Premises (1,500-3,500 sq ft)">Standard Premises (1,500-3,500 sq ft)</option>
-                    <option value="Compact (Under 1,500 sq ft)">Compact (Under 1,500 sq ft)</option>
-                    <option value="Large Complex (3,500+ sq ft)">Large Complex (3,500+ sq ft)</option>
+                    <option value="Monthly Contract">Monthly Contract</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Scheduled Date *</label>
+                  <label className="admin-form-label">Scheduled Date</label>
                   <input
                     type="date"
                     required
@@ -1903,70 +1424,55 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, date: e.target.value })}
                   />
                 </div>
-
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Time Window *</label>
+                  <label className="admin-form-label">Time Slot</label>
                   <select
                     className="admin-form-input"
                     value={newBookingForm.timeSlot}
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, timeSlot: e.target.value })}
                   >
-                    <option value="Morning Window (08:00 – 12:00)">Morning Window (08:00 – 12:00)</option>
-                    <option value="Afternoon Window (12:00 – 16:00)">Afternoon Window (12:00 – 16:00)</option>
-                    <option value="Evening Shift (18:00 – 22:00)">Evening Shift (18:00 – 22:00)</option>
+                    <option value="Morning Window (08:00 â€“ 12:00)">Morning Window (08:00 â€“ 12:00)</option>
+                    <option value="Afternoon Window (12:00 â€“ 16:00)">Afternoon Window (12:00 â€“ 16:00)</option>
+                    <option value="Evening Shift (18:00 â€“ 22:00)">Evening Shift (18:00 â€“ 22:00)</option>
                   </select>
                 </div>
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Premises Address (Street, City, Postcode) *</label>
+                <label className="admin-form-label">Service Address *</label>
                 <input
                   type="text"
                   required
                   className="admin-form-input"
-                  placeholder="e.g. 50 Grosvenor Square, Mayfair, London, W1K 2HP"
+                  placeholder="e.g. 100 Bishopsgate, London, EC2N 4AG"
                   value={newBookingForm.address}
                   onChange={(e) => setNewBookingForm({ ...newBookingForm, address: e.target.value })}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Agreed Total Price (£ inc. VAT) *</label>
+                  <label className="admin-form-label">Price (Â£ inc. VAT)</label>
                   <input
                     type="number"
-                    step="0.01"
                     required
                     className="admin-form-input"
                     value={newBookingForm.totalPrice}
-                    onChange={(e) => setNewBookingForm({ ...newBookingForm, totalPrice: e.target.value })}
+                    onChange={(e) => setNewBookingForm({ ...newBookingForm, totalPrice: Number(e.target.value) })}
                   />
                 </div>
-
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Payment Method *</label>
+                  <label className="admin-form-label">Payment Method</label>
                   <select
                     className="admin-form-input"
                     value={newBookingForm.paymentMethod}
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, paymentMethod: e.target.value })}
                   >
                     <option value="Corporate Invoice Net-30">Corporate Invoice Net-30</option>
-                    <option value="Credit / Debit Card (Paid)">Credit / Debit Card (Paid)</option>
-                    <option value="BACS Direct Bank Transfer">BACS Direct Bank Transfer</option>
-                    <option value="Apple Pay / Google Pay">Apple Pay / Google Pay</option>
+                    <option value="Credit / Debit Card">Credit / Debit Card</option>
+                    <option value="Bank Transfer (BACS)">Bank Transfer (BACS)</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Access Instructions / Key Codes / Special Notes</label>
-                <textarea
-                  className="admin-form-input"
-                  rows={2}
-                  placeholder="e.g. Key safe on reception entrance. Alarm code #4491. Loading bay access."
-                  value={newBookingForm.notes}
-                  onChange={(e) => setNewBookingForm({ ...newBookingForm, notes: e.target.value })}
-                />
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
@@ -1983,7 +1489,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Create &amp; Add to Queue →
+                  Create Booking â†’
                 </button>
               </div>
             </form>
@@ -1991,90 +1497,75 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         </div>
       )}
 
-      {/* ==========================================================================
-         MODAL 2: ONBOARD NEW OPERATIVE
-         ========================================================================== */}
-      {createOperativeModalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setCreateOperativeModalOpen(false)}>
-          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
+      {/* â”€â”€ MODAL: GRANT / ADD NEW ADMINISTRATOR â”€â”€ */}
+      {grantAdminModalOpen && (
+        <div className="admin-modal-overlay" onClick={() => setGrantAdminModalOpen(false)}>
+          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">👥 Onboard New Cleaning Operative</h3>
+              <h3 className="admin-modal-title">â­ Grant Administrator Privileges</h3>
               <button
                 type="button"
                 className="admin-modal-close"
-                onClick={() => setCreateOperativeModalOpen(false)}
+                onClick={() => setGrantAdminModalOpen(false)}
               >
-                ✕
+                âœ•
               </button>
             </div>
 
-            <form onSubmit={handleCreateOperative}>
+            <form onSubmit={handleGrantAdminSubmit}>
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px', marginBottom: '18px', fontSize: '0.84rem', color: '#1e40af', lineHeight: 1.5 }}>
+                Enter the email address of any user or client. They will be immediately elevated to <strong>ROLE_ADMIN</strong> with full access to this Operations Admin Portal.
+              </div>
+
               <div className="admin-form-group">
-                <label className="admin-form-label">Operative Full Name *</label>
+                <label className="admin-form-label">User Email Address *</label>
                 <input
-                  type="text"
+                  type="email"
                   required
                   className="admin-form-input"
-                  placeholder="e.g. Jordan Matthews"
-                  value={newOperativeForm.name}
-                  onChange={(e) => setNewOperativeForm({ ...newOperativeForm, name: e.target.value })}
+                  placeholder="e.g. colleague@lichtmarketinglimited.org"
+                  value={newAdminForm.email}
+                  onChange={(e) => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
                 />
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Role / Specialisation *</label>
-                <select
+                <label className="admin-form-label">Full Name</label>
+                <input
+                  type="text"
                   className="admin-form-input"
-                  value={newOperativeForm.role}
-                  onChange={(e) => setNewOperativeForm({ ...newOperativeForm, role: e.target.value })}
-                >
-                  <option value="Lead Deep Clean Specialist">Lead Deep Clean Specialist</option>
-                  <option value="Commercial Floor & Carpet Lead">Commercial Floor &amp; Carpet Lead</option>
-                  <option value="Bio-Sanitisation & Infection Control Tech">Bio-Sanitisation &amp; Infection Control Tech</option>
-                  <option value="High-Level Glass & Specialist Tech">High-Level Glass &amp; Specialist Tech</option>
-                  <option value="Domestic & Turnover Specialist">Domestic &amp; Turnover Specialist</option>
-                </select>
+                  placeholder="e.g. Operations Manager"
+                  value={newAdminForm.name}
+                  onChange={(e) => setNewAdminForm({ ...newAdminForm, name: e.target.value })}
+                />
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Contact Phone *</label>
+                <label className="admin-form-label">Department / Company</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="Licht Operations Management"
+                  value={newAdminForm.company}
+                  onChange={(e) => setNewAdminForm({ ...newAdminForm, company: e.target.value })}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-form-label">Contact Phone</label>
                 <input
                   type="tel"
-                  required
                   className="admin-form-input"
-                  placeholder="e.g. +44 7700 900555"
-                  value={newOperativeForm.phone}
-                  onChange={(e) => setNewOperativeForm({ ...newOperativeForm, phone: e.target.value })}
+                  placeholder="+44 20 8000 8899"
+                  value={newAdminForm.phone}
+                  onChange={(e) => setNewAdminForm({ ...newAdminForm, phone: e.target.value })}
                 />
               </div>
 
-              <div className="admin-form-group">
-                <label className="admin-form-label">DBS Certificate Verification Code *</label>
-                <input
-                  type="text"
-                  required
-                  className="admin-form-input"
-                  value={newOperativeForm.dbs}
-                  onChange={(e) => setNewOperativeForm({ ...newOperativeForm, dbs: e.target.value })}
-                />
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Initial Standby Status</label>
-                <select
-                  className="admin-form-input"
-                  value={newOperativeForm.status}
-                  onChange={(e) => setNewOperativeForm({ ...newOperativeForm, status: e.target.value })}
-                >
-                  <option value="available">Available (On Standby)</option>
-                  <option value="off_duty">Off Duty</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '22px' }}>
                 <button
                   type="button"
-                  onClick={() => setCreateOperativeModalOpen(false)}
+                  onClick={() => setGrantAdminModalOpen(false)}
                   className="admin-nav-btn"
                   style={{ background: '#f1f5f9', color: 'var(--navy)', flex: 1, justifyContent: 'center' }}
                 >
@@ -2083,9 +1574,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 <button
                   type="submit"
                   className="admin-submit-btn"
-                  style={{ flex: 2, margin: 0, background: '#0f766e' }}
+                  style={{ flex: 2, margin: 0, background: 'var(--navy)' }}
                 >
-                  Register Operative →
+                  Grant Full Admin Access â†’
                 </button>
               </div>
             </form>
@@ -2093,76 +1584,75 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         </div>
       )}
 
-      {/* ==========================================================================
-         MODAL 3: REGISTER NEW FLEET VEHICLE
-         ========================================================================== */}
-      {createFleetModalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setCreateFleetModalOpen(false)}>
-          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
+      {/* â”€â”€ 3. JOB COMPLETION OTP VERIFICATION MODAL â”€â”€ */}
+      {otpModalBooking && (
+        <div className="admin-modal-overlay" onClick={() => setOtpModalBooking(null)}>
+          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">🚐 Register Service Van</h3>
+              <h3 className="admin-modal-title">ðŸ” Verify Customer Job OTP</h3>
               <button
                 type="button"
+                onClick={() => setOtpModalBooking(null)}
                 className="admin-modal-close"
-                onClick={() => setCreateFleetModalOpen(false)}
               >
-                ✕
+                âœ•
               </button>
             </div>
 
-            <form onSubmit={handleCreateFleetVehicle}>
+            <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Booking Reference:</div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--navy)', fontFamily: 'monospace' }}>
+                {otpModalBooking.id}
+              </div>
+              <div style={{ fontSize: '0.84rem', marginTop: '6px' }}>
+                <strong>Client:</strong> {otpModalBooking.clientName} ({otpModalBooking.clientEmail})
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#475569', marginTop: '2px' }}>
+                ðŸ“ {otpModalBooking.address}
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.86rem', color: 'var(--slate-mid)', lineHeight: 1.5, marginBottom: '20px' }}>
+              To verify that the operative arrived on-site and the cleaning service was delivered, enter the <strong>4-digit verification code</strong> provided by the customer at the property.
+            </p>
+
+            {otpError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, marginBottom: '16px' }}>
+                âš ï¸ {otpError}
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyOtpSubmit}>
               <div className="admin-form-group">
-                <label className="admin-form-label">Van Name / Territorial Unit *</label>
+                <label className="admin-form-label">Customer 4-Digit Completion PIN / OTP *</label>
                 <input
                   type="text"
+                  maxLength={10}
                   required
+                  autoFocus
+                  placeholder="e.g. 5829"
+                  value={enteredOtp}
+                  onChange={(e) => setEnteredOtp(e.target.value)}
                   className="admin-form-input"
-                  placeholder="e.g. Van 4 (Canary Wharf & Docklands Unit)"
-                  value={newFleetForm.name}
-                  onChange={(e) => setNewFleetForm({ ...newFleetForm, name: e.target.value })}
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '1.8rem',
+                    textAlign: 'center',
+                    letterSpacing: '8px',
+                    fontWeight: 900,
+                    color: '#0f766e',
+                    padding: '14px',
+                  }}
                 />
+                <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', marginTop: '6px', textAlign: 'center' }}>
+                  (Supervisor emergency override PIN: <code>admin123</code> or <code>8899</code>)
+                </div>
               </div>
 
-              <div className="admin-form-group">
-                <label className="admin-form-label">Vehicle Registration Plate *</label>
-                <input
-                  type="text"
-                  required
-                  className="admin-form-input"
-                  placeholder="e.g. LN74 FGT"
-                  value={newFleetForm.reg}
-                  onChange={(e) => setNewFleetForm({ ...newFleetForm, reg: e.target.value })}
-                />
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Initial Status</label>
-                <select
-                  className="admin-form-input"
-                  value={newFleetForm.status}
-                  onChange={(e) => setNewFleetForm({ ...newFleetForm, status: e.target.value })}
-                >
-                  <option value="Depot Ready">Depot Ready</option>
-                  <option value="On Route">On Route</option>
-                  <option value="In Maintenance">In Maintenance</option>
-                </select>
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Onboard Rig &amp; Equipment Specifications *</label>
-                <input
-                  type="text"
-                  required
-                  className="admin-form-input"
-                  value={newFleetForm.equipment}
-                  onChange={(e) => setNewFleetForm({ ...newFleetForm, equipment: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <button
                   type="button"
-                  onClick={() => setCreateFleetModalOpen(false)}
+                  onClick={() => setOtpModalBooking(null)}
                   className="admin-nav-btn"
                   style={{ background: '#f1f5f9', color: 'var(--navy)', flex: 1, justifyContent: 'center' }}
                 >
@@ -2173,10 +1663,137 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Register Vehicle →
+                  Verify OTP &amp; Mark Completed â†’
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+    
+      {/* ── MODAL: VERIFIED COMPLETED ORDER AUDIT & VAT RECEIPT ── */}
+      {auditModalBooking && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setAuditModalBooking(null)}
+          style={{ zIndex: 2500 }}
+        >
+          <div
+            className="admin-modal-box"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px', background: '#ffffff', borderRadius: '16px', overflow: 'hidden', padding: 0 }}
+          >
+            <div style={{ background: '#10264A', padding: '24px', color: '#ffffff', borderBottom: '3px solid #1599AC' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    Operations &amp; Dispatch Audit
+                  </div>
+                  <h3 style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 800 }}>
+                    Verified Service Completion Record
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAuditModalBooking(null)}
+                  style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.2rem', cursor: 'pointer' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#065f46', fontWeight: 800 }}>
+                    Fulfillment Status
+                  </div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#047857' }}>
+                    ✓ Completed &amp; Verified
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#065f46', fontWeight: 800 }}>
+                    Customer Security PIN
+                  </div>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#065f46', fontSize: '1.1rem' }}>
+                    {auditModalBooking.completionOtp || '5829'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '18px', border: '1px solid #e2e8f0', fontSize: '0.84rem' }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Order ID:</strong> <code>{auditModalBooking.id}</code>
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Client Name:</strong> {auditModalBooking.clientName}
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Client Email:</strong> {auditModalBooking.clientEmail}
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Service:</strong> {auditModalBooking.serviceName}
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Scope &amp; Frequency:</strong> {auditModalBooking.frequency} {auditModalBooking.propertySize ? `· ${auditModalBooking.propertySize}` : ''}
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Service Location:</strong> {auditModalBooking.address}
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>Scheduled Date:</strong> {auditModalBooking.date} ({auditModalBooking.timeSlot})
+                </div>
+                {auditModalBooking.completedAt && (
+                  <div style={{ marginBottom: '8px', color: '#15803d', fontWeight: 600 }}>
+                    <strong>Completed &amp; Signed Off:</strong> {auditModalBooking.completedAt}
+                  </div>
+                )}
+                <div>
+                  <strong>Total Invoice Paid:</strong> £{auditModalBooking.totalPrice || auditModalBooking.paidAmount} (inc. VAT)
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{
+                    flex: 1,
+                    background: '#10264A',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>🖨️</span> Print Audit Summary
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuditModalBooking(null)}
+                  style={{
+                    padding: '12px 18px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

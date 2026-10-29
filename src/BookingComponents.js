@@ -21,9 +21,9 @@ export function ToastNotification({ message, onClose }) {
   if (!message) return null;
   return (
     <div className="licht-toast" role="alert">
-      <span>✨ {message}</span>
+      <span>âœ¨ {message}</span>
       <button onClick={onClose} className="licht-toast-close" aria-label="Dismiss notification">
-        ✕
+        âœ•
       </button>
     </div>
   );
@@ -124,7 +124,7 @@ export function AuthModal({
         const res = await handler(targetEmail, resetCode.trim(), newPassword);
         setIsLoading(false);
         if (res && res.success) {
-          setStatusNotice('✓ Password reset successfully! You can now sign in with your new password.');
+          setStatusNotice('âœ“ Password reset successfully! You can now sign in with your new password.');
           setPassword(newPassword);
           setEmail(targetEmail);
           setMode('login');
@@ -156,41 +156,22 @@ export function AuthModal({
             {getModalTitle()}
           </h2>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close">
-            ✕
+            âœ•
           </button>
         </div>
 
         <div className="licht-modal-body">
           {message && (
             <div className="auth-message-banner">
-              <span>🔒</span>
+              <span>ðŸ”’</span>
               <span>{message}</span>
             </div>
           )}
 
           {statusNotice && (
             <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#166534', fontSize: '0.84rem', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span>✉️</span>
+              <span>âœ‰ï¸</span>
               <span>{statusNotice}</span>
-            </div>
-          )}
-
-          {/* Quick Demo Login Option (Available on Login Mode) */}
-          {mode === 'login' && (
-            <div className="demo-login-box">
-              <div className="demo-login-info">
-                <div className="demo-login-title">
-                  <span>⚡</span> Instant Demo Client Login
-                </div>
-                <div>Test the booking and cart flow with 1-click verified credentials.</div>
-              </div>
-              <button
-                type="button"
-                onClick={onDemoLogin}
-                className="demo-quick-btn"
-              >
-                Sign In Demo
-              </button>
             </div>
           )}
 
@@ -216,14 +197,14 @@ export function AuthModal({
 
           {error && (
             <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600, background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-              ⚠️ {error}
+              âš ï¸ {error}
             </div>
           )}
 
-          {/* ── FORGOT PASSWORD BANNER ── */}
+          {/* â”€â”€ FORGOT PASSWORD BANNER â”€â”€ */}
           {mode === 'forgot' && (
             <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📬</span>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>ðŸ“¬</span>
               <div>
                 <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '0.9rem', marginBottom: '4px' }}>
                   Verification Code via Email
@@ -235,10 +216,10 @@ export function AuthModal({
             </div>
           )}
 
-          {/* ── RESET PASSWORD BANNER ── */}
+          {/* â”€â”€ RESET PASSWORD BANNER â”€â”€ */}
           {mode === 'reset' && (
             <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🔐</span>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>ðŸ”</span>
               <div>
                 <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.9rem', marginBottom: '4px' }}>
                   Enter Code from info@lichtmarketinglimited.org
@@ -250,10 +231,10 @@ export function AuthModal({
             </div>
           )}
 
-          {/* ── REGISTER NOTICE BANNER ── */}
+          {/* â”€â”€ REGISTER NOTICE BANNER â”€â”€ */}
           {mode === 'register' && (
             <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.2rem' }}>📧</span>
+              <span style={{ fontSize: '1.2rem' }}>ðŸ“§</span>
               <div style={{ fontSize: '0.81rem', color: '#0f766e', lineHeight: 1.45 }}>
                 An official welcome confirmation email will be automatically sent to your registered address from <strong>info@lichtmarketinglimited.org</strong>.
               </div>
@@ -334,7 +315,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -391,7 +372,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
@@ -403,7 +384,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
@@ -419,43 +400,12 @@ export function AuthModal({
               style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             >
               {isLoading ? 'Processing Dispatch...' : (
-                mode === 'login' ? 'Sign In & Continue →' :
-                mode === 'register' ? 'Create Account & Continue →' :
-                mode === 'forgot' ? 'Dispatch Security Code via Email →' :
-                'Set New Password & Sign In →'
+                mode === 'login' ? 'Sign In & Continue â†’' :
+                mode === 'register' ? 'Create Account & Continue â†’' :
+                mode === 'forgot' ? 'Dispatch Security Code via Email â†’' :
+                'Set New Password & Sign In â†’'
               )}
             </button>
-
-            {/* STAFF / ADMIN PORTAL SHORTCUT */}
-            {mode === 'login' && (
-              <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onClose) onClose();
-                    if (onNavigateAdmin) {
-                      onNavigateAdmin();
-                    } else {
-                      window.location.hash = '#/admin';
-                    }
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#0f766e',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    textDecoration: 'underline'
-                  }}
-                >
-                  <span>🔒</span> Staff or Operations Manager? Open Admin Portal →
-                </button>
-              </div>
-            )}
 
             {/* BACK LINKS FOR FORGOT / RESET */}
             {(mode === 'forgot' || mode === 'reset') && (
@@ -477,7 +427,7 @@ export function AuthModal({
                     textDecoration: 'underline'
                   }}
                 >
-                  ← Return to Client Sign In
+                  â† Return to Client Sign In
                 </button>
 
                 {mode === 'reset' && (
@@ -541,7 +491,7 @@ export function BookingModal({
 
   // Payment Gateway State
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'apple_pay' | 'invoice'
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
+  const [cardNumber, setCardNumber] = useState('4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242');
   const [cardExpiry, setCardExpiry] = useState('11/28');
   const [cardCvc, setCardCvc] = useState('389');
   const [cardholderName, setCardholderName] = useState(user?.name || 'Alex Vance');
@@ -585,13 +535,14 @@ export function BookingModal({
     setProcessingStatus('Connecting to secure 256-bit payment gateway...');
 
     setTimeout(() => {
-      setProcessingStatus(`Authorizing £${grandTotal} with financial provider...`);
+      setProcessingStatus(`Authorizing Â£${grandTotal} with financial provider...`);
     }, 500);
 
     setTimeout(() => {
       setProcessingStatus('Payment verified & authorized!');
       const txnId = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
       const bookingRef = `LICHT-BK-${Math.floor(1000 + Math.random() * 9000)}`;
+      const completionOtp = `${Math.floor(1000 + Math.random() * 9000)}`;
       const methodUsed = paymentMethod === 'apple_pay'
         ? 'Apple Pay / Google Pay'
         : paymentMethod === 'invoice'
@@ -611,7 +562,7 @@ export function BookingModal({
         frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Deep Clean',
         propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
         date,
-        timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
+        timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 â€“ 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 â€“ 16:00)' : 'Evening Shift (18:00 â€“ 22:00)',
         address: `${address}, ${postcode}`,
         notes,
         totalPrice: grandTotal,
@@ -619,6 +570,8 @@ export function BookingModal({
         clientEmail: user?.email || 'info@lichtmarketinglimited.org',
         createdAt: new Date().toLocaleDateString('en-GB'),
         status: 'Confirmed & Scheduled (Paid)',
+        completionOtp: completionOtp,
+        otpVerified: false,
       };
 
       setIsProcessingPayment(false);
@@ -650,7 +603,7 @@ export function BookingModal({
             {step === 5 ? 'Booking Confirmed & Paid' : step === 4 ? 'Secure Payment Gateway' : 'Book Professional Cleaning'}
           </h2>
           <button onClick={handleClose} className="licht-modal-close-btn" aria-label="Close">
-            ✕
+            âœ•
           </button>
         </div>
 
@@ -672,7 +625,7 @@ export function BookingModal({
                     {isCartBooking ? `Cart Checkout (${cartItems.length} Services)` : service?.title}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
-                    Base Rate: £{basePrice} · Fully insured and DBS vetted teams
+                    Base Rate: Â£{basePrice} Â· Fully insured and DBS vetted teams
                   </div>
                 </div>
               </div>
@@ -689,7 +642,7 @@ export function BookingModal({
                   3. Address &amp; Access
                 </div>
                 <div className={`booking-step-chip ${step === 4 ? 'active' : ''}`}>
-                  4. Payment Gateway 🔒
+                  4. Payment Gateway ðŸ”’
                 </div>
               </div>
 
@@ -749,7 +702,7 @@ export function BookingModal({
                         onClick={() => setPropertySize('standard')}
                       >
                         <div className="frequency-title">Standard Size</div>
-                        <div className="frequency-discount">1,500–3,500 sq ft (+£40)</div>
+                        <div className="frequency-discount">1,500â€“3,500 sq ft (+Â£40)</div>
                       </div>
 
                       <div
@@ -757,7 +710,7 @@ export function BookingModal({
                         onClick={() => setPropertySize('large')}
                       >
                         <div className="frequency-title">Large Complex</div>
-                        <div className="frequency-discount">3,500+ sq ft (+£90)</div>
+                        <div className="frequency-discount">3,500+ sq ft (+Â£90)</div>
                       </div>
                     </div>
                   </div>
@@ -785,24 +738,24 @@ export function BookingModal({
                         className={`slot-choice-btn ${timeSlot === 'morning' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('morning')}
                       >
-                        ☀️ Morning<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>08:00 – 12:00</span>
+                        â˜€ï¸ Morning<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>08:00 â€“ 12:00</span>
                       </div>
 
                       <div
                         className={`slot-choice-btn ${timeSlot === 'afternoon' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('afternoon')}
                       >
-                        ⛅ Afternoon<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>12:00 – 16:00</span>
+                        â›… Afternoon<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>12:00 â€“ 16:00</span>
                       </div>
 
                       <div
                         className={`slot-choice-btn ${timeSlot === 'evening' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('evening')}
                       >
-                        🌙 Evening Shift<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>18:00 – 22:00</span>
+                        ðŸŒ™ Evening Shift<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>18:00 â€“ 22:00</span>
                       </div>
                     </div>
                   </div>
@@ -879,7 +832,7 @@ export function BookingModal({
               {step === 4 && (
                 <div>
                   <div className="payment-security-banner">
-                    <span>🔒 256-Bit SSL Encrypted Payment Gateway</span>
+                    <span>ðŸ”’ 256-Bit SSL Encrypted Payment Gateway</span>
                     <span>PCI-DSS Level 1 Compliant</span>
                   </div>
 
@@ -887,7 +840,7 @@ export function BookingModal({
                     <div className="payment-processing-overlay">
                       <div className="payment-spinner" />
                       <h4 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '8px' }}>
-                        Processing Payment (£{grandTotal})
+                        Processing Payment (Â£{grandTotal})
                       </h4>
                       <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem' }}>
                         {processingStatus}
@@ -902,7 +855,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'card' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('card')}
                         >
-                          <span className="payment-tab-icon">💳</span>
+                          <span className="payment-tab-icon">ðŸ’³</span>
                           <span>Credit / Debit Card</span>
                         </button>
 
@@ -911,7 +864,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'apple_pay' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('apple_pay')}
                         >
-                          <span className="payment-tab-icon"></span>
+                          <span className="payment-tab-icon">ï£¿</span>
                           <span>Apple / Google Pay</span>
                         </button>
 
@@ -920,7 +873,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'invoice' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('invoice')}
                         >
-                          <span className="payment-tab-icon">🏢</span>
+                          <span className="payment-tab-icon">ðŸ¢</span>
                           <span>Corporate Invoice</span>
                         </button>
                       </div>
@@ -1014,7 +967,7 @@ export function BookingModal({
                             onClick={handleProcessPayment}
                             className="apple-pay-simulate-btn"
                           >
-                            <span> Pay</span> £{grandTotal}
+                            <span>ï£¿ Pay</span> Â£{grandTotal}
                           </button>
                         </div>
                       )}
@@ -1044,7 +997,7 @@ export function BookingModal({
                             />
                           </div>
                           <div className="corporate-terms-note">
-                            📋 <strong>Net-30 B2B Payment Terms:</strong> An itemized VAT tax invoice for <strong>£{grandTotal}</strong> will be emailed to your accounts department. Technician scheduling is confirmed immediately.
+                            ðŸ“‹ <strong>Net-30 B2B Payment Terms:</strong> An itemized VAT tax invoice for <strong>Â£{grandTotal}</strong> will be emailed to your accounts department. Technician scheduling is confirmed immediately.
                           </div>
                         </div>
                       )}
@@ -1057,27 +1010,27 @@ export function BookingModal({
               <div className="booking-pricing-breakdown">
                 <div className="price-line-row">
                   <span>Base Cleaning Service</span>
-                  <span>£{basePrice}</span>
+                  <span>Â£{basePrice}</span>
                 </div>
                 {sizeAddon > 0 && (
                   <div className="price-line-row">
                     <span>Premises Scale Adjustment</span>
-                    <span>+£{sizeAddon}</span>
+                    <span>+Â£{sizeAddon}</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
                   <div className="price-line-row" style={{ color: 'var(--teal)' }}>
                     <span>Frequency Discount ({discountRate * 100}%)</span>
-                    <span>-£{discountAmount}</span>
+                    <span>-Â£{discountAmount}</span>
                   </div>
                 )}
                 <div className="price-line-row">
                   <span>VAT (20%)</span>
-                  <span>£{vatAmount}</span>
+                  <span>Â£{vatAmount}</span>
                 </div>
                 <div className="price-line-row total-row">
                   <span>{step === 4 ? 'Amount to Authorize' : 'Estimated Total'}</span>
-                  <span>£{grandTotal}</span>
+                  <span>Â£{grandTotal}</span>
                 </div>
               </div>
 
@@ -1090,7 +1043,7 @@ export function BookingModal({
                       onClick={() => setStep(step - 1)}
                       className="modal-back-btn"
                     >
-                      ← Back
+                      â† Back
                     </button>
                   )}
                   {step < 4 ? (
@@ -1099,7 +1052,7 @@ export function BookingModal({
                       onClick={handleNextStep}
                       className="modal-next-btn"
                     >
-                      {step === 3 ? 'Proceed to Payment Gateway →' : 'Continue to Next Step →'}
+                      {step === 3 ? 'Proceed to Payment Gateway â†’' : 'Continue to Next Step â†’'}
                     </button>
                   ) : (
                     <button
@@ -1107,7 +1060,7 @@ export function BookingModal({
                       onClick={handleProcessPayment}
                       className="modal-pay-btn"
                     >
-                      🔒 Pay £{grandTotal} &amp; Confirm Booking →
+                      ðŸ”’ Pay Â£{grandTotal} &amp; Confirm Booking â†’
                     </button>
                   )}
                 </div>
@@ -1116,7 +1069,7 @@ export function BookingModal({
           ) : (
             /* STEP 5: Payment Receipt & Confirmed Screen */
             <div className="booking-success-box">
-              <div className="booking-success-icon">✓</div>
+              <div className="booking-success-icon">âœ“</div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'var(--navy)', marginBottom: '6px' }}>
                 Booking Confirmed &amp; Payment Received!
               </h3>
@@ -1125,12 +1078,33 @@ export function BookingModal({
               </p>
 
               <div className="payment-receipt-badge">
-                <span>✓ Payment Captured: £{confirmedBookingData?.totalPrice}</span>
+                <span>âœ“ Payment Captured: Â£{confirmedBookingData?.totalPrice}</span>
                 <span style={{ fontFamily: 'monospace' }}>{paymentReceipt?.txnId}</span>
               </div>
 
               <div className="booking-ref-badge">
                 Booking Reference: {confirmedBookingData?.id}
+              </div>
+
+              {/* SERVICE COMPLETION VERIFICATION OTP BOX */}
+              <div style={{
+                background: '#f0fdfa',
+                border: '2px dashed #0d9488',
+                borderRadius: '16px',
+                padding: '20px 24px',
+                textAlign: 'center',
+                margin: '18px 0 22px',
+                boxShadow: '0 4px 14px rgba(13, 148, 136, 0.08)'
+              }}>
+                <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#0f766e', fontWeight: 800, marginBottom: '6px' }}>
+                  ðŸ” Service Completion Verification PIN / OTP
+                </div>
+                <div style={{ fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900, color: '#0f766e', letterSpacing: '8px', margin: '6px 0' }}>
+                  {confirmedBookingData?.completionOtp || '5829'}
+                </div>
+                <p style={{ margin: '8px 0 0', fontSize: '0.84rem', color: '#115e59', lineHeight: 1.45 }}>
+                  <strong>How this works:</strong> When your cleaning operative arrives and finishes the service at your property, provide them with this 4-digit code. Entering this OTP authorizes and verifies that the clean was successfully completed.
+                </p>
               </div>
 
               <div style={{ background: 'var(--bg-offwhite)', borderRadius: '16px', padding: '18px 22px', textAlign: 'left', marginBottom: '24px', border: '1px solid var(--border-light)' }}>
@@ -1147,18 +1121,18 @@ export function BookingModal({
                   <strong>Payment Method:</strong> {paymentReceipt?.methodUsed}
                 </div>
                 <div style={{ fontSize: '0.85rem' }}>
-                  <strong>Confirmed Amount:</strong> £{confirmedBookingData?.totalPrice} (inc. VAT) · Status: <strong>PAID</strong>
+                  <strong>Confirmed Amount:</strong> Â£{confirmedBookingData?.totalPrice} (inc. VAT) Â· Status: <strong>PAID</strong>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
-                  onClick={() => alert(`Receipt ${paymentReceipt?.txnId} downloaded for £${confirmedBookingData?.totalPrice}`)}
+                  onClick={() => alert(`Receipt ${paymentReceipt?.txnId} downloaded for Â£${confirmedBookingData?.totalPrice}`)}
                   className="service-cart-btn"
                   style={{ padding: '14px 20px' }}
                 >
-                  📄 Download Receipt (PDF)
+                  ðŸ“„ Download Receipt (PDF)
                 </button>
                 <button
                   type="button"
@@ -1166,7 +1140,7 @@ export function BookingModal({
                   className="service-book-btn"
                   style={{ flex: 1, padding: '14px 20px' }}
                 >
-                  View in My Bookings ↗
+                  View in My Bookings â†—
                 </button>
                 <button
                   type="button"
@@ -1208,17 +1182,17 @@ export function CartDrawer({
       <div className="cart-drawer-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cart-drawer-header">
           <h3 className="cart-drawer-title">
-            <span>🛒</span> Cleaning Cart ({cart.length})
+            <span>ðŸ›’</span> Cleaning Cart ({cart.length})
           </h3>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close cart">
-            ✕
+            âœ•
           </button>
         </div>
 
         <div className="cart-items-scroll">
           {cart.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--slate-mid)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🧹</div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>ðŸ§¹</div>
               <h4 style={{ color: 'var(--navy)', marginBottom: '8px', fontSize: '1.2rem' }}>
                 Your cart is empty
               </h4>
@@ -1241,7 +1215,7 @@ export function CartDrawer({
                   <div className="cart-item-title">{item.title}</div>
                   <div className="cart-item-freq">{item.frequency || 'One-off Clean'}</div>
                   <div className="cart-item-price">
-                    £{item.price * item.quantity}
+                    Â£{item.price * item.quantity}
                   </div>
                 </div>
 
@@ -1268,7 +1242,7 @@ export function CartDrawer({
                   className="cart-item-remove-btn"
                   title="Remove item"
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
             ))
@@ -1280,15 +1254,15 @@ export function CartDrawer({
             <div style={{ marginBottom: '14px' }}>
               <div className="price-line-row">
                 <span>Subtotal</span>
-                <span>£{subtotal}</span>
+                <span>Â£{subtotal}</span>
               </div>
               <div className="price-line-row">
                 <span>VAT (20%)</span>
-                <span>£{vat}</span>
+                <span>Â£{vat}</span>
               </div>
               <div className="price-line-row total-row">
                 <span>Total</span>
-                <span>£{total}</span>
+                <span>Â£{total}</span>
               </div>
             </div>
 
@@ -1297,7 +1271,7 @@ export function CartDrawer({
               className="form-submit-btn"
               style={{ margin: 0, width: '100%' }}
             >
-              Proceed to Schedule Booking ({cart.length} services) →
+              Proceed to Schedule Booking ({cart.length} services) â†’
             </button>
 
             <button
@@ -1314,7 +1288,7 @@ export function CartDrawer({
 }
 
 /* ==========================================================================
-   5. CLIENT BOOKINGS HISTORY MODAL
+   5. CLIENT BOOKINGS HISTORY MODAL (ACTIVE & COMPLETED ORDERS TRACKING)
    ========================================================================== */
 export function MyBookingsModal({
   isOpen,
@@ -1323,77 +1297,656 @@ export function MyBookingsModal({
   onCancelBooking,
   onBookNew,
 }) {
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'active' | 'completed'
+  const [selectedReceiptBooking, setSelectedReceiptBooking] = useState(null);
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackNotice, setFeedbackNotice] = useState('');
+
   if (!isOpen) return null;
+
+  const isCompletedBooking = (b) => {
+    const s = (b.status || '').toLowerCase();
+    return s.includes('completed') || Boolean(b.otpVerified);
+  };
+
+  const isCancelledBooking = (b) => {
+    return (b.status || '').toLowerCase().includes('cancel');
+  };
+
+  const completedBookings = bookings.filter(isCompletedBooking);
+  const activeBookings = bookings.filter((b) => !isCompletedBooking(b) && !isCancelledBooking(b));
+
+  const displayedList =
+    activeFilter === 'completed'
+      ? completedBookings
+      : activeFilter === 'active'
+      ? activeBookings
+      : bookings;
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+    setFeedbackNotice(`✓ Thank you for your ${feedbackRating}-star review! Your feedback for order ${feedbackBooking?.id} has been submitted.`);
+    setTimeout(() => {
+      setFeedbackNotice('');
+      setFeedbackBooking(null);
+      setFeedbackRating(5);
+      setFeedbackComment('');
+    }, 2500);
+  };
 
   return (
     <div className="licht-modal-overlay" onClick={onClose}>
-      <div className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="licht-modal-header">
-          <h2 className="licht-modal-title">My Scheduled Bookings</h2>
+      <div className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
+        <div className="licht-modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '1.4rem' }}>📅</span>
+            <div>
+              <h2 className="licht-modal-title" style={{ margin: 0, fontSize: '1.25rem' }}>
+                My Cleaning Reservations &amp; Service History
+              </h2>
+              <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)', marginTop: '2px' }}>
+                Track upcoming appointments, view verified completed cleans, and download VAT receipts.
+              </div>
+            </div>
+          </div>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close">
             ✕
           </button>
         </div>
 
-        <div className="licht-modal-body">
+        {/* ── SUB-TABS: ALL / ACTIVE / COMPLETED ── */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '12px 24px',
+          background: '#f8fafc',
+          borderBottom: '1px solid var(--border-light)',
+          flexWrap: 'wrap'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('all')}
+            style={{
+              padding: '7px 16px',
+              borderRadius: '20px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: activeFilter === 'all' ? '1.5px solid var(--navy)' : '1px solid #cbd5e1',
+              background: activeFilter === 'all' ? 'var(--navy)' : '#ffffff',
+              color: activeFilter === 'all' ? '#ffffff' : '#475569',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            All Bookings ({bookings.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveFilter('active')}
+            style={{
+              padding: '7px 16px',
+              borderRadius: '20px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: activeFilter === 'active' ? '1.5px solid var(--teal)' : '1px solid #cbd5e1',
+              background: activeFilter === 'active' ? 'var(--teal)' : '#ffffff',
+              color: activeFilter === 'active' ? '#ffffff' : '#0f766e',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            ⏳ Scheduled &amp; Active ({activeBookings.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveFilter('completed')}
+            style={{
+              padding: '7px 16px',
+              borderRadius: '20px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: activeFilter === 'completed' ? '1.5px solid #059669' : '1px solid #cbd5e1',
+              background: activeFilter === 'completed' ? '#059669' : '#ffffff',
+              color: activeFilter === 'completed' ? '#ffffff' : '#065f46',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>✓</span> Previous Completed Orders ({completedBookings.length})
+          </button>
+        </div>
+
+        <div className="licht-modal-body" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
+          {feedbackNotice && (
+            <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', color: '#065f46', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
+              {feedbackNotice}
+            </div>
+          )}
+
           {bookings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--slate-mid)' }}>
+            <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--slate-mid)' }}>
               <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📅</div>
-              <h3 style={{ color: 'var(--navy)', marginBottom: '8px' }}>No Active Bookings</h3>
+              <h3 style={{ color: 'var(--navy)', marginBottom: '8px' }}>No Cleaning Bookings Found</h3>
               <p style={{ fontSize: '0.88rem', marginBottom: '24px' }}>
-                You have not booked any cleaning services yet. Choose from our accredited commercial and domestic services.
+                You have not booked any cleaning services yet. Select from our accredited commercial and domestic services.
               </p>
               <button
                 onClick={() => { onClose(); onBookNew(); }}
                 className="service-book-btn"
                 style={{ padding: '12px 28px' }}
               >
-                Browse &amp; Book Services
+                Browse &amp; Book Services ↗
+              </button>
+            </div>
+          ) : displayedList.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '44px 20px', color: 'var(--slate-mid)', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1' }}>
+              <div style={{ fontSize: '2.4rem', marginBottom: '10px' }}>
+                {activeFilter === 'completed' ? '✨' : '⏳'}
+              </div>
+              <h3 style={{ color: 'var(--navy)', marginBottom: '6px', fontSize: '1.05rem' }}>
+                {activeFilter === 'completed' ? 'No Completed Orders Yet' : 'No Scheduled Active Bookings'}
+              </h3>
+              <p style={{ fontSize: '0.84rem', margin: '0 auto 18px', maxWidth: '420px', lineHeight: 1.5 }}>
+                {activeFilter === 'completed'
+                  ? 'Once your operative finishes work on-site and authenticates your 4-digit PIN, your verified completion records and VAT receipts will appear here.'
+                  : 'You do not have any upcoming scheduled cleanings at this time.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('all')}
+                style={{ background: 'var(--navy)', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                View All Bookings ({bookings.length})
               </button>
             </div>
           ) : (
             <div>
-              <div style={{ marginBottom: '16px', fontSize: '0.85rem', color: 'var(--slate-mid)' }}>
-                You have <strong>{bookings.length}</strong> active cleaning reservation(s):
+              <div style={{ marginBottom: '14px', fontSize: '0.82rem', color: 'var(--slate-mid)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>
+                  Showing <strong>{displayedList.length}</strong> {activeFilter === 'completed' ? 'completed order(s)' : activeFilter === 'active' ? 'active order(s)' : 'reservation(s)'}:
+                </span>
+                {completedBookings.length > 0 && activeFilter !== 'completed' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter('completed')}
+                    style={{ background: 'none', border: 'none', color: '#059669', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    View {completedBookings.length} Completed Service(s) →
+                  </button>
+                )}
               </div>
 
-              {bookings.map((b) => (
-                <div key={b.id} className="booking-history-card">
-                  <div className="booking-card-top">
-                    <span className="booking-card-ref">REF: {b.id}</span>
-                    <span className="booking-status-tag">{b.status}</span>
-                  </div>
+              {displayedList.map((b) => {
+                const isCompleted = isCompletedBooking(b);
+                const isCancelled = isCancelledBooking(b);
 
-                  <h4 className="booking-card-title">{b.serviceName}</h4>
-
-                  <div className="booking-card-meta">
-                    🗓 <strong>Scheduled:</strong> {b.date} · {b.timeSlot}
-                  </div>
-                  <div className="booking-card-meta">
-                    📍 <strong>Address:</strong> {b.address}
-                  </div>
-                  <div className="booking-card-meta">
-                    🔄 <strong>Frequency:</strong> {b.frequency} ({b.propertySize})
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--border-light)' }}>
-                    <div style={{ fontWeight: '800', color: 'var(--navy)', fontSize: '1rem' }}>
-                      £{b.totalPrice} <span style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', fontWeight: 'normal' }}>(inc. VAT)</span>
+                return (
+                  <div
+                    key={b.id}
+                    className="booking-history-card"
+                    style={{
+                      border: isCompleted ? '1.5px solid #86efac' : isCancelled ? '1px solid #fecaca' : '1px solid var(--border-light)',
+                      background: isCompleted ? '#f0fdf4' : isCancelled ? '#fff5f5' : 'var(--bg-offwhite)',
+                      boxShadow: isCompleted ? '0 4px 16px rgba(22, 101, 52, 0.06)' : 'none',
+                    }}
+                  >
+                    <div className="booking-card-top">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="booking-card-ref">REF: {b.id}</span>
+                        {isCompleted && (
+                          <span style={{
+                            background: '#dcfce7',
+                            color: '#15803d',
+                            border: '1px solid #86efac',
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            textTransform: 'uppercase',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <span>✓</span> Completed &amp; Verified
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className="booking-status-tag"
+                        style={
+                          isCompleted
+                            ? { background: 'rgba(22, 163, 74, 0.15)', color: '#15803d', borderColor: '#86efac' }
+                            : isCancelled
+                            ? { background: '#fee2e2', color: '#dc2626' }
+                            : {}
+                        }
+                      >
+                        {b.status || 'Confirmed & Scheduled (Paid)'}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={() => onCancelBooking(b.id)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600' }}
-                    >
-                      Cancel Booking
-                    </button>
+                    <h4 className="booking-card-title">{b.serviceName}</h4>
+
+                    <div className="booking-card-meta">
+                      🗓 <strong>Scheduled:</strong> {b.date} · {b.timeSlot}
+                      {b.completedAt && (
+                        <span style={{ marginLeft: '12px', color: '#15803d', fontWeight: 600 }}>
+                          • <strong>Completed At:</strong> {b.completedAt}
+                        </span>
+                      )}
+                    </div>
+                    <div className="booking-card-meta">
+                      📍 <strong>Service Address:</strong> {b.address}
+                    </div>
+                    <div className="booking-card-meta">
+                      🔄 <strong>Plan:</strong> {b.frequency} {b.propertySize ? `· ${b.propertySize}` : ''}
+                    </div>
+
+                    {/* ── SECURITY PIN BOX (DIFFERENTIATES ACTIVE VS COMPLETED) ── */}
+                    {isCompleted ? (
+                      <div style={{
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        borderRadius: '10px',
+                        padding: '10px 14px',
+                        margin: '12px 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '10px'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.74rem', textTransform: 'uppercase', color: '#065f46', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span>🛡️</span> Service Completed &amp; Authenticated On-Site
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#047857', marginTop: '2px' }}>
+                            Security OTP <code>{b.completionOtp || '5829'}</code> was verified by the DBS-vetted operative.
+                          </div>
+                        </div>
+                        <span style={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.9rem',
+                          fontWeight: 800,
+                          color: '#065f46',
+                          background: '#d1fae5',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          ✓ PIN Authenticated
+                        </span>
+                      </div>
+                    ) : (
+                      b.completionOtp && (
+                        <div style={{
+                          background: '#f0fdfa',
+                          border: '1px solid #99f6e4',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
+                          margin: '12px 0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px'
+                        }}>
+                          <div>
+                            <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#0f766e', fontWeight: 800 }}>
+                              🔐 Service Completion PIN:
+                            </div>
+                            <div style={{ fontSize: '0.73rem', color: '#134e4a', marginTop: '2px' }}>
+                              Give to operative once work is completed to verify service
+                            </div>
+                          </div>
+                          <span style={{ fontFamily: 'monospace', fontSize: '1.25rem', fontWeight: 900, color: '#0f766e', background: '#ccfbf1', padding: '3px 12px', borderRadius: '6px', letterSpacing: '3px' }}>
+                            {b.completionOtp}
+                          </span>
+                        </div>
+                      )
+                    )}
+
+                    {/* ── CARD FOOTER WITH PRICING & ACTIONS ── */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--border-light)', flexWrap: 'wrap', gap: '10px' }}>
+                      <div style={{ fontWeight: '800', color: 'var(--navy)', fontSize: '1.05rem' }}>
+                        £{b.totalPrice || b.paidAmount} <span style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', fontWeight: 'normal' }}>(inc. VAT)</span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {isCompleted ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedReceiptBooking(b)}
+                              style={{
+                                background: '#ffffff',
+                                border: '1px solid #059669',
+                                color: '#059669',
+                                fontSize: '0.75rem',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              title="View official VAT receipt and completion certificate"
+                            >
+                              <span>📄</span> View Receipt
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFeedbackBooking(b);
+                                setFeedbackRating(5);
+                                setFeedbackComment('');
+                              }}
+                              style={{
+                                background: '#fef3c7',
+                                border: '1px solid #fde047',
+                                color: '#92400e',
+                                fontSize: '0.75rem',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              title="Leave a review for this service"
+                            >
+                              <span>★</span> Leave Review
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onClose();
+                                onBookNew();
+                              }}
+                              style={{
+                                background: '#0f766e',
+                                border: 'none',
+                                color: '#ffffff',
+                                fontSize: '0.75rem',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              title="Rebook this cleaning service"
+                            >
+                              <span>🔄</span> Book Again
+                            </button>
+                          </>
+                        ) : !isCancelled ? (
+                          <button
+                            type="button"
+                            onClick={() => onCancelBooking(b.id)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Cancel Booking
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* ── MODAL: OFFICIAL VAT RECEIPT & COMPLETION CERTIFICATE ── */}
+      {selectedReceiptBooking && (
+        <div
+          className="licht-modal-overlay"
+          onClick={() => setSelectedReceiptBooking(null)}
+          style={{ zIndex: 2500 }}
+        >
+          <div
+            className="licht-modal-box"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '560px', background: '#ffffff', padding: '0', borderRadius: '16px', overflow: 'hidden' }}
+          >
+            {/* Header */}
+            <div style={{ background: '#10264A', padding: '24px', color: '#ffffff', borderBottom: '3px solid #1599AC' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '0.04em' }}>
+                    LICHT MARKETING LIMITED
+                  </h3>
+                  <div style={{ fontSize: '0.72rem', color: '#38bdf8', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Home &amp; Corporate Cleaning Excellence
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
+                    Company Reg: 14892011 · VAT Reg: GB 442 8912 04
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedReceiptBooking(null)}
+                  style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.2rem', cursor: 'pointer' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Receipt Body */}
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase' }}>Tax Invoice &amp; Receipt Ref</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', fontFamily: 'monospace' }}>
+                    {selectedReceiptBooking.id}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase' }}>Status</div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803d', background: '#dcfce7', padding: '3px 10px', borderRadius: '12px' }}>
+                    ✓ PAID &amp; COMPLETED
+                  </span>
+                </div>
+              </div>
+
+              {/* Service Details */}
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '18px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                  Service Rendered
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#10264A' }}>
+                  {selectedReceiptBooking.serviceName}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '4px' }}>
+                  {selectedReceiptBooking.frequency} {selectedReceiptBooking.propertySize ? `· ${selectedReceiptBooking.propertySize}` : ''}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '2px' }}>
+                  <strong>Address:</strong> {selectedReceiptBooking.address}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '2px' }}>
+                  <strong>Date Scheduled:</strong> {selectedReceiptBooking.date} ({selectedReceiptBooking.timeSlot})
+                </div>
+                {selectedReceiptBooking.completedAt && (
+                  <div style={{ fontSize: '0.8rem', color: '#15803d', marginTop: '2px', fontWeight: 600 }}>
+                    <strong>Verified Completed:</strong> {selectedReceiptBooking.completedAt}
+                  </div>
+                )}
+                {selectedReceiptBooking.completionOtp && (
+                  <div style={{ fontSize: '0.75rem', color: '#0f766e', marginTop: '6px', fontWeight: 700 }}>
+                    🔐 Verified On-Site with PIN: <code>{selectedReceiptBooking.completionOtp}</code>
+                  </div>
+                )}
+              </div>
+
+              {/* Cost Breakdown */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '6px 0', color: '#475569' }}>
+                  <span>Service Subtotal (Net):</span>
+                  <span>£{((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) / 1.2).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '6px 0', color: '#475569' }}>
+                  <span>UK VAT (20%):</span>
+                  <span>£{((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) - (selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) / 1.2).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, padding: '10px 0', borderTop: '2px solid #e2e8f0', color: '#10264A', marginTop: '4px' }}>
+                  <span>Total Paid (inc. VAT):</span>
+                  <span>£{selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount}</span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', textAlign: 'right' }}>
+                  Payment Method: {selectedReceiptBooking.paymentMethod || 'Visa / Mastercard Secure Escrow'}
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{
+                    flex: 1,
+                    background: '#10264A',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>🖨️</span> Print / Save Receipt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedReceiptBooking(null)}
+                  style={{
+                    padding: '12px 18px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#334155',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: 5-STAR SERVICE FEEDBACK ── */}
+      {feedbackBooking && (
+        <div
+          className="licht-modal-overlay"
+          onClick={() => setFeedbackBooking(null)}
+          style={{ zIndex: 2500 }}
+        >
+          <div
+            className="licht-modal-box"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px', padding: '24px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '1.15rem' }}>
+                Rate Your Cleaning Experience
+              </h3>
+              <button
+                type="button"
+                onClick={() => setFeedbackBooking(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--slate-mid)', marginTop: 0, marginBottom: '18px' }}>
+              How did our DBS-vetted operative perform for <strong>{feedbackBooking.serviceName}</strong>?
+            </p>
+
+            <form onSubmit={handleFeedbackSubmit}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setFeedbackRating(star)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '2rem',
+                      cursor: 'pointer',
+                      color: star <= feedbackRating ? '#f59e0b' : '#cbd5e1',
+                      transition: 'transform 0.15s ease',
+                    }}
+                    title={`${star} Star${star > 1 ? 's' : ''}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '18px' }}>
+                <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                  Comments or Suggestions (Optional)
+                </label>
+                <textarea
+                  className="form-textarea"
+                  rows={3}
+                  placeholder="Share details on the clean, punctuality, or attention to detail..."
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  style={{ width: '100%', borderRadius: '10px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="submit"
+                  className="service-book-btn"
+                  style={{ flex: 1, padding: '12px' }}
+                >
+                  Submit Feedback ★
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedbackBooking(null)}
+                  style={{
+                    padding: '12px 18px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

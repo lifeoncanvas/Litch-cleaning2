@@ -248,6 +248,21 @@ export const apiCompleteBooking = async (id) => {
   }
 };
 
+export const apiVerifyBookingOtp = async (id, otp) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/verify-otp`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ otp }),
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('Backend verify OTP failed:', err);
+    return { success: false, message: 'Could not connect to verification server' };
+  }
+};
+
 export const apiCancelBooking = async (id) => {
   try {
     const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/cancel`, {
@@ -370,6 +385,7 @@ const apiService = {
   apiCreateBooking,
   apiDispatchBooking,
   apiCompleteBooking,
+  apiVerifyBookingOtp,
   apiCancelBooking,
   apiSubmitQuote,
   apiFetchQuotes,
