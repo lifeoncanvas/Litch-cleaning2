@@ -373,6 +373,64 @@ export const apiUpdateFleetStatus = async (id, status) => {
   }
 };
 
+/* ==========================================================================
+   PAYPAL PAYMENT GATEWAY API (LIVE INTEGRATION)
+   ========================================================================== */
+export const apiGetPayPalConfig = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/paypal/config`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend PayPal config unavailable, using fallback client-id:', err);
+    return {
+      clientId: 'BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE',
+      currency: 'GBP',
+      appName: 'LICHT House Cleaning',
+      mode: 'live',
+    };
+  }
+};
+
+export const apiCreatePayPalOrder = async (amount, bookingId, serviceName) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/paypal/create-order`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ amount, bookingId, serviceName, currency: 'GBP' }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `HTTP ${res.status}: Failed to create PayPal order`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Create PayPal order failed:', err);
+    throw err;
+  }
+};
+
+export const apiCapturePayPalOrder = async (orderId, bookingId, payStage = 'BOOKING') => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/paypal/capture-order`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ orderId, bookingId, payStage }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `HTTP ${res.status}: Failed to capture PayPal payment`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Capture PayPal order failed:', err);
+    throw err;
+  }
+};
+
 const apiService = {
   checkBackendHealth,
   apiLogin,
@@ -393,6 +451,9 @@ const apiService = {
   apiUpdateOperativeStatus,
   apiFetchFleet,
   apiUpdateFleetStatus,
+  apiGetPayPalConfig,
+  apiCreatePayPalOrder,
+  apiCapturePayPalOrder,
 };
 
 export default apiService;

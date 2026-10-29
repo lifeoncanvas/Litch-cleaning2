@@ -838,9 +838,14 @@
 
 .payment-methods-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
   margin-bottom: 22px;
+}
+
+.paypal-smart-container {
+  min-height: 120px;
+  margin: 14px 0 20px;
 }
 
 .payment-tab-btn {

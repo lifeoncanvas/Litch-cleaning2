@@ -851,9 +851,28 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                           <tr key={b.id} style={{ opacity: isCancelled ? 0.6 : 1 }}>
                             <td>
                               <div className="booking-ref-cell">{b.id}</div>
-                              <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>
-                                {b.paymentMethod || 'Card'}
-                              </div>
+                              {b.paymentMethod?.includes('PayPal') ? (
+                                <div style={{ marginTop: '3px' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#003087', fontWeight: 800, background: '#dbeafe', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
+                                    ● PayPal Live
+                                  </span>
+                                </div>
+                              ) : b.paymentMethod?.includes('Pay After Service') ? (
+                                <div style={{ marginTop: '3px' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#b45309', fontWeight: 800, background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
+                                    ⏳ Pay After Service
+                                  </span>
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>
+                                  {b.paymentMethod || 'Card'}
+                                </div>
+                              )}
+                              {b.transactionId && (
+                                <div style={{ fontSize: '0.66rem', fontFamily: 'monospace', color: 'var(--slate-mid)', marginTop: '2px' }}>
+                                  Txn: {b.transactionId}
+                                </div>
+                              )}
                               {b.completionOtp && (
                                 <div style={{ fontSize: '0.72rem', color: '#0d9488', fontWeight: 700, marginTop: '4px' }}>
                                   OTP: <code>{b.completionOtp}</code>

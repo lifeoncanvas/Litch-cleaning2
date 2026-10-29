@@ -478,6 +478,15 @@ export default function App() {
     showToast(`Booking ${newBooking.id} confirmed and saved to backend!`);
   };
 
+  const handleBookingPaid = (updatedBooking) => {
+    setBookings((prev) => {
+      const updated = prev.map((b) => (b.id === updatedBooking.id ? updatedBooking : b));
+      localStorage.setItem('licht_bookings', JSON.stringify(updated));
+      return updated;
+    });
+    showToast(`Payment of £${updatedBooking.paidAmount || updatedBooking.totalPrice} captured via PayPal! Reference: ${updatedBooking.id}`);
+  };
+
   const handleCancelBooking = async (bookingId) => {
     try {
       await apiCancelBooking(bookingId);
@@ -1843,6 +1852,7 @@ export default function App() {
             : bookings
         }
         onCancelBooking={handleCancelBooking}
+        onBookingPaid={handleBookingPaid}
         onBookNew={() => {
           navigateTo('home', 'services');
         }}
