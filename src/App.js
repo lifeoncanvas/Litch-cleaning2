@@ -514,7 +514,12 @@ export default function App() {
       return (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', background: '#f8fafc' }}>
           <div style={{ maxWidth: '440px', background: '#fff', padding: '36px', borderRadius: '18px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '2.5rem' }}>ðŸ”’</span>
+            <div style={{ display: 'inline-flex', padding: '14px', background: 'rgba(16, 38, 74, 0.06)', borderRadius: '50%', color: 'var(--navy)', marginBottom: '8px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
             <h2 style={{ color: '#10264A', fontSize: '1.4rem', marginTop: '14px', marginBottom: '8px' }}>Restricted Operations Portal</h2>
             <p style={{ color: '#64748b', fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '22px' }}>
               This portal is strictly restricted to administrator <strong>sharonshelke1@gmail.com</strong>.
@@ -538,13 +543,13 @@ export default function App() {
                 fontSize: '0.9rem'
               }}
             >
-              Sign In as Administrator â†’
+              Sign In as Administrator &rarr;
             </button>
             <button
               onClick={() => navigateTo('home')}
               style={{ background: 'none', border: 'none', color: 'var(--teal)', marginTop: '16px', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}
             >
-              â† Return to Main Website
+              &larr; Return to Main Website
             </button>
           </div>
         </div>
@@ -566,7 +571,7 @@ export default function App() {
 
   return (
     <div className="licht-editorial-app">
-      {/* â”€â”€ 1. FIXED FLOATING NAVIGATION BAR â”€â”€ */}
+      {/* ── 1. FIXED FLOATING NAVIGATION BAR ── */}
       <header className={`header-wrapper ${scrolled ? 'scrolled' : ''}`}>
         <nav className="nav-bar" aria-label="Main Navigation">
           {/* Brand Logo on the left */}
@@ -576,7 +581,7 @@ export default function App() {
             title="Licht Marketing Home"
             style={{ border: 'none', cursor: 'pointer' }}
           >
-            {/* EXACT LICHT MARKETING LOGO â€” 100% UNTOUCHED ORIGINAL */}
+            {/* EXACT LICHT MARKETING LOGO — 100% UNTOUCHED ORIGINAL */}
             <img
               src="/licht-logo.png"
               alt="LICHT MARKETING - Home & Corporate Cleaning"
@@ -658,8 +663,14 @@ export default function App() {
               onClick={() => setCartDrawerOpen(true)}
               className="nav-cart-btn"
               title="View Cleaning Cart"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <span>ðŸ›’</span> Cart
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+              </svg>
+              <span>Cart</span>
               {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
             </button>
 
@@ -674,7 +685,7 @@ export default function App() {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
+                      gap: '6px',
                       background: 'rgba(21, 153, 172, 0.15)',
                       color: 'var(--teal)',
                       border: '1.5px solid var(--teal)',
@@ -685,15 +696,27 @@ export default function App() {
                       cursor: 'pointer',
                     }}
                   >
-                    <span>ðŸ”’</span> Admin Portal
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>Admin Portal</span>
                   </button>
                 )}
                 <button
                   onClick={() => setMyBookingsModalOpen(true)}
                   className="nav-bookings-btn"
                   title="View My Bookings"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  ðŸ“… Bookings {bookings.length > 0 && <span className="cart-badge" style={{ background: 'var(--navy)' }}>{bookings.length}</span>}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span>Bookings</span>
+                  {bookings.length > 0 && <span className="cart-badge" style={{ background: 'var(--navy)', marginLeft: '4px' }}>{bookings.length}</span>}
                 </button>
                 <div className="nav-user-pill">
                   <span className="user-avatar-circle">{user.name ? user.name[0].toUpperCase() : 'C'}</span>
@@ -784,8 +807,14 @@ export default function App() {
                   <button
                     onClick={() => { setCartDrawerOpen(true); setMobileMenuOpen(false); }}
                     className="mobile-action-btn cart-btn"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   >
-                    <span>ðŸ›’ View Cart</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="9" cy="21" r="1" />
+                      <circle cx="20" cy="21" r="1" />
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                    <span>View Cart</span>
                     {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
                   </button>
 
@@ -801,8 +830,15 @@ export default function App() {
                       <button
                         onClick={() => { setMyBookingsModalOpen(true); setMobileMenuOpen(false); }}
                         className="mobile-action-btn bookings-btn"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                       >
-                        ðŸ“… My Bookings ({bookings.length})
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <span>My Bookings ({bookings.length})</span>
                       </button>
                       <button
                         onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
@@ -821,8 +857,13 @@ export default function App() {
                         setMobileMenuOpen(false);
                       }}
                       className="mobile-action-btn login-btn"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                      ðŸ”’ Sign In / Create Account
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      <span>Sign In / Create Account</span>
                     </button>
                   )}
 
@@ -836,9 +877,17 @@ export default function App() {
                         border: '1.5px solid var(--teal)',
                         fontWeight: 700,
                         marginTop: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
                       }}
                     >
-                      <span>ðŸ”’ Staff &amp; Operations Admin Portal</span>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      <span>Staff &amp; Operations Admin Portal</span>
                     </button>
                   )}
                 </div>
@@ -848,14 +897,14 @@ export default function App() {
         </nav>
       </header>
 
-      {/* â”€â”€ 2. CONDITIONAL PAGE RENDERING: ABOUT US vs HOME â”€â”€ */}
+      {/* ── 2. CONDITIONAL PAGE RENDERING: ABOUT US vs HOME ── */}
       {currentPage === 'about' ? (
         <AboutPage onNavigate={navigateTo} onInitiateBooking={handleInitiateBooking} />
       ) : (
-        /* â”€â”€ HOME PAGE CONTENT â”€â”€ */
+        /* ── HOME PAGE CONTENT ── */
         <main>
-          {/* â”€â”€ HERO SECTION (EDITORIAL ARCHITECTURAL FRAME) â”€â”€ */}
-          {/* â”€â”€ HERO SECTION (NOVA-STYLE REFERENCE DESIGN) â”€â”€ */}
+          {/* ── HERO SECTION (EDITORIAL ARCHITECTURAL FRAME) ── */}
+          {/* ── HERO SECTION (NOVA-STYLE REFERENCE DESIGN) ── */}
           <section id="hero" className="hero-wrapper" aria-label="Hero Section">
             <div className="nova-hero-frame">
               <img
@@ -866,7 +915,7 @@ export default function App() {
               <div className="nova-hero-ambient-glow" />
 
               <div className="nova-hero-grid">
-                {/* â”€â”€ Left Column: Kicker, Headline, CTA, Dual Metrics â”€â”€ */}
+                {/* ── Left Column: Kicker, Headline, CTA, Dual Metrics ── */}
                 <div className="nova-left-col">
                   <div>
                     <div className="nova-kicker">STANDARDS, NATURALLY</div>
@@ -879,7 +928,7 @@ export default function App() {
                       onClick={() => navigateTo('home', 'quote')}
                       className="nova-cta-btn"
                     >
-                      Get Early Access <span>â†’</span>
+                      Get Early Access <span>&rarr;</span>
                     </button>
                   </div>
 
@@ -893,7 +942,7 @@ export default function App() {
                       <div className="nova-stat-num">5-Step</div>
                       <div className="nova-stat-footer">
                         <span>Process</span>
-                        <span>â†’</span>
+                        <span>&rarr;</span>
                       </div>
                     </button>
                     <button
@@ -905,13 +954,13 @@ export default function App() {
                       <div className="nova-stat-num">100%</div>
                       <div className="nova-stat-footer">
                         <span>Details Matter</span>
-                        <span>â†’</span>
+                        <span>&rarr;</span>
                       </div>
                     </button>
                   </div>
                 </div>
 
-                {/* â”€â”€ Right Column: Stacked White Cards â”€â”€ */}
+                {/* ── Right Column: Stacked White Cards ── */}
                 <div className="nova-right-col">
                   {/* Top Card: See Features / Feels Effortless */}
                   <div className="nova-white-card">
@@ -992,12 +1041,12 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 3. EDITORIAL WHITESPACE SECTION (MIDDLE OF REFERENCE IMAGE) â”€â”€ */}
+          {/* ── 3. EDITORIAL WHITESPACE SECTION (MIDDLE OF REFERENCE IMAGE) ── */}
           <section id="about" className="editorial-middle-section" aria-label="Brand Overview">
             <div className="editorial-container">
               <div className="editorial-header-row">
                 <div className="editorial-mark-group">
-                  <span className="editorial-asterisk">âœ¦</span>
+                  <span className="editorial-asterisk">✦</span>
                   <div>
                     <span className="editorial-kicker-label">SHAPING PRISTINE SPACES</span>
                     <div className="editorial-main-headline">
@@ -1019,14 +1068,14 @@ export default function App() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                 <a href="#services" className="editorial-left-link">
-                  OUR COMPREHENSIVE SERVICES â†—
+                  OUR COMPREHENSIVE SERVICES &nearr;
                 </a>
                 <button
                   onClick={() => navigateTo('about')}
                   className="editorial-left-link"
                   style={{ color: 'var(--teal)', borderColor: 'var(--teal)', cursor: 'pointer' }}
                 >
-                  LEARN MORE ABOUT US â†—
+                  LEARN MORE ABOUT US &nearr;
                 </button>
               </div>
 
@@ -1074,7 +1123,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 4. "WE CLEAN. YOU RELAX. â†’" DARK SERVICE CARDS â”€â”€ */}
+          {/* ── 4. "WE CLEAN. YOU RELAX. &rarr;" DARK SERVICE CARDS ── */}
           <section className="we-clean-section" aria-label="Core Pillars">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1083,7 +1132,7 @@ export default function App() {
                     WE CLEAN.<br />
                     <span className="center-headline-muted">YOU RELAX.</span>
                   </div>
-                  <span className="center-headline-arrow">â†’</span>
+                  <span className="center-headline-arrow">&rarr;</span>
                 </div>
                 <p className="center-subtext">
                   Comprehensive cleaning solutions engineered for corporate hygiene, seamless scheduling, and pristine environments.
@@ -1100,13 +1149,13 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">ðŸ¢</div>
+                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg></div>
                     <span className="dark-card-num">01</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CORPORATE &amp; OFFICE</h3>
                     <p className="dark-card-desc">Scheduled workplace cleaning tailored to corporate headquarters and dynamic offices.</p>
-                    <div className="dark-card-arrow-circle">â†—</div>
+                    <div className="dark-card-arrow-circle">&nearr;</div>
                   </div>
                 </div>
 
@@ -1119,13 +1168,13 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">ðŸ¡</div>
+                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg></div>
                     <span className="dark-card-num">02</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">HOME &amp; RESIDENTIAL</h3>
                     <p className="dark-card-desc">Meticulous housekeeping, deep kitchen sanitisation, and routine domestic care.</p>
-                    <div className="dark-card-arrow-circle">â†—</div>
+                    <div className="dark-card-arrow-circle">&nearr;</div>
                   </div>
                 </div>
 
@@ -1138,13 +1187,19 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">ðŸ©º</div>
+                    <div className="dark-card-icon-pill">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <line x1="12" y1="8" x2="12" y2="14" />
+                        <line x1="9" y1="11" x2="15" y2="11" />
+                      </svg>
+                    </div>
                     <span className="dark-card-num">03</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CARE &amp; HEALTHCARE</h3>
                     <p className="dark-card-desc">Infection control and hospital-standard hygiene for clinical and assisted living.</p>
-                    <div className="dark-card-arrow-circle">â†—</div>
+                    <div className="dark-card-arrow-circle">&nearr;</div>
                   </div>
                 </div>
 
@@ -1157,20 +1212,20 @@ export default function App() {
                   />
                   <div className="dark-card-gradient" />
                   <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">âš™ï¸</div>
+                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg></div>
                     <span className="dark-card-num">04</span>
                   </div>
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">SPECIALIST &amp; POST-BUILD</h3>
                     <p className="dark-card-desc">Commercial floor restoration, steam extraction, and post-construction sparkle cleaning.</p>
-                    <div className="dark-card-arrow-circle">â†—</div>
+                    <div className="dark-card-arrow-circle">&nearr;</div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* â”€â”€ 5. FULL SERVICES GRID ("CLEANING THAT FITS YOUR SPACE") â”€â”€ */}
+          {/* ── 5. FULL SERVICES GRID ("CLEANING THAT FITS YOUR SPACE") ── */}
           <section id="services" className="services-full-section" aria-label="Services Grid">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1232,11 +1287,11 @@ export default function App() {
                           >
                             {service.title}
                           </h3>
-                          <span className="service-price-pill">From Â£{service.price}</span>
+                          <span className="service-price-pill">From £{service.price}</span>
                         </div>
                         {service.pricingNote && (
                           <div style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: 600, marginTop: '4px', marginBottom: '6px' }}>
-                            â„¹ï¸ {service.pricingNote}
+                            ℹ {service.pricingNote}
                           </div>
                         )}
                         <p className="service-card-text">{service.desc}</p>
@@ -1247,7 +1302,7 @@ export default function App() {
                           className="service-book-btn"
                           onClick={() => handleInitiateBooking(service)}
                         >
-                          Book Now â†—
+                          Book Now &nearr;
                         </button>
                         <button
                           type="button"
@@ -1265,7 +1320,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 6. EDITORIAL SPLIT FEATURES (CORPORATE & RESIDENTIAL) â”€â”€ */}
+          {/* ── 6. EDITORIAL SPLIT FEATURES (CORPORATE & RESIDENTIAL) ── */}
           <section className="feature-split-section" aria-label="Featured Service Sectors">
             <div className="editorial-container">
               {/* Corporate Feature */}
@@ -1291,7 +1346,7 @@ export default function App() {
                     Reliable cleaning services tailored to your workplace and business requirements. We support modern offices, financial institutions, and commercial facilities with discreet, uncompromising service.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('corporate')}>
-                    Request a Corporate Quote â†—
+                    Request a Corporate Quote &nearr;
                   </a>
                 </div>
               </div>
@@ -1308,7 +1363,7 @@ export default function App() {
                     Thoughtful, reliable cleaning for the spaces you call home. Experience the comfort of a spotless living room, pristine kitchen, and revitalised bathrooms serviced by background-checked cleaning professionals.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('general')}>
-                    Explore Home Cleaning â†—
+                    Explore Home Cleaning &nearr;
                   </a>
                 </div>
                 <div className="feature-panel-media">
@@ -1326,7 +1381,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 7. VISUAL SECTORS GRID (8 SECTORS â€” ALL CLEANING IN ACTION) â”€â”€ */}
+          {/* ── 7. VISUAL SECTORS GRID (8 SECTORS — ALL CLEANING IN ACTION) ── */}
           <section id="sectors" className="sectors-section" aria-label="Sectors We Serve">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1354,7 +1409,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 8. WHY CHOOSE US ("THE DETAILS MATTER") â”€â”€ */}
+          {/* ── 8. WHY CHOOSE US ("THE DETAILS MATTER") ── */}
           <section id="details-matter" className="why-us-section" aria-label="Why Choose Us">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1363,7 +1418,7 @@ export default function App() {
                   THE DETAILS MATTER.
                 </h2>
                 <p className="center-subtext">
-                  We believe true professionalism lies in the subtle nuances â€” the uncompromised corners, the verified staff, and the consistent reliability.
+                  We believe true professionalism lies in the subtle nuances — the uncompromised corners, the verified staff, and the consistent reliability.
                 </p>
               </div>
 
@@ -1379,7 +1434,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 9. OUR 5-STEP EDITORIAL PROCESS â”€â”€ */}
+          {/* ── 9. OUR 5-STEP EDITORIAL PROCESS ── */}
           <section id="process" className="process-section" aria-label="Cleaning Process">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1404,7 +1459,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 10. INTERACTIVE QUOTE & CONTRACT ENQUIRY FORMS â”€â”€ */}
+          {/* ── 10. INTERACTIVE QUOTE & CONTRACT ENQUIRY FORMS ── */}
           <section id="quote" className="quote-section" aria-label="Quote Request">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1437,7 +1492,7 @@ export default function App() {
                 <div className="quote-form-card">
                   {submittedForm ? (
                     <div className="form-success-banner">
-                      <div className="success-icon">âœ“</div>
+                      <div className="success-icon">✓</div>
                       <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '8px' }}>
                         Thank You! Your Enquiry Has Been Received.
                       </h3>
@@ -1590,7 +1645,7 @@ export default function App() {
 
                       <button type="submit" className="form-submit-btn">
                         <span>Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request</span>
-                        <span>â†’</span>
+                        <span>&rarr;</span>
                       </button>
                     </form>
                   )}
@@ -1599,24 +1654,24 @@ export default function App() {
             </div>
           </section>
 
-          {/* â”€â”€ 11. STANDARDS, COMPLIANCE & TESTIMONIALS â”€â”€ */}
+          {/* ── 11. STANDARDS, COMPLIANCE & TESTIMONIALS ── */}
           <section className="standards-section" aria-label="Compliance and Testimonials">
             <div className="editorial-container">
               <div className="standards-badge-cluster">
                 <div className="standard-badge-item">
-                  <span className="badge-check">âœ“</span>
+                  <span className="badge-check">✓</span>
                   <span className="badge-text">COSHH Certified &amp; Compliant</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">âœ“</span>
-                  <span className="badge-text">Â£10M Public &amp; Employers Liability</span>
+                  <span className="badge-check">✓</span>
+                  <span className="badge-text">£10M Public &amp; Employers Liability</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">âœ“</span>
+                  <span className="badge-check">✓</span>
                   <span className="badge-text">Enhanced DBS Vetted Cleaners</span>
                 </div>
                 <div className="standard-badge-item">
-                  <span className="badge-check">âœ“</span>
+                  <span className="badge-check">✓</span>
                   <span className="badge-text">Rigorous Health &amp; Safety Audits</span>
                 </div>
               </div>
@@ -1624,12 +1679,12 @@ export default function App() {
               <div className="testimonials-grid">
                 {TESTIMONIALS_DATA.map((t, idx) => (
                   <div key={idx} className="testimonial-card">
-                    <p className="testimonial-quote">â€œ{t.quote}â€</p>
+                    <p className="testimonial-quote">“{t.quote}”</p>
                     <div className="testimonial-client">
                       <div className="client-avatar">{t.name[0]}</div>
                       <div>
                         <div className="client-meta-name">{t.name}</div>
-                        <div className="client-meta-org">{t.role} Â· {t.company}</div>
+                        <div className="client-meta-org">{t.role} · {t.company}</div>
                       </div>
                     </div>
                   </div>
@@ -1640,7 +1695,7 @@ export default function App() {
         </main>
       )}
 
-      {/* â”€â”€ 12. MINIMALIST EDITORIAL FOOTER â”€â”€ */}
+      {/* ── 12. MINIMALIST EDITORIAL FOOTER ── */}
       <footer className="footer-editorial" aria-label="Site Footer">
         <div className="editorial-container">
           <div className="footer-top-row">
@@ -1676,7 +1731,7 @@ export default function App() {
                   padding: 0
                 }}
               >
-                Read Our Story &amp; Values â†’
+                Read Our Story &amp; Values &rarr;
               </button>
             </div>
 
@@ -1693,16 +1748,21 @@ export default function App() {
             <div>
               <div className="footer-col-title">Contact &amp; Hours</div>
               <ul className="footer-links-list">
-                <li style={{ color: 'white', fontWeight: '700' }}>ðŸ“ž 020 8000 0000</li>
+                <li style={{ color: 'white', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  020 8000 0000
+                </li>
                 <li style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  âœ‰ï¸ <a href="mailto:info@lichtmarketinglimited.org" style={{ color: 'inherit', textDecoration: 'none' }}>info@lichtmarketinglimited.org</a>
+                  <a href="mailto:info@lichtmarketinglimited.org" style={{ color: 'inherit', textDecoration: 'none' }}>info@lichtmarketinglimited.org</a>
                 </li>
                 <li style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
-                  ðŸŒ <a href="https://lichtmarketinglimited.org" target="_blank" rel="noreferrer" style={{ color: 'var(--teal)', textDecoration: 'none' }}>lichtmarketinglimited.org</a>
+                  <a href="https://lichtmarketinglimited.org" target="_blank" rel="noreferrer" style={{ color: 'var(--teal)', textDecoration: 'none' }}>lichtmarketinglimited.org</a>
                 </li>
                 <li style={{ marginTop: '10px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Monday â€“ Friday: 07:00 â€“ 20:00<br />
-                  Saturday: 08:00 â€“ 17:00<br />
+                  Monday – Friday: 07:00 – 20:00<br />
+                  Saturday: 08:00 – 17:00<br />
                   Sunday: By Corporate Appointment
                 </li>
               </ul>
@@ -1711,7 +1771,7 @@ export default function App() {
 
           <div className="footer-bottom-bar">
             <div>
-              Â© {new Date().getFullYear()} LICHT MARKETING LIMITED â€” Home &amp; Corporate Cleaning. All rights reserved.
+              © {new Date().getFullYear()} LICHT MARKETING LIMITED — Home &amp; Corporate Cleaning. All rights reserved.
             </div>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <button onClick={() => navigateTo('about')} className="footer-link-item">About Licht Marketing</button>
@@ -1723,13 +1783,13 @@ export default function App() {
         </div>
       </footer>
 
-      {/* â”€â”€ TOAST NOTIFICATIONS â”€â”€ */}
+      {/* ── TOAST NOTIFICATIONS ── */}
       <ToastNotification
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />
 
-      {/* â”€â”€ AUTHENTICATION MODAL (LOGIN / SIGN UP / QUICK DEMO) â”€â”€ */}
+      {/* ── AUTHENTICATION MODAL (LOGIN / SIGN UP / QUICK DEMO) ── */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => {
@@ -1748,7 +1808,7 @@ export default function App() {
         }}
       />
 
-      {/* â”€â”€ INTERACTIVE BOOKING FLOW MODAL â”€â”€ */}
+      {/* ── INTERACTIVE BOOKING FLOW MODAL ── */}
       <BookingModal
         isOpen={bookingModalOpen}
         onClose={() => {
@@ -1762,7 +1822,7 @@ export default function App() {
         onViewBookings={() => setMyBookingsModalOpen(true)}
       />
 
-      {/* â”€â”€ CLEANING CART DRAWER â”€â”€ */}
+      {/* ── CLEANING CART DRAWER ── */}
       <CartDrawer
         isOpen={cartDrawerOpen}
         onClose={() => setCartDrawerOpen(false)}
@@ -1773,7 +1833,7 @@ export default function App() {
         onProceedCheckout={handleProceedCartCheckout}
       />
 
-      {/* â”€â”€ CLIENT BOOKING HISTORY MODAL â”€â”€ */}
+      {/* ── CLIENT BOOKING HISTORY MODAL ── */}
       <MyBookingsModal
         isOpen={myBookingsModalOpen}
         onClose={() => setMyBookingsModalOpen(false)}

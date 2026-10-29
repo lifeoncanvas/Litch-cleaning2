@@ -1,10 +1,10 @@
-﻿/* ==========================================================================
-   LICHT MARKETING LIMITED â€” OPERATIONS & DISPATCH ADMIN PORTAL
+/* ==========================================================================
+   LICHT MARKETING LIMITED — OPERATIONS & DISPATCH ADMIN PORTAL
    Premium Corporate Management & Access Control Design System
    Matches the luxury aesthetic of lichtmarketinglimited.org
    ========================================================================== */
 
-/* â”€â”€ 1. Global Reset & Wrapper â”€â”€ */
+/* ── 1. Global Reset & Wrapper ── */
 .admin-portal-app,
 .admin-portal-root {
   min-height: 100vh;
@@ -15,7 +15,7 @@
   flex-direction: column;
 }
 
-/* â”€â”€ 2. Top Header Navigation Bar â”€â”€ */
+/* ── 2. Top Header Navigation Bar ── */
 .admin-header,
 .admin-navbar {
   background: var(--navy, #10264A);
@@ -195,7 +195,7 @@
   transform: translateY(-1px);
 }
 
-/* â”€â”€ 3. Sub-Header Navigation Tabs â”€â”€ */
+/* ── 3. Sub-Header Navigation Tabs ── */
 .admin-tabs-nav,
 .admin-tabs-bar {
   background: #ffffff;
@@ -247,7 +247,7 @@
   color: var(--teal, #1599AC);
 }
 
-/* â”€â”€ 4. Main Dashboard Container â”€â”€ */
+/* ── 4. Main Dashboard Container ── */
 .admin-container {
   max-width: 1400px;
   width: 100%;
@@ -256,7 +256,7 @@
   flex: 1;
 }
 
-/* â”€â”€ 5. KPI Metrics Grid â”€â”€ */
+/* ── 5. KPI Metrics Grid ── */
 .admin-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -322,7 +322,7 @@
   border: 1px solid rgba(21, 153, 172, 0.2);
 }
 
-/* â”€â”€ 6. Section Header & Controls â”€â”€ */
+/* ── 6. Section Header & Controls ── */
 .admin-section-header {
   display: flex;
   align-items: center;
@@ -390,7 +390,7 @@
   box-shadow: 0 0 0 3px rgba(21, 153, 172, 0.2);
 }
 
-/* â”€â”€ 7. Data Tables Card & Layout â”€â”€ */
+/* ── 7. Data Tables Card & Layout ── */
 .admin-table-card {
   background: #ffffff;
   border-radius: 20px;
@@ -537,7 +537,7 @@
   box-shadow: 0 6px 16px rgba(21, 153, 172, 0.25);
 }
 
-/* â”€â”€ 8. Login Card (Editorial Architecture Frame) â”€â”€ */
+/* ── 8. Login Card (Editorial Architecture Frame) ── */
 .admin-login-wrapper {
   min-height: 100vh;
   display: flex;
@@ -649,7 +649,7 @@
   color: var(--teal, #1599AC);
 }
 
-/* â”€â”€ 9. Modals â”€â”€ */
+/* ── 9. Modals ── */
 .admin-modal-overlay {
   position: fixed;
   inset: 0;
@@ -702,7 +702,7 @@
   color: var(--navy, #10264A);
 }
 
-/* â”€â”€ 10. Responsive Breakpoints â”€â”€ */
+/* ── 10. Responsive Breakpoints ── */
 @media (max-width: 1024px) {
   .admin-kpi-grid {
     grid-template-columns: repeat(2, 1fr);

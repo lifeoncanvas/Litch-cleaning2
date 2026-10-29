@@ -21,9 +21,9 @@ export function ToastNotification({ message, onClose }) {
   if (!message) return null;
   return (
     <div className="licht-toast" role="alert">
-      <span>âœ¨ {message}</span>
+      <span>✨ {message}</span>
       <button onClick={onClose} className="licht-toast-close" aria-label="Dismiss notification">
-        âœ•
+        ✕
       </button>
     </div>
   );
@@ -120,7 +120,7 @@ export function AuthModal({
         const res = await handler(targetEmail, resetCode.trim(), newPassword);
         setIsLoading(false);
         if (res && res.success) {
-          setStatusNotice('âœ“ Password reset successfully! You can now sign in with your new password.');
+          setStatusNotice('✓ Password reset successfully! You can now sign in with your new password.');
           setPassword(newPassword);
           setEmail(targetEmail);
           setMode('login');
@@ -152,21 +152,21 @@ export function AuthModal({
             {getModalTitle()}
           </h2>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close">
-            âœ•
+            ✕
           </button>
         </div>
 
         <div className="licht-modal-body">
           {message && (
             <div className="auth-message-banner">
-              <span>ðŸ”’</span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
               <span>{message}</span>
             </div>
           )}
 
           {statusNotice && (
             <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#166534', fontSize: '0.84rem', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span>âœ‰ï¸</span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
               <span>{statusNotice}</span>
             </div>
           )}
@@ -193,14 +193,14 @@ export function AuthModal({
 
           {error && (
             <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600, background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-              âš ï¸ {error}
+              ⚠️ {error}
             </div>
           )}
 
-          {/* â”€â”€ FORGOT PASSWORD BANNER â”€â”€ */}
+          {/* ── FORGOT PASSWORD BANNER ── */}
           {mode === 'forgot' && (
             <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>ðŸ“¬</span>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📭</span>
               <div>
                 <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '0.9rem', marginBottom: '4px' }}>
                   Verification Code via Email
@@ -212,10 +212,10 @@ export function AuthModal({
             </div>
           )}
 
-          {/* â”€â”€ RESET PASSWORD BANNER â”€â”€ */}
+          {/* ── RESET PASSWORD BANNER ── */}
           {mode === 'reset' && (
             <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '14px', padding: '16px', marginBottom: '18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>ðŸ”</span>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🔑</span>
               <div>
                 <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.9rem', marginBottom: '4px' }}>
                   Enter Code from info@lichtmarketinglimited.org
@@ -227,10 +227,10 @@ export function AuthModal({
             </div>
           )}
 
-          {/* â”€â”€ REGISTER NOTICE BANNER â”€â”€ */}
+          {/* ── REGISTER NOTICE BANNER ── */}
           {mode === 'register' && (
             <div style={{ background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.2rem' }}>ðŸ“§</span>
+              <span style={{ fontSize: '1.2rem' }}>📧</span>
               <div style={{ fontSize: '0.81rem', color: '#0f766e', lineHeight: 1.45 }}>
                 An official welcome confirmation email will be automatically sent to your registered address from <strong>info@lichtmarketinglimited.org</strong>.
               </div>
@@ -311,7 +311,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -368,7 +368,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
@@ -380,7 +380,7 @@ export function AuthModal({
                     type="password"
                     required
                     className="form-input"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
@@ -396,10 +396,10 @@ export function AuthModal({
               style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             >
               {isLoading ? 'Processing Dispatch...' : (
-                mode === 'login' ? 'Sign In & Continue â†’' :
-                mode === 'register' ? 'Create Account & Continue â†’' :
-                mode === 'forgot' ? 'Dispatch Security Code via Email â†’' :
-                'Set New Password & Sign In â†’'
+                mode === 'login' ? 'Sign In & Continue &rarr;' :
+                mode === 'register' ? 'Create Account & Continue &rarr;' :
+                mode === 'forgot' ? 'Dispatch Security Code via Email &rarr;' :
+                'Set New Password & Sign In &rarr;'
               )}
             </button>
 
@@ -423,7 +423,7 @@ export function AuthModal({
                     textDecoration: 'underline'
                   }}
                 >
-                  â† Return to Client Sign In
+                  &larr; Return to Client Sign In
                 </button>
 
                 {mode === 'reset' && (
@@ -487,7 +487,7 @@ export function BookingModal({
 
   // Payment Gateway State
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'apple_pay' | 'invoice'
-  const [cardNumber, setCardNumber] = useState('4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242');
+  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
   const [cardExpiry, setCardExpiry] = useState('11/28');
   const [cardCvc, setCardCvc] = useState('389');
   const [cardholderName, setCardholderName] = useState(user?.name || 'Alex Vance');
@@ -531,7 +531,7 @@ export function BookingModal({
     setProcessingStatus('Connecting to secure 256-bit payment gateway...');
 
     setTimeout(() => {
-      setProcessingStatus(`Authorizing Â£${grandTotal} with financial provider...`);
+      setProcessingStatus(`Authorizing £${grandTotal} with financial provider...`);
     }, 500);
 
     setTimeout(() => {
@@ -558,7 +558,7 @@ export function BookingModal({
         frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Deep Clean',
         propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
         date,
-        timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 â€“ 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 â€“ 16:00)' : 'Evening Shift (18:00 â€“ 22:00)',
+        timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
         address: `${address}, ${postcode}`,
         notes,
         totalPrice: grandTotal,
@@ -599,7 +599,7 @@ export function BookingModal({
             {step === 5 ? 'Booking Confirmed & Paid' : step === 4 ? 'Secure Payment Gateway' : 'Book Professional Cleaning'}
           </h2>
           <button onClick={handleClose} className="licht-modal-close-btn" aria-label="Close">
-            âœ•
+            ✕
           </button>
         </div>
 
@@ -621,7 +621,7 @@ export function BookingModal({
                     {isCartBooking ? `Cart Checkout (${cartItems.length} Services)` : service?.title}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
-                    Base Rate: Â£{basePrice} Â· Fully insured and DBS vetted teams
+                    Base Rate: £{basePrice} · Fully insured and DBS vetted teams
                   </div>
                 </div>
               </div>
@@ -638,7 +638,7 @@ export function BookingModal({
                   3. Address &amp; Access
                 </div>
                 <div className={`booking-step-chip ${step === 4 ? 'active' : ''}`}>
-                  4. Payment Gateway ðŸ”’
+                  4. Payment Gateway 🔒
                 </div>
               </div>
 
@@ -698,7 +698,7 @@ export function BookingModal({
                         onClick={() => setPropertySize('standard')}
                       >
                         <div className="frequency-title">Standard Size</div>
-                        <div className="frequency-discount">1,500â€“3,500 sq ft (+Â£40)</div>
+                        <div className="frequency-discount">1,500–3,500 sq ft (+£40)</div>
                       </div>
 
                       <div
@@ -706,7 +706,7 @@ export function BookingModal({
                         onClick={() => setPropertySize('large')}
                       >
                         <div className="frequency-title">Large Complex</div>
-                        <div className="frequency-discount">3,500+ sq ft (+Â£90)</div>
+                        <div className="frequency-discount">3,500+ sq ft (+£90)</div>
                       </div>
                     </div>
                   </div>
@@ -734,24 +734,24 @@ export function BookingModal({
                         className={`slot-choice-btn ${timeSlot === 'morning' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('morning')}
                       >
-                        â˜€ï¸ Morning<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>08:00 â€“ 12:00</span>
+                        ☀️ Morning<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>08:00 – 12:00</span>
                       </div>
 
                       <div
                         className={`slot-choice-btn ${timeSlot === 'afternoon' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('afternoon')}
                       >
-                        â›… Afternoon<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>12:00 â€“ 16:00</span>
+                        ⛅ Afternoon<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>12:00 – 16:00</span>
                       </div>
 
                       <div
                         className={`slot-choice-btn ${timeSlot === 'evening' ? 'selected' : ''}`}
                         onClick={() => setTimeSlot('evening')}
                       >
-                        ðŸŒ™ Evening Shift<br />
-                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>18:00 â€“ 22:00</span>
+                        🌙 Evening Shift<br />
+                        <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>18:00 – 22:00</span>
                       </div>
                     </div>
                   </div>
@@ -828,7 +828,7 @@ export function BookingModal({
               {step === 4 && (
                 <div>
                   <div className="payment-security-banner">
-                    <span>ðŸ”’ 256-Bit SSL Encrypted Payment Gateway</span>
+                    <span>🔒 256-Bit SSL Encrypted Payment Gateway</span>
                     <span>PCI-DSS Level 1 Compliant</span>
                   </div>
 
@@ -836,7 +836,7 @@ export function BookingModal({
                     <div className="payment-processing-overlay">
                       <div className="payment-spinner" />
                       <h4 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '8px' }}>
-                        Processing Payment (Â£{grandTotal})
+                        Processing Payment (£{grandTotal})
                       </h4>
                       <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem' }}>
                         {processingStatus}
@@ -851,7 +851,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'card' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('card')}
                         >
-                          <span className="payment-tab-icon">ðŸ’³</span>
+                          <span className="payment-tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
                           <span>Credit / Debit Card</span>
                         </button>
 
@@ -860,7 +860,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'apple_pay' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('apple_pay')}
                         >
-                          <span className="payment-tab-icon">ï£¿</span>
+                          <span className="payment-tab-icon"></span>
                           <span>Apple / Google Pay</span>
                         </button>
 
@@ -869,7 +869,7 @@ export function BookingModal({
                           className={`payment-tab-btn ${paymentMethod === 'invoice' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('invoice')}
                         >
-                          <span className="payment-tab-icon">ðŸ¢</span>
+                          <span className="payment-tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg></span>
                           <span>Corporate Invoice</span>
                         </button>
                       </div>
@@ -963,7 +963,7 @@ export function BookingModal({
                             onClick={handleProcessPayment}
                             className="apple-pay-simulate-btn"
                           >
-                            <span>ï£¿ Pay</span> Â£{grandTotal}
+                            <span>Apple Pay</span> £{grandTotal}
                           </button>
                         </div>
                       )}
@@ -993,7 +993,7 @@ export function BookingModal({
                             />
                           </div>
                           <div className="corporate-terms-note">
-                            ðŸ“‹ <strong>Net-30 B2B Payment Terms:</strong> An itemized VAT tax invoice for <strong>Â£{grandTotal}</strong> will be emailed to your accounts department. Technician scheduling is confirmed immediately.
+                            📋 <strong>Net-30 B2B Payment Terms:</strong> An itemized VAT tax invoice for <strong>£{grandTotal}</strong> will be emailed to your accounts department. Technician scheduling is confirmed immediately.
                           </div>
                         </div>
                       )}
@@ -1006,27 +1006,27 @@ export function BookingModal({
               <div className="booking-pricing-breakdown">
                 <div className="price-line-row">
                   <span>Base Cleaning Service</span>
-                  <span>Â£{basePrice}</span>
+                  <span>£{basePrice}</span>
                 </div>
                 {sizeAddon > 0 && (
                   <div className="price-line-row">
                     <span>Premises Scale Adjustment</span>
-                    <span>+Â£{sizeAddon}</span>
+                    <span>+£{sizeAddon}</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
                   <div className="price-line-row" style={{ color: 'var(--teal)' }}>
                     <span>Frequency Discount ({discountRate * 100}%)</span>
-                    <span>-Â£{discountAmount}</span>
+                    <span>-£{discountAmount}</span>
                   </div>
                 )}
                 <div className="price-line-row">
                   <span>VAT (20%)</span>
-                  <span>Â£{vatAmount}</span>
+                  <span>£{vatAmount}</span>
                 </div>
                 <div className="price-line-row total-row">
                   <span>{step === 4 ? 'Amount to Authorize' : 'Estimated Total'}</span>
-                  <span>Â£{grandTotal}</span>
+                  <span>£{grandTotal}</span>
                 </div>
               </div>
 
@@ -1039,7 +1039,7 @@ export function BookingModal({
                       onClick={() => setStep(step - 1)}
                       className="modal-back-btn"
                     >
-                      â† Back
+                      &larr; Back
                     </button>
                   )}
                   {step < 4 ? (
@@ -1048,7 +1048,7 @@ export function BookingModal({
                       onClick={handleNextStep}
                       className="modal-next-btn"
                     >
-                      {step === 3 ? 'Proceed to Payment Gateway â†’' : 'Continue to Next Step â†’'}
+                      {step === 3 ? 'Proceed to Payment Gateway &rarr;' : 'Continue to Next Step &rarr;'}
                     </button>
                   ) : (
                     <button
@@ -1056,7 +1056,7 @@ export function BookingModal({
                       onClick={handleProcessPayment}
                       className="modal-pay-btn"
                     >
-                      ðŸ”’ Pay Â£{grandTotal} &amp; Confirm Booking â†’
+                      Pay £{grandTotal} &amp; Confirm Booking &rarr;
                     </button>
                   )}
                 </div>
@@ -1065,7 +1065,7 @@ export function BookingModal({
           ) : (
             /* STEP 5: Payment Receipt & Confirmed Screen */
             <div className="booking-success-box">
-              <div className="booking-success-icon">âœ“</div>
+              <div className="booking-success-icon">✓</div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'var(--navy)', marginBottom: '6px' }}>
                 Booking Confirmed &amp; Payment Received!
               </h3>
@@ -1074,7 +1074,7 @@ export function BookingModal({
               </p>
 
               <div className="payment-receipt-badge">
-                <span>âœ“ Payment Captured: Â£{confirmedBookingData?.totalPrice}</span>
+                <span>✓ Payment Captured: £{confirmedBookingData?.totalPrice}</span>
                 <span style={{ fontFamily: 'monospace' }}>{paymentReceipt?.txnId}</span>
               </div>
 
@@ -1093,7 +1093,7 @@ export function BookingModal({
                 boxShadow: '0 4px 14px rgba(13, 148, 136, 0.08)'
               }}>
                 <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#0f766e', fontWeight: 800, marginBottom: '6px' }}>
-                  ðŸ” Service Completion Verification PIN / OTP
+                  🔑 Service Completion Verification PIN / OTP
                 </div>
                 <div style={{ fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900, color: '#0f766e', letterSpacing: '8px', margin: '6px 0' }}>
                   {confirmedBookingData?.completionOtp || '5829'}
@@ -1117,18 +1117,18 @@ export function BookingModal({
                   <strong>Payment Method:</strong> {paymentReceipt?.methodUsed}
                 </div>
                 <div style={{ fontSize: '0.85rem' }}>
-                  <strong>Confirmed Amount:</strong> Â£{confirmedBookingData?.totalPrice} (inc. VAT) Â· Status: <strong>PAID</strong>
+                  <strong>Confirmed Amount:</strong> £{confirmedBookingData?.totalPrice} (inc. VAT) · Status: <strong>PAID</strong>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
-                  onClick={() => alert(`Receipt ${paymentReceipt?.txnId} downloaded for Â£${confirmedBookingData?.totalPrice}`)}
+                  onClick={() => alert(`Receipt ${paymentReceipt?.txnId} downloaded for £${confirmedBookingData?.totalPrice}`)}
                   className="service-cart-btn"
                   style={{ padding: '14px 20px' }}
                 >
-                  ðŸ“„ Download Receipt (PDF)
+                  📄 Download Receipt (PDF)
                 </button>
                 <button
                   type="button"
@@ -1136,7 +1136,7 @@ export function BookingModal({
                   className="service-book-btn"
                   style={{ flex: 1, padding: '14px 20px' }}
                 >
-                  View in My Bookings â†—
+                  View in My Bookings &nearr;
                 </button>
                 <button
                   type="button"
@@ -1178,17 +1178,17 @@ export function CartDrawer({
       <div className="cart-drawer-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cart-drawer-header">
           <h3 className="cart-drawer-title">
-            <span>ðŸ›’</span> Cleaning Cart ({cart.length})
+            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span> Cleaning Cart ({cart.length})
           </h3>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close cart">
-            âœ•
+            ✕
           </button>
         </div>
 
         <div className="cart-items-scroll">
           {cart.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--slate-mid)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>ðŸ§¹</div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨</div>
               <h4 style={{ color: 'var(--navy)', marginBottom: '8px', fontSize: '1.2rem' }}>
                 Your cart is empty
               </h4>
@@ -1211,7 +1211,7 @@ export function CartDrawer({
                   <div className="cart-item-title">{item.title}</div>
                   <div className="cart-item-freq">{item.frequency || 'One-off Clean'}</div>
                   <div className="cart-item-price">
-                    Â£{item.price * item.quantity}
+                    £{item.price * item.quantity}
                   </div>
                 </div>
 
@@ -1238,7 +1238,7 @@ export function CartDrawer({
                   className="cart-item-remove-btn"
                   title="Remove item"
                 >
-                  âœ•
+                  ✕
                 </button>
               </div>
             ))
@@ -1250,15 +1250,15 @@ export function CartDrawer({
             <div style={{ marginBottom: '14px' }}>
               <div className="price-line-row">
                 <span>Subtotal</span>
-                <span>Â£{subtotal}</span>
+                <span>£{subtotal}</span>
               </div>
               <div className="price-line-row">
                 <span>VAT (20%)</span>
-                <span>Â£{vat}</span>
+                <span>£{vat}</span>
               </div>
               <div className="price-line-row total-row">
                 <span>Total</span>
-                <span>Â£{total}</span>
+                <span>£{total}</span>
               </div>
             </div>
 
@@ -1267,7 +1267,7 @@ export function CartDrawer({
               className="form-submit-btn"
               style={{ margin: 0, width: '100%' }}
             >
-              Proceed to Schedule Booking ({cart.length} services) â†’
+              Proceed to Schedule Booking ({cart.length} services) &rarr;
             </button>
 
             <button

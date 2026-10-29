@@ -93,7 +93,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     frequency: 'One-Off Deep Clean',
     propertySize: 'Standard Premises (1,500-3,500 sq ft)',
     date: new Date().toISOString().split('T')[0],
-    timeSlot: 'Morning Window (08:00 â€“ 12:00)',
+    timeSlot: 'Morning Window (08:00 – 12:00)',
     address: '',
     totalPrice: 280,
     paymentMethod: 'Corporate Invoice Net-30',
@@ -229,7 +229,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       frequency: 'One-Off Deep Clean',
       propertySize: 'Standard Premises (1,500-3,500 sq ft)',
       date: new Date().toISOString().split('T')[0],
-      timeSlot: 'Morning Window (08:00 â€“ 12:00)',
+      timeSlot: 'Morning Window (08:00 – 12:00)',
       address: '',
       totalPrice: 280,
       paymentMethod: 'Corporate Invoice Net-30',
@@ -303,7 +303,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     localStorage.setItem('licht_bookings', JSON.stringify(updated));
     if (onBookingUpdate) onBookingUpdate();
 
-    setAdminNotice(`âœ“ Booking ${otpModalBooking.id} authenticated with customer OTP! Job marked completed & feedback review email dispatched to client.`);
+    setAdminNotice(`✓ Booking ${otpModalBooking.id} authenticated with customer OTP! Job marked completed & feedback review email dispatched to client.`);
     setTimeout(() => setAdminNotice(''), 6000);
     setOtpModalBooking(null);
     setEnteredOtp('');
@@ -319,7 +319,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       frequency: quote.frequency || 'One-Off Deep Clean',
       propertySize: quote.propertySize || 'Standard Premises (1,500-3,500 sq ft)',
       date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      timeSlot: 'Morning Window (08:00 â€“ 12:00)',
+      timeSlot: 'Morning Window (08:00 – 12:00)',
       address: quote.postcode ? `London premises (${quote.postcode})` : 'London, UK',
       totalPrice: 320,
       paymentMethod: 'Corporate Invoice Net-30',
@@ -494,16 +494,16 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     return matchesSearch && matchesRole;
   });
 
-  /* â”€â”€ ADMIN LOGIN SCREEN â”€â”€ */
+  /* ── ADMIN LOGIN SCREEN ── */
   if (!adminUser) {
     return (
       <div className="admin-login-wrapper">
         <div className="admin-login-card">
           <div className="admin-login-header">
             <div className="admin-brand-icon">
-              <span>âœ¦</span>
+              <span>✦</span>
             </div>
-            <span className="admin-login-badge">ðŸ”’ Restricted Operations Portal</span>
+            <span className="admin-login-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Restricted Operations Portal</span>
             <h1 className="admin-login-title">Licht Admin Access</h1>
             <p className="admin-login-sub">
               Sign in to manage live customer bookings, review quote inquiries, and configure user permissions.
@@ -512,7 +512,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
           {authError && (
             <div style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600 }}>
-              âš ï¸ {authError}
+              ⚠️ {authError}
             </div>
           )}
 
@@ -535,7 +535,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 type="password"
                 required
                 className="admin-form-input"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
               />
@@ -545,7 +545,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             </div>
 
             <button type="submit" className="admin-submit-btn">
-              Authorize &amp; Enter Portal â†’
+              Authorize &amp; Enter Portal &rarr;
             </button>
           </form>
 
@@ -555,14 +555,14 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             className="admin-back-link"
             style={{ background: 'none', border: 'none', width: '100%' }}
           >
-            â† Return to Main Website
+            &larr; Return to Main Website
           </button>
         </div>
       </div>
     );
   }
 
-  /* â”€â”€ MAIN ADMIN PORTAL â”€â”€ */
+  /* ── MAIN ADMIN PORTAL ── */
   return (
     <div className="admin-portal-app">
       {/* Top Header */}
@@ -573,7 +573,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </div>
           <span className="admin-portal-tag">Operations Admin</span>
           <button onClick={onExit} className="admin-exit-btn" title="Back to main website">
-            â† Main Website
+            &larr; Main Website
           </button>
         </div>
 
@@ -623,7 +623,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           onClick={() => setActiveTab('orders')}
         >
-          <span>ðŸ“‹ Bookings &amp; Orders</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Bookings &amp; Orders</span>
           <span className="admin-tab-count">{bookings.length}</span>
         </button>
 
@@ -635,7 +635,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             apiFetchQuotes().then(setQuotes);
           }}
         >
-          <span>ðŸ“¨ Inbound Quotes</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Inbound Quotes</span>
           <span className="admin-tab-count">{quotes.length}</span>
         </button>
 
@@ -644,7 +644,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
-          <span>ðŸ›¡ï¸ Admins &amp; User Access</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admins &amp; User Access</span>
           <span className="admin-tab-count">{usersList.length}</span>
         </button>
       </nav>
@@ -679,7 +679,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
               <div className="admin-kpi-val">{quotes.length}</div>
               <div className="admin-kpi-trend">Inquiries from contact form</div>
             </div>
-            <div className="admin-kpi-icon-bubble">ðŸ“¨</div>
+            <div className="admin-kpi-icon-bubble"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
           </div>
 
           <div className="admin-kpi-card">
@@ -688,7 +688,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
               <div className="admin-kpi-val">{usersList.length}</div>
               <div className="admin-kpi-trend">Client &amp; staff accounts</div>
             </div>
-            <div className="admin-kpi-icon-bubble">ðŸ‘¥</div>
+            <div className="admin-kpi-icon-bubble"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           </div>
 
           <div className="admin-kpi-card">
@@ -697,11 +697,11 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
               <div className="admin-kpi-val">{usersList.filter(u => u.role === 'ROLE_ADMIN').length}</div>
               <div className="admin-kpi-trend" style={{ color: 'var(--teal)' }}>Sharon Shelke (Owner)</div>
             </div>
-            <div className="admin-kpi-icon-bubble">ðŸ›¡ï¸</div>
+            <div className="admin-kpi-icon-bubble"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           </div>
         </section>
 
-        {/* â”€â”€ TAB 1: BOOKINGS & ORDERS â”€â”€ */}
+        {/* ── TAB 1: BOOKINGS & ORDERS ── */}
         {activeTab === 'orders' && (
           <section>
             <div className="admin-section-header">
@@ -821,7 +821,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             <div className="admin-table-card">
               {filteredBookings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '56px 20px', color: 'var(--slate-mid)' }}>
-                  <span style={{ fontSize: '2.8rem' }}>ðŸ“‹</span>
+                  <span style={{ fontSize: '2.8rem' }}>📋</span>
                   <h3 style={{ color: 'var(--navy)', marginTop: '14px', marginBottom: '6px' }}>No Customer Bookings Yet</h3>
                   <p style={{ fontSize: '0.88rem', margin: 0 }}>
                     When visitors complete a booking on the website or you create one manually, it will appear here in real time.
@@ -868,7 +868,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                             <td>
                               <strong style={{ color: 'var(--navy)' }}>{b.serviceName}</strong>
                               <div style={{ fontSize: '0.74rem', color: 'var(--slate-mid)' }}>
-                                {b.frequency} {b.propertySize ? `Â· ${b.propertySize}` : ''}
+                                {b.frequency} {b.propertySize ? `· ${b.propertySize}` : ''}
                               </div>
                             </td>
                             <td>
@@ -876,7 +876,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                               <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>{b.timeSlot}</div>
                             </td>
                             <td>
-                              <strong style={{ color: 'var(--navy)', fontSize: '0.95rem' }}>Â£{b.totalPrice || b.paidAmount}</strong>
+                              <strong style={{ color: 'var(--navy)', fontSize: '0.95rem' }}>£{b.totalPrice || b.paidAmount}</strong>
                               <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>inc. VAT</div>
                             </td>
                             <td>
@@ -894,10 +894,10 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                   cursor: 'pointer',
                                 }}
                               >
-                                <option value="Confirmed & Scheduled (Paid)">â— Confirmed (Paid)</option>
-                                <option value="In Progress">ðŸš€ In Progress</option>
-                                <option value="Completed & Verified">âœ“ Completed (Requires OTP)</option>
-                                <option value="Cancelled">âœ• Cancelled</option>
+                                <option value="Confirmed & Scheduled (Paid)">● Confirmed (Paid)</option>
+                                <option value="In Progress">⚡ In Progress</option>
+                                <option value="Completed & Verified">✓ Completed (Requires OTP)</option>
+                                <option value="Cancelled">✕ Cancelled</option>
                               </select>
                             </td>
                             <td>
@@ -921,12 +921,12 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                     }}
                                     title="Authenticate client OTP to confirm completion of service"
                                   >
-                                    <span>ðŸ”</span> Verify OTP
+                                    <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: '-1px' }}><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5M10 13l-4 4-2-2-4 4 4 4 2-2 4-4"/></svg></span> Verify OTP
                                   </button>
                                 )}
                                 {isCompleted && (
                                   <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                    <span>âœ“</span> Done
+                                    <span>✓</span> Done
                                   </span>
                                 )}
                                 {!isCancelled && !isCompleted && (
@@ -961,7 +961,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                   }}
                                   title="Delete record"
                                 >
-                                  âœ•
+                                  ✕
                                 </button>
                               </div>
                             </td>
@@ -976,7 +976,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </section>
         )}
 
-        {/* â”€â”€ TAB 2: INBOUND QUOTES â”€â”€ */}
+        {/* ── TAB 2: INBOUND QUOTES ── */}
         {activeTab === 'quotes' && (
           <section>
             <div className="admin-section-header">
@@ -991,7 +991,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             <div className="admin-table-card">
               {quotes.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '56px 20px', color: 'var(--slate-mid)' }}>
-                  <span style={{ fontSize: '2.8rem' }}>ðŸ“¨</span>
+                  <span style={{ fontSize: '2.8rem' }}>📫</span>
                   <h3 style={{ color: 'var(--navy)', marginTop: '14px', marginBottom: '6px' }}>No Inbound Quotes Yet</h3>
                   <p style={{ fontSize: '0.88rem', margin: 0 }}>
                     Inquiries submitted through the website Contact form will appear here in real time.
@@ -1026,9 +1026,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                             {q.propertySize && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>{q.propertySize}</div>}
                           </td>
                           <td>
-                            <div style={{ fontSize: '0.82rem' }}>ðŸ“§ {q.email}</div>
-                            {q.phone && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>ðŸ“ž {q.phone}</div>}
-                            {q.postcode && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>ðŸ“ {q.postcode}</div>}
+                            <div style={{ fontSize: '0.82rem' }}>✉ {q.email}</div>
+                            {q.phone && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>☎ {q.phone}</div>}
+                            {q.postcode && <div style={{ fontSize: '0.78rem', color: 'var(--slate-mid)' }}>📍 {q.postcode}</div>}
                           </td>
                           <td style={{ maxWidth: '240px', fontSize: '0.8rem', color: '#475569' }}>
                             {q.message || 'No additional specifications.'}
@@ -1056,7 +1056,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 }}
                                 title="Convert this quote to a booked job"
                               >
-                                Convert â†’
+                                Convert &rarr;
                               </button>
                               <button
                                 type="button"
@@ -1088,7 +1088,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 }}
                                 title="Delete enquiry"
                               >
-                                âœ•
+                                ✕
                               </button>
                             </div>
                           </td>
@@ -1102,19 +1102,19 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </section>
         )}
 
-        {/* â”€â”€ TAB 3: ADMIN ROLES & USER ACCESS CONTROL â”€â”€ */}
+        {/* ── TAB 3: ADMIN ROLES & USER ACCESS CONTROL ── */}
         {activeTab === 'users' && (
           <section>
             {adminNotice && (
               <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 18px', marginBottom: '20px', color: '#166534', fontSize: '0.86rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>ðŸ›¡ï¸</span>
+                <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
                 <span>{adminNotice}</span>
               </div>
             )}
 
             <div className="admin-section-header">
               <div>
-                <h2 className="admin-section-title">ðŸ›¡ï¸ Administrator Roles &amp; Access Control</h2>
+                <h2 className="admin-section-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Administrator Roles &amp; Access Control</h2>
                 <p className="admin-section-subtitle">
                   Manage registered user accounts, promote clients to Administrators with 1-click, and grant full portal access.
                 </p>
@@ -1127,7 +1127,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ width: 'auto', padding: '10px 18px', margin: 0, background: 'var(--navy)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <span>â­</span> Make / Add New Admin
+                  <span>★</span> Make / Add New Admin
                 </button>
 
                 <input
@@ -1192,24 +1192,24 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 className="booking-status-pill"
                                 style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700 }}
                               >
-                                ðŸ›¡ï¸ Administrator
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Administrator
                               </span>
                             ) : (
                               <span className="booking-status-pill confirmed">
-                                ðŸ‘¤ Client Partner
+                                Client Partner
                               </span>
                             )}
                           </td>
                           <td style={{ fontSize: '0.84rem', color: 'var(--slate-mid)' }}>{u.joined || 'Active'}</td>
                           <td>
                             <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <span>âœ“</span> Active &amp; Verified
+                              <span>✓</span> Active &amp; Verified
                             </span>
                           </td>
                           <td>
                             {u.email?.toLowerCase().trim() === 'sharonshelke1@gmail.com' ? (
                               <span style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                <span>ðŸ‘‘</span> Primary Owner
+                                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: '-1px', color: '#eab308' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> Primary Owner
                               </span>
                             ) : u.role === 'ROLE_ADMIN' ? (
                               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1244,7 +1244,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                     cursor: 'pointer',
                                   }}
                                 >
-                                  âœ•
+                                  ✕
                                 </button>
                               </div>
                             ) : (
@@ -1267,7 +1267,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                     gap: '4px',
                                   }}
                                 >
-                                  <span>â­</span> Make Admin
+                                  <span>★</span> Make Admin
                                 </button>
                                 <button
                                   type="button"
@@ -1283,7 +1283,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                     cursor: 'pointer',
                                   }}
                                 >
-                                  âœ•
+                                  ✕
                                 </button>
                               </div>
                             )}
@@ -1299,18 +1299,18 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         )}
       </main>
 
-      {/* â”€â”€ MODAL: CREATE MANUAL BOOKING â”€â”€ */}
+      {/* ── MODAL: CREATE MANUAL BOOKING ── */}
       {createBookingModalOpen && (
         <div className="admin-modal-overlay" onClick={() => setCreateBookingModalOpen(false)}>
           <div className="admin-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">ðŸ“‹ Create New Customer Booking</h3>
+              <h3 className="admin-modal-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Create New Customer Booking</h3>
               <button
                 type="button"
                 className="admin-modal-close"
                 onClick={() => setCreateBookingModalOpen(false)}
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -1364,14 +1364,14 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                       });
                     }}
                   >
-                    <option value="Corporate & Office Cleaning">Corporate &amp; Office Cleaning (From Â£180)</option>
-                    <option value="Home & Residential Cleaning">Home &amp; Residential Cleaning (From Â£95)</option>
-                    <option value="Commercial & Retail Cleaning">Commercial &amp; Retail Cleaning (From Â£150)</option>
-                    <option value="Care & Supported Living">Care &amp; Supported Living (From Â£220)</option>
-                    <option value="Deep & Specialist Cleaning">Deep &amp; Specialist Cleaning (From Â£240)</option>
-                    <option value="Ongoing Contract Cleaning">Ongoing Contract Cleaning (From Â£360)</option>
-                    <option value="End-of-Tenancy Cleaning">End-of-Tenancy Cleaning (From Â£195)</option>
-                    <option value="Post-Construction & Sparkle Clean">Post-Construction &amp; Sparkle Clean (From Â£280)</option>
+                    <option value="Corporate & Office Cleaning">Corporate &amp; Office Cleaning (From £180)</option>
+                    <option value="Home & Residential Cleaning">Home &amp; Residential Cleaning (From £95)</option>
+                    <option value="Commercial & Retail Cleaning">Commercial &amp; Retail Cleaning (From £150)</option>
+                    <option value="Care & Supported Living">Care &amp; Supported Living (From £220)</option>
+                    <option value="Deep & Specialist Cleaning">Deep &amp; Specialist Cleaning (From £240)</option>
+                    <option value="Ongoing Contract Cleaning">Ongoing Contract Cleaning (From £360)</option>
+                    <option value="End-of-Tenancy Cleaning">End-of-Tenancy Cleaning (From £195)</option>
+                    <option value="Post-Construction & Sparkle Clean">Post-Construction &amp; Sparkle Clean (From £280)</option>
                   </select>
                 </div>
 
@@ -1408,9 +1408,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                     value={newBookingForm.timeSlot}
                     onChange={(e) => setNewBookingForm({ ...newBookingForm, timeSlot: e.target.value })}
                   >
-                    <option value="Morning Window (08:00 â€“ 12:00)">Morning Window (08:00 â€“ 12:00)</option>
-                    <option value="Afternoon Window (12:00 â€“ 16:00)">Afternoon Window (12:00 â€“ 16:00)</option>
-                    <option value="Evening Shift (18:00 â€“ 22:00)">Evening Shift (18:00 â€“ 22:00)</option>
+                    <option value="Morning Window (08:00 – 12:00)">Morning Window (08:00 – 12:00)</option>
+                    <option value="Afternoon Window (12:00 – 16:00)">Afternoon Window (12:00 – 16:00)</option>
+                    <option value="Evening Shift (18:00 – 22:00)">Evening Shift (18:00 – 22:00)</option>
                   </select>
                 </div>
               </div>
@@ -1429,7 +1429,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Price (Â£ inc. VAT)</label>
+                  <label className="admin-form-label">Price (£ inc. VAT)</label>
                   <input
                     type="number"
                     required
@@ -1466,7 +1466,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Create Booking â†’
+                  Create Booking &rarr;
                 </button>
               </div>
             </form>
@@ -1474,18 +1474,18 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         </div>
       )}
 
-      {/* â”€â”€ MODAL: GRANT / ADD NEW ADMINISTRATOR â”€â”€ */}
+      {/* ── MODAL: GRANT / ADD NEW ADMINISTRATOR ── */}
       {grantAdminModalOpen && (
         <div className="admin-modal-overlay" onClick={() => setGrantAdminModalOpen(false)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">â­ Grant Administrator Privileges</h3>
+              <h3 className="admin-modal-title">★ Grant Administrator Privileges</h3>
               <button
                 type="button"
                 className="admin-modal-close"
                 onClick={() => setGrantAdminModalOpen(false)}
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -1553,7 +1553,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: 'var(--navy)' }}
                 >
-                  Grant Full Admin Access â†’
+                  Grant Full Admin Access &rarr;
                 </button>
               </div>
             </form>
@@ -1561,18 +1561,18 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         </div>
       )}
 
-      {/* â”€â”€ 3. JOB COMPLETION OTP VERIFICATION MODAL â”€â”€ */}
+      {/* ── 3. JOB COMPLETION OTP VERIFICATION MODAL ── */}
       {otpModalBooking && (
         <div className="admin-modal-overlay" onClick={() => setOtpModalBooking(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="admin-modal-header">
-              <h3 className="admin-modal-title">ðŸ” Verify Customer Job OTP</h3>
+              <h3 className="admin-modal-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: '-1px' }}><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5M10 13l-4 4-2-2-4 4 4 4 2-2 4-4"/></svg>Verify Customer Job OTP</h3>
               <button
                 type="button"
                 onClick={() => setOtpModalBooking(null)}
                 className="admin-modal-close"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -1585,7 +1585,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 <strong>Client:</strong> {otpModalBooking.clientName} ({otpModalBooking.clientEmail})
               </div>
               <div style={{ fontSize: '0.82rem', color: '#475569', marginTop: '2px' }}>
-                ðŸ“ {otpModalBooking.address}
+                📍 {otpModalBooking.address}
               </div>
             </div>
 
@@ -1595,7 +1595,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
             {otpError && (
               <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, marginBottom: '16px' }}>
-                âš ï¸ {otpError}
+                ⚠️ {otpError}
               </div>
             )}
 
@@ -1640,7 +1640,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Verify OTP &amp; Mark Completed â†’
+                  Verify OTP &amp; Mark Completed &rarr;
                 </button>
               </div>
             </form>

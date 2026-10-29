@@ -1,9 +1,9 @@
-﻿/* ==========================================================================
-   LICHT MARKETING â€” BOOKING FLOW, CART & AUTHENTICATION STYLES
+/* ==========================================================================
+   LICHT MARKETING — BOOKING FLOW, CART & AUTHENTICATION STYLES
    Editorial High-End Corporate & Domestic Cleaning System
    ========================================================================== */
 
-/* â”€â”€ 1. Toast Notification â”€â”€ */
+/* ── 1. Toast Notification ── */
 .licht-toast {
   position: fixed;
   top: 96px;
@@ -47,7 +47,7 @@
   }
 }
 
-/* â”€â”€ 2. Modal Overlay & Containers â”€â”€ */
+/* ── 2. Modal Overlay & Containers ── */
 .licht-modal-overlay {
   position: fixed;
   inset: 0;
@@ -141,7 +141,7 @@
   padding: 24px 30px 32px;
 }
 
-/* â”€â”€ 3. Auth Modal Specifics â”€â”€ */
+/* ── 3. Auth Modal Specifics ── */
 .auth-message-banner {
   background: #eef8fa;
   border-left: 4px solid var(--teal);
@@ -281,7 +281,7 @@
   transform: translateY(-1px);
 }
 
-/* â”€â”€ 4. Service Card Buttons & Price â”€â”€ */
+/* ── 4. Service Card Buttons & Price ── */
 .service-card-meta-row {
   display: flex;
   align-items: baseline;
@@ -349,7 +349,7 @@
   color: var(--teal);
 }
 
-/* â”€â”€ 5. Booking Flow Modal Details â”€â”€ */
+/* ── 5. Booking Flow Modal Details ── */
 .booking-hero-preview {
   display: flex;
   align-items: center;
@@ -538,7 +538,7 @@
   border: 1px dashed var(--border-medium);
 }
 
-/* â”€â”€ 6. Cart Drawer Specifics â”€â”€ */
+/* ── 6. Cart Drawer Specifics ── */
 .cart-drawer-overlay {
   position: fixed;
   inset: 0;
@@ -654,7 +654,7 @@
   background: #ffffff;
 }
 
-/* â”€â”€ 7. Header Auth & Cart Pills â”€â”€ */
+/* ── 7. Header Auth & Cart Pills ── */
 .nav-cart-btn {
   display: inline-flex;
   align-items: center;
@@ -767,7 +767,7 @@
   color: #ef4444;
 }
 
-/* â”€â”€ 8. My Bookings Cards â”€â”€ */
+/* ── 8. My Bookings Cards ── */
 .booking-history-card {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
@@ -821,7 +821,7 @@
   margin-bottom: 4px;
 }
 
-/* â”€â”€ 9. Payment Gateway Styles â”€â”€ */
+/* ── 9. Payment Gateway Styles ── */
 .payment-security-banner {
   display: flex;
   align-items: center;
@@ -974,7 +974,7 @@
   color: #15803d;
 }
 
-/* â”€â”€ Responsive adjustments â”€â”€ */
+/* ── Responsive adjustments ── */
 @media (max-width: 768px) {
   .licht-modal-box {
     border-radius: 20px;
@@ -1024,7 +1024,7 @@
   }
 }
 
-/* â”€â”€ Dedicated Booking Modal Step Navigation Buttons â”€â”€ */
+/* ── Dedicated Booking Modal Step Navigation Buttons ── */
 .booking-modal-actions {
   display: flex;
   align-items: center;
