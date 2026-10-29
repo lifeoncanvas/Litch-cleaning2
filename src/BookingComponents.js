@@ -43,6 +43,7 @@ export function AuthModal({
   onRegister,
   onForgotPassword,
   onResetPassword,
+  onNavigateAdmin,
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -424,6 +425,37 @@ export function AuthModal({
                 'Set New Password & Sign In →'
               )}
             </button>
+
+            {/* STAFF / ADMIN PORTAL SHORTCUT */}
+            {mode === 'login' && (
+              <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onClose) onClose();
+                    if (onNavigateAdmin) {
+                      onNavigateAdmin();
+                    } else {
+                      window.location.hash = '#/admin';
+                    }
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#0f766e',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  <span>🔒</span> Staff or Operations Manager? Open Admin Portal →
+                </button>
+              </div>
+            )}
 
             {/* BACK LINKS FOR FORGOT / RESET */}
             {(mode === 'forgot' || mode === 'reset') && (

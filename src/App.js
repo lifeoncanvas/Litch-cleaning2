@@ -529,6 +529,21 @@ export default function App() {
                 Contact
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => navigateTo('admin')}
+                className={`nav-link ${currentPage === 'admin' ? 'active' : ''}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  color: currentPage === 'admin' ? 'var(--teal)' : 'var(--navy)',
+                  fontWeight: 700,
+                }}
+              >
+                <span>⚡</span> Admin Portal
+              </button>
+            </li>
           </ul>
 
           {/* Desktop Action Cluster (Cart + Login/User profile + Backend status) */}
@@ -562,6 +577,29 @@ export default function App() {
               />
               <span>{backendOnline ? 'API :8081 Live' : 'API Syncing'}</span>
             </div>
+
+            {/* Admin Management Portal Quick Access Button */}
+            <button
+              onClick={() => navigateTo('admin')}
+              className="nav-admin-quick-btn"
+              title="Open Operations Admin & Dispatch Portal"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(21, 153, 172, 0.12)',
+                color: 'var(--teal)',
+                border: '1.5px solid rgba(21, 153, 172, 0.35)',
+                padding: '7px 14px',
+                borderRadius: '14px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>🔒</span> Admin / Manage
+            </button>
 
             {/* Cart Button with Item Badge */}
             <button
@@ -713,6 +751,20 @@ export default function App() {
                       🔒 Sign In / Create Account
                     </button>
                   )}
+
+                  <button
+                    onClick={() => { navigateTo('admin'); setMobileMenuOpen(false); }}
+                    className="mobile-action-btn admin-portal-btn"
+                    style={{
+                      background: 'rgba(21, 153, 172, 0.15)',
+                      color: 'var(--teal)',
+                      border: '1.5px solid var(--teal)',
+                      fontWeight: 700,
+                      marginTop: '10px',
+                    }}
+                  >
+                    <span>🔒 Staff &amp; Operations Admin Portal</span>
+                  </button>
                 </div>
               </div>
             </>
@@ -1625,6 +1677,10 @@ export default function App() {
         onLogin={handleLogin}
         onDemoLogin={handleDemoLogin}
         onRegister={handleRegister}
+        onNavigateAdmin={() => {
+          setAuthModalOpen(false);
+          navigateTo('admin');
+        }}
       />
 
       {/* ── INTERACTIVE BOOKING FLOW MODAL ── */}

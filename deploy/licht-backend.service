@@ -1,0 +1,23 @@
+[Unit]
+Description=Licht Marketing Limited - Housing Cleaning Backend API
+After=syslog.target network.target mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/lichtmarketinglimited.org/backend
+ExecStart=/usr/bin/java -Xms256m -Xmx512m -jar /var/www/lichtmarketinglimited.org/backend/housing-cleaning-backend-1.0.0-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+Environment="SPRING_PROFILES_ACTIVE=prod"
+Environment="SERVER_PORT=8081"
+Environment="APP_CLIENT_URL=https://lichtmarketinglimited.org"
+
+# Log handling
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=licht-backend
+
+[Install]
+WantedBy=multi-user.target
