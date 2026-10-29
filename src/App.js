@@ -1077,14 +1077,14 @@ export default function App() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                 <a href="#services" className="editorial-left-link">
-                  OUR COMPREHENSIVE SERVICES &nearr;
+                  OUR COMPREHENSIVE SERVICES
                 </a>
                 <button
                   onClick={() => navigateTo('about')}
                   className="editorial-left-link"
                   style={{ color: 'var(--teal)', borderColor: 'var(--teal)', cursor: 'pointer' }}
                 >
-                  LEARN MORE ABOUT US &nearr;
+                  LEARN MORE ABOUT US
                 </button>
               </div>
 
@@ -1164,7 +1164,7 @@ export default function App() {
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CORPORATE &amp; OFFICE</h3>
                     <p className="dark-card-desc">Scheduled workplace cleaning tailored to corporate headquarters and dynamic offices.</p>
-                    <div className="dark-card-arrow-circle">&nearr;</div>
+                    <div className="dark-card-arrow-circle">↗</div>
                   </div>
                 </div>
 
@@ -1183,7 +1183,7 @@ export default function App() {
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">HOME &amp; RESIDENTIAL</h3>
                     <p className="dark-card-desc">Meticulous housekeeping, deep kitchen sanitisation, and routine domestic care.</p>
-                    <div className="dark-card-arrow-circle">&nearr;</div>
+                    <div className="dark-card-arrow-circle">↗</div>
                   </div>
                 </div>
 
@@ -1208,7 +1208,7 @@ export default function App() {
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">CARE &amp; HEALTHCARE</h3>
                     <p className="dark-card-desc">Infection control and hospital-standard hygiene for clinical and assisted living.</p>
-                    <div className="dark-card-arrow-circle">&nearr;</div>
+                    <div className="dark-card-arrow-circle">↗</div>
                   </div>
                 </div>
 
@@ -1227,7 +1227,7 @@ export default function App() {
                   <div className="dark-card-bottom">
                     <h3 className="dark-card-title">SPECIALIST &amp; POST-BUILD</h3>
                     <p className="dark-card-desc">Commercial floor restoration, steam extraction, and post-construction sparkle cleaning.</p>
-                    <div className="dark-card-arrow-circle">&nearr;</div>
+                    <div className="dark-card-arrow-circle">↗</div>
                   </div>
                 </div>
               </div>
@@ -1311,7 +1311,7 @@ export default function App() {
                           className="service-book-btn"
                           onClick={() => handleInitiateBooking(service)}
                         >
-                          Book Now &nearr;
+                          Book Now
                         </button>
                         <button
                           type="button"
@@ -1355,7 +1355,7 @@ export default function App() {
                     Reliable cleaning services tailored to your workplace and business requirements. We support modern offices, financial institutions, and commercial facilities with discreet, uncompromising service.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('corporate')}>
-                    Request a Corporate Quote &nearr;
+                    Request a Corporate Quote
                   </a>
                 </div>
               </div>
@@ -1372,7 +1372,7 @@ export default function App() {
                     Thoughtful, reliable cleaning for the spaces you call home. Experience the comfort of a spotless living room, pristine kitchen, and revitalised bathrooms serviced by background-checked cleaning professionals.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('general')}>
-                    Explore Home Cleaning &nearr;
+                    Explore Home Cleaning
                   </a>
                 </div>
                 <div className="feature-panel-media">

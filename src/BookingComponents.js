@@ -1529,7 +1529,7 @@ export function BookingModal({
                   className="service-book-btn"
                   style={{ flex: 1, padding: '14px 20px' }}
                 >
-                  View in My Bookings &nearr;
+                  View in My Bookings
                 </button>
                 <button
                   type="button"
