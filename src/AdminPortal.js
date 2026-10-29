@@ -545,7 +545,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             </div>
 
             <button type="submit" className="admin-submit-btn">
-              Authorize &amp; Enter Portal &rarr;
+              Authorize &amp; Enter Portal
             </button>
           </form>
 
@@ -555,7 +555,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
             className="admin-back-link"
             style={{ background: 'none', border: 'none', width: '100%' }}
           >
-            &larr; Return to Main Website
+            Return to Main Website
           </button>
         </div>
       </div>
@@ -573,7 +573,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           </div>
           <span className="admin-portal-tag">Operations Admin</span>
           <button onClick={onExit} className="admin-exit-btn" title="Back to main website">
-            &larr; Main Website
+            Main Website
           </button>
         </div>
 
@@ -1075,7 +1075,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 }}
                                 title="Convert this quote to a booked job"
                               >
-                                Convert &rarr;
+                                Convert to Booking
                               </button>
                               <button
                                 type="button"
@@ -1485,7 +1485,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Create Booking &rarr;
+                  Create Booking
                 </button>
               </div>
             </form>
@@ -1572,7 +1572,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: 'var(--navy)' }}
                 >
-                  Grant Full Admin Access &rarr;
+                  Grant Full Admin Access
                 </button>
               </div>
             </form>
@@ -1659,7 +1659,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   className="admin-submit-btn"
                   style={{ flex: 2, margin: 0, background: '#0f766e' }}
                 >
-                  Verify OTP &amp; Mark Completed &rarr;
+                  Verify OTP &amp; Mark Completed
                 </button>
               </div>
             </form>

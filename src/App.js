@@ -552,13 +552,13 @@ export default function App() {
                 fontSize: '0.9rem'
               }}
             >
-              Sign In as Administrator &rarr;
+              Sign In as Administrator
             </button>
             <button
               onClick={() => navigateTo('home')}
               style={{ background: 'none', border: 'none', color: 'var(--teal)', marginTop: '16px', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}
             >
-              &larr; Return to Main Website
+              Return to Main Website
             </button>
           </div>
         </div>
@@ -937,7 +937,7 @@ export default function App() {
                       onClick={() => navigateTo('home', 'quote')}
                       className="nova-cta-btn"
                     >
-                      Get Early Access <span>&rarr;</span>
+                      Get Early Access
                     </button>
                   </div>
 
@@ -951,7 +951,6 @@ export default function App() {
                       <div className="nova-stat-num">5-Step</div>
                       <div className="nova-stat-footer">
                         <span>Process</span>
-                        <span>&rarr;</span>
                       </div>
                     </button>
                     <button
@@ -963,7 +962,6 @@ export default function App() {
                       <div className="nova-stat-num">100%</div>
                       <div className="nova-stat-footer">
                         <span>Details Matter</span>
-                        <span>&rarr;</span>
                       </div>
                     </button>
                   </div>
@@ -1132,7 +1130,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* ── 4. "WE CLEAN. YOU RELAX. &rarr;" DARK SERVICE CARDS ── */}
+          {/* ── 4. "WE CLEAN. YOU RELAX." DARK SERVICE CARDS ── */}
           <section className="we-clean-section" aria-label="Core Pillars">
             <div className="editorial-container">
               <div className="center-editorial-header">
@@ -1141,7 +1139,6 @@ export default function App() {
                     WE CLEAN.<br />
                     <span className="center-headline-muted">YOU RELAX.</span>
                   </div>
-                  <span className="center-headline-arrow">&rarr;</span>
                 </div>
                 <p className="center-subtext">
                   Comprehensive cleaning solutions engineered for corporate hygiene, seamless scheduling, and pristine environments.
@@ -1653,8 +1650,7 @@ export default function App() {
                       </div>
 
                       <button type="submit" className="form-submit-btn">
-                        <span>Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request</span>
-                        <span>&rarr;</span>
+                        Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request
                       </button>
                     </form>
                   )}
@@ -1740,7 +1736,7 @@ export default function App() {
                   padding: 0
                 }}
               >
-                Read Our Story &amp; Values &rarr;
+                Read Our Story &amp; Values
               </button>
             </div>
 

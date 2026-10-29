@@ -401,10 +401,10 @@ export function AuthModal({
               style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             >
               {isLoading ? 'Processing Dispatch...' : (
-                mode === 'login' ? 'Sign In & Continue &rarr;' :
-                mode === 'register' ? 'Create Account & Continue &rarr;' :
-                mode === 'forgot' ? 'Dispatch Security Code via Email &rarr;' :
-                'Set New Password & Sign In &rarr;'
+                mode === 'login' ? 'Sign In & Continue' :
+                mode === 'register' ? 'Create Account & Continue' :
+                mode === 'forgot' ? 'Dispatch Security Code via Email' :
+                'Set New Password & Sign In'
               )}
             </button>
 
@@ -428,7 +428,7 @@ export function AuthModal({
                     textDecoration: 'underline'
                   }}
                 >
-                  &larr; Return to Client Sign In
+                  Return to Client Sign In
                 </button>
 
                 {mode === 'reset' && (
@@ -1258,7 +1258,7 @@ export function BookingModal({
                             className="service-book-btn"
                             style={{ width: '100%', padding: '14px', fontSize: '0.92rem', background: '#0f766e' }}
                           >
-                            Confirm Booking — Pay £{grandTotal} After Service &rarr;
+                            Confirm Booking — Pay £{grandTotal} After Service
                           </button>
                         </div>
                       )}
@@ -1428,7 +1428,7 @@ export function BookingModal({
                       onClick={() => setStep(step - 1)}
                       className="modal-back-btn"
                     >
-                      &larr; Back
+                      Back
                     </button>
                   )}
                   {step < 4 ? (
@@ -1437,7 +1437,7 @@ export function BookingModal({
                       onClick={handleNextStep}
                       className="modal-next-btn"
                     >
-                      {step === 3 ? 'Proceed to Payment Gateway &rarr;' : 'Continue to Next Step &rarr;'}
+                      {step === 3 ? 'Proceed to Payment Gateway' : 'Continue to Next Step'}
                     </button>
                   ) : paymentMethod === 'paypal' ? (
                     <div style={{ fontSize: '0.82rem', color: 'var(--slate-mid)', textAlign: 'center', margin: 'auto' }}>
@@ -1449,7 +1449,7 @@ export function BookingModal({
                       onClick={handleProcessPayment}
                       className="modal-pay-btn"
                     >
-                      Pay £{grandTotal} &amp; Confirm Booking &rarr;
+                      Pay £{grandTotal} &amp; Confirm Booking
                     </button>
                   )}
                 </div>
@@ -1660,7 +1660,7 @@ export function CartDrawer({
               className="form-submit-btn"
               style={{ margin: 0, width: '100%' }}
             >
-              Proceed to Schedule Booking ({cart.length} services) &rarr;
+              Proceed to Schedule Booking ({cart.length} services)
             </button>
 
             <button
