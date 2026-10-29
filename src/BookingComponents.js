@@ -678,7 +678,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
               )}
 
               <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '0.78rem', color: 'var(--slate-mid)' }}>
-                🔒 256-Bit Live PayPal Checkout · LICHT House Cleaning
+                🔒 256-Bit Secure PayPal &amp; Card Checkout · LICHT House Cleaning
               </div>
 
               <PayPalButtonContainer
@@ -725,15 +725,8 @@ export function BookingModal({
   const [postcode, setPostcode] = useState('W1J 6BQ');
   const [notes, setNotes] = useState('');
 
-  // Payment Gateway State
-  const [paymentMethod, setPaymentMethod] = useState('paypal'); // 'paypal' | 'pay_later' | 'card' | 'invoice'
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExpiry, setCardExpiry] = useState('11/28');
-  const [cardCvc, setCardCvc] = useState('389');
-  const [cardholderName, setCardholderName] = useState(user?.name || 'Alex Vance');
-  const [saveCard, setSaveCard] = useState(true);
-  const [poNumber, setPoNumber] = useState('');
-  const [accountsEmail, setAccountsEmail] = useState(user?.email || '');
+  // Payment Gateway State (All payments routed through PayPal: PayPal account, Debit/Credit Cards & Pay After Service)
+  const [paymentMethod, setPaymentMethod] = useState('paypal'); // 'paypal' | 'pay_later'
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [processingStatus, setProcessingStatus] = useState('');
   const [paymentReceipt, setPaymentReceipt] = useState(null);
@@ -773,7 +766,7 @@ export function BookingModal({
     const newBooking = {
       id: preAssignedBookingId,
       transactionId: txnId,
-      paymentMethod: 'PayPal (Live)',
+      paymentMethod: 'PayPal / Card',
       paidAmount: grandTotal,
       serviceName: isCartBooking
         ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
@@ -797,7 +790,7 @@ export function BookingModal({
 
     setPaymentReceipt({
       txnId,
-      methodUsed: 'PayPal (Live)',
+      methodUsed: 'PayPal / Card',
       amount: grandTotal,
       date: new Date().toLocaleDateString('en-GB'),
     });
@@ -842,59 +835,6 @@ export function BookingModal({
     setConfirmedBookingData(newBooking);
     onConfirmBooking(newBooking);
     setStep(5);
-  };
-
-  const handleProcessPayment = () => {
-    setIsProcessingPayment(true);
-    setProcessingStatus('Connecting to secure 256-bit payment gateway...');
-
-    setTimeout(() => {
-      setProcessingStatus(`Authorizing £${grandTotal} with financial provider...`);
-    }, 500);
-
-    setTimeout(() => {
-      setProcessingStatus('Payment verified & authorized!');
-      const txnId = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
-      const methodUsed = paymentMethod === 'invoice'
-        ? `Corporate Net-30 Invoice (PO: ${poNumber || 'LICHT-CORP-498'})`
-        : `Visa ending in ${cardNumber.replace(/\D/g, '').slice(-4) || '4242'}`;
-
-      const newBooking = {
-        id: preAssignedBookingId,
-        transactionId: txnId,
-        paymentMethod: methodUsed,
-        paidAmount: grandTotal,
-        serviceName: isCartBooking
-          ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
-          : service.title,
-        serviceId: service?.id || 'multi_cart',
-        serviceImg: service?.img || cartItems[0]?.img || '/service_office.jpg',
-        frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Deep Clean',
-        propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
-        date,
-        timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
-        address: `${address}, ${postcode}`,
-        notes,
-        totalPrice: grandTotal,
-        clientName: user?.name || 'Verified Client',
-        clientEmail: user?.email || 'info@lichtmarketinglimited.org',
-        createdAt: new Date().toLocaleDateString('en-GB'),
-        status: 'Confirmed & Scheduled (Paid)',
-        completionOtp: preAssignedOtp,
-        otpVerified: false,
-      };
-
-      setIsProcessingPayment(false);
-      setPaymentReceipt({
-        txnId,
-        methodUsed,
-        amount: grandTotal,
-        date: new Date().toLocaleDateString('en-GB'),
-      });
-      setConfirmedBookingData(newBooking);
-      onConfirmBooking(newBooking);
-      setStep(5);
-    }, 1200);
   };
 
   const handleClose = () => {
@@ -1159,18 +1099,18 @@ export function BookingModal({
                   ) : (
                     <>
                       {/* Payment Method Tabs */}
-                      <div className="payment-methods-tabs">
+                      <div className="payment-methods-tabs" style={{ gridTemplateColumns: '1fr 1fr' }}>
                         <button
                           type="button"
                           className={`payment-tab-btn ${paymentMethod === 'paypal' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('paypal')}
                         >
                           <span className="payment-tab-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#003087">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#003087">
                               <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.004.408 5.42.043 5.918.043h7.728c3.275 0 5.612.784 6.758 2.268 1.096 1.42 1.258 3.398.48 5.882-.015.048-.033.095-.049.143-.323 1.077-.852 1.99-1.574 2.716-.762.766-1.745 1.343-2.923 1.714-1.127.355-2.434.536-3.886.536H10.12l-1.39 8.815c-.059.414-.416.72-.834.72l-.82.014z" />
                             </svg>
                           </span>
-                          <span>PayPal (Live)</span>
+                          <span>PayPal / Card</span>
                         </button>
 
                         <button
@@ -1179,55 +1119,26 @@ export function BookingModal({
                           onClick={() => setPaymentMethod('pay_later')}
                         >
                           <span className="payment-tab-icon">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="12" cy="12" r="10" />
                               <polyline points="12 6 12 12 16 14" />
                             </svg>
                           </span>
                           <span>Pay After Service</span>
                         </button>
-
-                        <button
-                          type="button"
-                          className={`payment-tab-btn ${paymentMethod === 'card' ? 'active' : ''}`}
-                          onClick={() => setPaymentMethod('card')}
-                        >
-                          <span className="payment-tab-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                              <line x1="1" y1="10" x2="23" y2="10" />
-                            </svg>
-                          </span>
-                          <span>Credit / Debit Card</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className={`payment-tab-btn ${paymentMethod === 'invoice' ? 'active' : ''}`}
-                          onClick={() => setPaymentMethod('invoice')}
-                        >
-                          <span className="payment-tab-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-                              <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
-                            </svg>
-                          </span>
-                          <span>Corporate Invoice</span>
-                        </button>
                       </div>
 
-                      {/* 1. PayPal Live View */}
+                      {/* 1. PayPal & Card View */}
                       {paymentMethod === 'paypal' && (
-                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '18px 20px', marginBottom: '18px' }}>
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '18px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ color: '#003087', fontWeight: 900, fontSize: '1.15rem' }}>PayPal</span>
-                              <span style={{ fontSize: '0.72rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>LIVE INTEGRATION</span>
+                              <span style={{ color: '#003087', fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.5px' }}>PayPal</span>
                             </div>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>Merchant: LICHT House Cleaning</span>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--slate-mid)', fontWeight: 600 }}>Merchant: LICHT House Cleaning</span>
                           </div>
-                          <p style={{ fontSize: '0.84rem', color: 'var(--slate-mid)', margin: '0 0 16px', lineHeight: 1.45 }}>
-                            Pay £{grandTotal} securely using your PayPal account, debit/credit card, or <strong>Pay in 3</strong> interest-free installments.
+                          <p style={{ fontSize: '0.86rem', color: 'var(--slate-mid)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                            Pay <strong>£{grandTotal}</strong> securely using your <strong>PayPal account</strong> or any <strong>Debit / Credit Card</strong>.
                           </p>
 
                           <PayPalButtonContainer
@@ -1242,148 +1153,22 @@ export function BookingModal({
 
                       {/* 2. Pay After Service View */}
                       {paymentMethod === 'pay_later' && (
-                        <div style={{ background: '#f0fdfa', border: '1.5px solid #99f6e4', borderRadius: '12px', padding: '18px 20px', marginBottom: '18px' }}>
+                        <div style={{ background: '#f0fdfa', border: '1.5px solid #99f6e4', borderRadius: '12px', padding: '20px', marginBottom: '18px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             <span style={{ color: '#0f766e', fontSize: '1.15rem' }}>✓</span>
-                            <strong style={{ color: '#0f766e', fontSize: '0.98rem' }}>Pay Upon Service Completion (Zero Upfront Charge)</strong>
+                            <strong style={{ color: '#0f766e', fontSize: '1rem' }}>Pay Upon Service Completion (£0.00 Charged Today)</strong>
                           </div>
-                          <p style={{ fontSize: '0.84rem', color: '#134e4a', margin: '0 0 16px', lineHeight: 1.55 }}>
-                            Your cleaning is confirmed immediately with <strong>£0.00 charged today</strong>.
-                            When our DBS-vetted cleaner finishes work at your property, provide them with your 4-digit verification PIN.
-                            You can then settle your <strong>£{grandTotal}</strong> balance securely online via PayPal or Card from your "My Bookings" portal.
+                          <p style={{ fontSize: '0.86rem', color: '#134e4a', margin: '0 0 16px', lineHeight: 1.55 }}>
+                            Your appointment is confirmed immediately with <strong>£0.00 charged today</strong>. When our DBS-vetted cleaner finishes work at your property, provide them with your 4-digit verification PIN. You can then settle your <strong>£{grandTotal}</strong> balance securely online via PayPal or Card from your "My Bookings" portal.
                           </p>
                           <button
                             type="button"
                             onClick={handlePayLaterConfirm}
                             className="service-book-btn"
-                            style={{ width: '100%', padding: '14px', fontSize: '0.92rem', background: '#0f766e' }}
+                            style={{ width: '100%', padding: '14px', fontSize: '0.94rem', background: '#0f766e', cursor: 'pointer' }}
                           >
                             Confirm Booking — Pay £{grandTotal} After Service
                           </button>
-                        </div>
-                      )}
-
-                      {/* Card Details View */}
-                      {paymentMethod === 'card' && (
-                        <div>
-                          <div className="form-group">
-                            <label className="form-label">Cardholder Name *</label>
-                            <input
-                              type="text"
-                              className="form-input"
-                              value={cardholderName}
-                              onChange={(e) => setCardholderName(e.target.value)}
-                              placeholder="Name as it appears on card"
-                              required
-                            />
-                          </div>
-
-                          <div className="form-group">
-                            <label className="form-label">Card Number *</label>
-                            <div className="card-input-wrapper">
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={cardNumber}
-                                onChange={(e) => setCardNumber(e.target.value)}
-                                placeholder="1234 5678 9012 3456"
-                                required
-                              />
-                              <div className="card-input-icons">
-                                <span>VISA</span>
-                                <span>MC</span>
-                                <span>AMEX</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                            <div className="form-group">
-                              <label className="form-label">Expiry Date *</label>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={cardExpiry}
-                                onChange={(e) => setCardExpiry(e.target.value)}
-                                placeholder="MM/YY"
-                                required
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label className="form-label">CVC / Security Code *</label>
-                              <input
-                                type="password"
-                                maxLength={4}
-                                className="form-input"
-                                value={cardCvc}
-                                onChange={(e) => setCardCvc(e.target.value)}
-                                placeholder="CVC"
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 16px' }}>
-                            <input
-                              type="checkbox"
-                              id="saveCardCheckbox"
-                              checked={saveCard}
-                              onChange={(e) => setSaveCard(e.target.checked)}
-                              style={{ cursor: 'pointer' }}
-                            />
-                            <label htmlFor="saveCardCheckbox" style={{ fontSize: '0.82rem', color: 'var(--slate-dark)', cursor: 'pointer' }}>
-                              Save card securely for recurring cleanings and fast checkout
-                            </label>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Apple Pay View */}
-                      {paymentMethod === 'apple_pay' && (
-                        <div className="express-pay-box">
-                          <h4 style={{ color: 'var(--navy)', marginBottom: '8px', fontSize: '1.05rem' }}>
-                            Express One-Click Checkout
-                          </h4>
-                          <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem', marginBottom: '20px' }}>
-                            Authorize your cleaning booking instantly using your default device card and biometric authentication.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={handleProcessPayment}
-                            className="apple-pay-simulate-btn"
-                          >
-                            <span>Apple Pay</span> £{grandTotal}
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Corporate Invoicing View */}
-                      {paymentMethod === 'invoice' && (
-                        <div className="corporate-invoice-box">
-                          <div className="form-group">
-                            <label className="form-label">Purchase Order (PO) Number</label>
-                            <input
-                              type="text"
-                              className="form-input"
-                              value={poNumber}
-                              onChange={(e) => setPoNumber(e.target.value)}
-                              placeholder="e.g. PO-LICHT-2026-904"
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Accounts Payable Email *</label>
-                            <input
-                              type="email"
-                              className="form-input"
-                              value={accountsEmail}
-                              onChange={(e) => setAccountsEmail(e.target.value)}
-                              placeholder="accounts@company.co.uk"
-                              required
-                            />
-                          </div>
-                          <div className="corporate-terms-note">
-                            📋 <strong>Net-30 B2B Payment Terms:</strong> An itemized VAT tax invoice for <strong>£{grandTotal}</strong> will be emailed to your accounts department. Technician scheduling is confirmed immediately.
-                          </div>
                         </div>
                       )}
                     </>
@@ -1441,17 +1226,9 @@ export function BookingModal({
                     </button>
                   ) : paymentMethod === 'paypal' ? (
                     <div style={{ fontSize: '0.82rem', color: 'var(--slate-mid)', textAlign: 'center', margin: 'auto' }}>
-                      Click the official gold <strong>PayPal</strong> button above to complete checkout.
+                      Choose <strong>PayPal</strong> or <strong>Debit / Credit Card</strong> above to complete checkout.
                     </div>
-                  ) : paymentMethod === 'pay_later' ? null : (
-                    <button
-                      type="button"
-                      onClick={handleProcessPayment}
-                      className="modal-pay-btn"
-                    >
-                      Pay £{grandTotal} &amp; Confirm Booking
-                    </button>
-                  )}
+                  ) : null}
                 </div>
               )}
             </>
