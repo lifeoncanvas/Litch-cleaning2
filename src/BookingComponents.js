@@ -92,10 +92,6 @@ export function AuthModal({
         if (res && res.success) {
           setStatusNotice(res.message || `A verification code has been dispatched to ${targetEmail} from info@lichtmarketinglimited.org.`);
           setForgotEmail(targetEmail);
-          // If code was returned in dev payload, prefill
-          if (res.data && res.data.code) {
-            setResetCode(res.data.code);
-          }
           setMode('reset');
         } else {
           setError(res?.message || 'Could not dispatch reset code. Please try again.');

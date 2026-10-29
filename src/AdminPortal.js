@@ -35,7 +35,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   });
 
   const [adminEmail, setAdminEmail] = useState('sharonshelke1@gmail.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
   // Backend Health & Inbound Quotes State
@@ -165,38 +165,15 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         setAdminUser(res.user);
         localStorage.setItem('licht_admin_auth', JSON.stringify(res.user));
         return;
+      } else if (res && !res.success) {
+        setAuthError(res.message || 'Invalid administrator credentials.');
+        return;
       }
-    } catch (err) {}
-
-    // Fallback authentication
-    const normalizedAdminEmail = adminEmail.trim().toLowerCase();
-    const dynamicAdmins = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('licht_admin_emails') || '[]').map(em => (em || '').toLowerCase().trim());
-      } catch {
-        return [];
-      }
-    })();
-
-    const isAllowedAdmin = [
-      'sharonshelke1@gmail.com',
-      'admin@lichtmarketinglimited.org',
-      'info@lichtmarketinglimited.org',
-      ...dynamicAdmins
-    ].includes(normalizedAdminEmail);
-
-    if (isAllowedAdmin && adminPassword === 'admin123') {
-      const admin = {
-        name: normalizedAdminEmail === 'sharonshelke1@gmail.com' ? 'Sharon Shelke' : 'Operations Manager',
-        role: 'ROLE_ADMIN',
-        email: normalizedAdminEmail,
-        loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setAdminUser(admin);
-      localStorage.setItem('licht_admin_auth', JSON.stringify(admin));
-    } else {
-      setAuthError('Unauthorized. Only administrators (e.g. sharonshelke1@gmail.com) can access this portal.');
+    } catch (err) {
+      console.warn('Backend admin login error:', err);
     }
+
+    setAuthError('Unauthorized. Valid administrator credentials required.');
   };
 
   const handleAdminLogout = () => {
@@ -306,7 +283,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     setOtpError('');
 
     const expected = otpModalBooking.completionOtp;
-    const isMatch = (expected && expected.trim() === enteredOtp.trim()) || enteredOtp.trim() === 'admin123' || enteredOtp.trim() === '8899';
+    const isMatch = expected && expected.trim() === enteredOtp.trim();
 
     if (!isMatch) {
       setOtpError('Invalid OTP! Please enter the 4-digit verification code provided by the customer.');
@@ -563,7 +540,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 onChange={(e) => setAdminPassword(e.target.value)}
               />
               <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', marginTop: '4px' }}>
-                Admin Access: <code>sharonshelke1@gmail.com</code> / <code>admin123</code>
+                Restricted Operations Portal — Authorized Administrator Credentials Required
               </div>
             </div>
 
@@ -1645,7 +1622,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                   }}
                 />
                 <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', marginTop: '6px', textAlign: 'center' }}>
-                  (Supervisor emergency override PIN: <code>admin123</code> or <code>8899</code>)
+                  Please enter the 4-digit verification code provided by the client upon on-site inspection.
                 </div>
               </div>
 
