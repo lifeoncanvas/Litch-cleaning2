@@ -29,7 +29,6 @@ import { VALUES_DATA, PROCESS_DATA, TESTIMONIALS_DATA } from './data/contentData
 
 // Spring Boot Backend API Integration
 import {
-  checkBackendHealth,
   apiLogin,
   apiDemoLogin,
   apiRegister,
@@ -50,8 +49,6 @@ export default function App() {
   const [serviceFilter, setServiceFilter] = useState('all');
   const [quoteTab, setQuoteTab] = useState('general'); // 'general' | 'corporate'
   const [submittedForm, setSubmittedForm] = useState(false);
-  const [backendOnline, setBackendOnline] = useState(false);
-  const [backendPort, setBackendPort] = useState(8081);
 
   // User Authentication State (Persisted in localStorage)
   const [user, setUser] = useState(() => {
@@ -174,16 +171,6 @@ export default function App() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Backend Health Check
-  useEffect(() => {
-    checkBackendHealth().then((res) => {
-      setBackendOnline(res.online);
-      if (res.online && res.data?.port) {
-        setBackendPort(res.data.port);
-      }
-    });
   }, []);
 
   // Fetch client bookings from backend when user is logged in
@@ -635,38 +622,8 @@ export default function App() {
             </li>
           </ul>
 
-          {/* Desktop Action Cluster (Cart + Login/User profile + Backend status) */}
+          {/* Desktop Action Cluster (Cart + Login/User profile) */}
           <div className="nav-actions desktop-only">
-            {/* Live Backend Connection Indicator */}
-            <div
-              className="backend-status-pill"
-              title={backendOnline ? `Spring Boot Backend API active on port ${backendPort} (Connected to MySQL)` : 'Connecting to Spring Boot REST API (:8081)...'}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '0.74rem',
-                fontWeight: 600,
-                padding: '5px 10px',
-                borderRadius: '14px',
-                background: backendOnline ? 'rgba(34, 197, 94, 0.12)' : 'rgba(234, 179, 8, 0.12)',
-                color: backendOnline ? '#16a34a' : '#ca8a04',
-                border: `1px solid ${backendOnline ? 'rgba(34, 197, 94, 0.35)' : 'rgba(234, 179, 8, 0.35)'}`,
-                cursor: 'default',
-              }}
-            >
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: backendOnline ? '#16a34a' : '#eab308',
-                  boxShadow: backendOnline ? '0 0 6px rgba(34, 197, 94, 0.8)' : 'none',
-                }}
-              />
-              <span>{backendOnline ? 'API :8081 Live' : 'API Syncing'}</span>
-            </div>
-
             {/* Cart Button with Item Badge */}
             <button
               onClick={() => setCartDrawerOpen(true)}

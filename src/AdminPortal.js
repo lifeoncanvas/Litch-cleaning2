@@ -595,7 +595,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 boxShadow: backendStatus.online ? '0 0 8px rgba(34, 197, 94, 0.8)' : 'none',
               }}
             />
-            <span>{backendStatus.online ? `API :8081 Online` : `Local Mode`}</span>
+            <span>{backendStatus.online ? 'API Online' : 'Local Mode'}</span>
           </div>
 
           <div className="admin-badge">
