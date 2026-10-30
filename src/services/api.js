@@ -56,6 +56,31 @@ const getHeaders = () => {
   return headers;
 };
 
+/**
+ * Safely parse response JSON, guarding against HTML fallback responses (e.g. 404 / Webpack index.html).
+ */
+export const safeJsonFetch = async (res, contextName = 'Request') => {
+  const text = await res.text();
+  if (!text || !text.trim()) {
+    if (!res.ok) throw new Error(`${contextName} failed: HTTP ${res.status} ${res.statusText}`);
+    return {};
+  }
+  const trimmed = text.trim();
+  if (trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<!doctype')) {
+    throw new Error(`${contextName}: Server returned HTML response (HTTP ${res.status}). Backend server is either offline or the route is not mapped.`);
+  }
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`${contextName}: Invalid JSON response (${text.slice(0, 60)})`);
+  }
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || `${contextName} failed: HTTP ${res.status}`);
+  }
+  return data;
+};
+
 /* ==========================================================================
    HEALTH CHECK
    ========================================================================== */
@@ -433,10 +458,9 @@ export const apiGetPayPalConfig = async () => {
       method: 'GET',
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(res.statusText);
-    return await res.json();
+    return await safeJsonFetch(res, 'PayPal Config');
   } catch (err) {
-    console.warn('Backend PayPal config unavailable, using fallback client-id:', err);
+    console.warn('Backend PayPal config unavailable, using fallback client-id:', err.message);
     return {
       clientId: 'BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ',
       currency: 'GBP',
@@ -454,13 +478,9 @@ export const apiCreatePayPalOrder = async (amount, bookingId, serviceName) => {
       headers: getHeaders(),
       body: JSON.stringify({ amount, bookingId, serviceName, currency: 'GBP' }),
     });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || `HTTP ${res.status}: Failed to create PayPal order`);
-    }
-    return await res.json();
+    return await safeJsonFetch(res, 'PayPal Create Order');
   } catch (err) {
-    console.error('Create PayPal order failed:', err);
+    console.warn('Backend create PayPal order failed:', err.message);
     throw err;
   }
 };
@@ -472,13 +492,9 @@ export const apiCapturePayPalOrder = async (orderId, bookingId, payStage = 'BOOK
       headers: getHeaders(),
       body: JSON.stringify({ orderId, bookingId, payStage }),
     });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || `HTTP ${res.status}: Failed to capture PayPal payment`);
-    }
-    return await res.json();
+    return await safeJsonFetch(res, 'PayPal Capture Order');
   } catch (err) {
-    console.error('Capture PayPal order failed:', err);
+    console.warn('Backend capture PayPal order failed:', err.message);
     throw err;
   }
 };
