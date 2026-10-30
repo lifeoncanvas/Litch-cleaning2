@@ -5,7 +5,15 @@
  *              Includes resilient offline caching and fallback.
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+const getApiBaseUrl = () => {
+  if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api';
+  }
+  return 'http://localhost:8081/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Helper to retrieve stored JWT token
