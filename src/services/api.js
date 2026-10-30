@@ -438,10 +438,11 @@ export const apiGetPayPalConfig = async () => {
   } catch (err) {
     console.warn('Backend PayPal config unavailable, using fallback client-id:', err);
     return {
-      clientId: 'BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE',
+      clientId: 'BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ',
       currency: 'GBP',
       appName: 'LICHT House Cleaning',
-      mode: 'live',
+      mode: 'sandbox',
+      webhookId: '45S68093S3920431N',
     };
   }
 };

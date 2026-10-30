@@ -15,6 +15,7 @@ import './Booking.css';
 import {
   apiForgotPassword,
   apiResetPassword,
+  apiGetPayPalConfig,
   apiCreatePayPalOrder,
   apiCapturePayPalOrder,
 } from './services/api';
@@ -462,23 +463,38 @@ export function AuthModal({
 }
 
 /* ==========================================================================
-   PAYPAL LIVE INTEGRATION & SMART BUTTONS
-   App Name: LICHT House Cleaning | Client ID: BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE
-   Currency: GBP | Intent: CAPTURE
+   PAYPAL PAYMENT GATEWAY & SMART BUTTONS (SANDBOX INTEGRATION)
+   App Name: LICHT House Cleaning | Client ID: BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ
+   Currency: GBP | Intent: CAPTURE | Webhook ID: 45S68093S3920431N
    ========================================================================== */
-export const PAYPAL_LIVE_CLIENT_ID = 'BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE';
+export const PAYPAL_SANDBOX_CLIENT_ID = 'BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ';
+export const PAYPAL_CLIENT_ID = PAYPAL_SANDBOX_CLIENT_ID;
 
 let paypalSdkPromise = null;
-export const loadPayPalSdk = (clientId = PAYPAL_LIVE_CLIENT_ID, currency = 'GBP') => {
-  if (typeof window !== 'undefined' && window.paypal) {
+let currentLoadedClientId = null;
+
+export const loadPayPalSdk = (clientId = PAYPAL_CLIENT_ID, currency = 'GBP') => {
+  if (typeof window !== 'undefined' && window.paypal && currentLoadedClientId === clientId) {
     return Promise.resolve(window.paypal);
   }
+
+  // If client ID changed or SDK script exists with different ID, refresh
+  if (currentLoadedClientId && currentLoadedClientId !== clientId) {
+    paypalSdkPromise = null;
+    const existing = document.getElementById('licht-paypal-sdk-script');
+    if (existing) existing.remove();
+    if (typeof window !== 'undefined') window.paypal = undefined;
+  }
+
   if (paypalSdkPromise) return paypalSdkPromise;
 
   paypalSdkPromise = new Promise((resolve, reject) => {
     const existing = document.getElementById('licht-paypal-sdk-script');
     if (existing) {
-      existing.addEventListener('load', () => resolve(window.paypal));
+      existing.addEventListener('load', () => {
+        currentLoadedClientId = clientId;
+        resolve(window.paypal);
+      });
       existing.addEventListener('error', () => reject(new Error('Failed to load PayPal script')));
       return;
     }
@@ -489,6 +505,7 @@ export const loadPayPalSdk = (clientId = PAYPAL_LIVE_CLIENT_ID, currency = 'GBP'
     script.async = true;
     script.onload = () => {
       if (window.paypal) {
+        currentLoadedClientId = clientId;
         resolve(window.paypal);
       } else {
         reject(new Error('PayPal SDK loaded but window.paypal is undefined'));
@@ -496,7 +513,7 @@ export const loadPayPalSdk = (clientId = PAYPAL_LIVE_CLIENT_ID, currency = 'GBP'
     };
     script.onerror = (err) => {
       paypalSdkPromise = null;
-      reject(new Error('Failed to load live PayPal SDK script from paypal.com'));
+      reject(new Error('Failed to load PayPal SDK script from paypal.com'));
     };
     document.body.appendChild(script);
   });
@@ -512,7 +529,12 @@ export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymen
   useEffect(() => {
     let isCancelled = false;
 
-    loadPayPalSdk()
+    apiGetPayPalConfig()
+      .then((cfg) => {
+        const clientId = cfg?.clientId || PAYPAL_CLIENT_ID;
+        const currency = cfg?.currency || 'GBP';
+        return loadPayPalSdk(clientId, currency);
+      })
       .then((paypal) => {
         if (isCancelled) return;
         setLoading(false);
