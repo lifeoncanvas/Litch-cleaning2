@@ -607,7 +607,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
         ...booking,
         status: 'Completed & Paid (PayPal)',
         paidAmount: booking.totalPrice,
-        paymentMethod: 'PayPal (Live)',
+        paymentMethod: 'PayPal',
         transactionId: res.captureId,
       });
     }
@@ -634,7 +634,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 Payment of £{booking.totalPrice} Captured!
               </h3>
               <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
-                Your service balance has been settled via live PayPal. An official VAT invoice has been emailed to <strong>{booking.clientEmail}</strong>.
+                Your service balance has been settled via PayPal. An official VAT invoice has been emailed to <strong>{booking.clientEmail}</strong>.
               </p>
               <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '20px', fontSize: '0.82rem', textAlign: 'left' }}>
                 <div><strong>Booking Ref:</strong> {booking.id}</div>
@@ -647,7 +647,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 className="service-book-btn"
                 style={{ width: '100%', padding: '12px' }}
               >
-                Close &amp; View Bookings
+                Close & View Bookings
               </button>
             </div>
           ) : (
@@ -662,7 +662,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                   <strong style={{ color: 'var(--navy)' }}>{booking.id}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--slate-mid)' }}>Date &amp; Window:</span>
+                  <span style={{ color: 'var(--slate-mid)' }}>Date & Window:</span>
                   <span>{booking.date} · {booking.timeSlot}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '10px', marginTop: '10px' }}>
@@ -678,7 +678,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
               )}
 
               <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '0.78rem', color: 'var(--slate-mid)' }}>
-                🔒 256-Bit Secure PayPal &amp; Card Checkout · LICHT House Cleaning
+                🔒 256-Bit Secure PayPal & Card Checkout (GBP) · LICHT House Cleaning
               </div>
 
               <PayPalButtonContainer
@@ -727,11 +727,7 @@ export function BookingModal({
   const [postcode, setPostcode] = useState('W1J 6BQ');
   const [notes, setNotes] = useState('');
 
-  // Payment Gateway State (All payments routed through PayPal: PayPal account, Debit/Credit Cards & Pay After Service)
-  const [paymentMethod, setPaymentMethod] = useState('paypal'); // 'paypal' | 'pay_later'
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState('');
-  const [paymentReceipt, setPaymentReceipt] = useState(null);
+  const [isProcessingPayment] = useState(false);
 
   const [preAssignedBookingId] = useState(() => 'LICHT-BK-' + Math.floor(1000 + Math.random() * 9000));
   const [preAssignedOtp] = useState(() => '' + Math.floor(1000 + Math.random() * 9000));
@@ -758,50 +754,9 @@ export function BookingModal({
     if (step < 3) {
       setStep(step + 1);
     } else if (step === 3) {
-      // Proceed to Step 4: Payment Gateway Screen
+      // Proceed to Step 4: Review & Confirm Screen
       setStep(4);
     }
-  };
-
-  const handlePayPalSuccess = (captureRes) => {
-    const txnId = captureRes?.captureId || captureRes?.orderId || ('TXN-PP-' + Math.floor(100000 + Math.random() * 900000));
-    const newBooking = {
-      id: preAssignedBookingId,
-      transactionId: txnId,
-      paymentMethod: 'PayPal / Card',
-      paidAmount: grandTotal,
-      paymentStatus: 'PAID',
-      paymentLink: `https://lichtmarketinglimited.org/?pay=${preAssignedBookingId}`,
-      serviceName: isCartBooking
-        ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
-        : service.title,
-      serviceId: service?.id || 'multi_cart',
-      serviceImg: service?.img || cartItems[0]?.img || '/service_office.jpg',
-      frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Deep Clean',
-      propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
-      date,
-      timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
-      address: `${address}, ${postcode}`,
-      notes,
-      totalPrice: grandTotal,
-      clientName: clientName || user?.name || 'Customer',
-      clientEmail: clientEmail || user?.email || 'info@lichtmarketinglimited.org',
-      clientPhone: phone,
-      createdAt: new Date().toLocaleDateString('en-GB'),
-      status: 'Confirmed & Scheduled (Paid)',
-      completionOtp: preAssignedOtp,
-      otpVerified: false,
-    };
-
-    setPaymentReceipt({
-      txnId,
-      methodUsed: 'PayPal / Card',
-      amount: grandTotal,
-      date: new Date().toLocaleDateString('en-GB'),
-    });
-    setConfirmedBookingData(newBooking);
-    onConfirmBooking(newBooking);
-    setStep(5);
   };
 
   const handlePayLaterConfirm = () => {
@@ -809,7 +764,7 @@ export function BookingModal({
     const newBooking = {
       id: preAssignedBookingId,
       transactionId: txnId,
-      paymentMethod: 'Pay After Service (PayPal / Card)',
+      paymentMethod: 'PayPal (Post-Service)',
       paidAmount: 0.0,
       paymentStatus: 'PENDING_PAYMENT',
       paymentLink: `https://lichtmarketinglimited.org/?pay=${preAssignedBookingId}`,
@@ -834,12 +789,6 @@ export function BookingModal({
       otpVerified: false,
     };
 
-    setPaymentReceipt({
-      txnId: 'Awaiting Settlement After Service',
-      methodUsed: 'Pay After Service (PayPal / Card)',
-      amount: 0.0,
-      date: new Date().toLocaleDateString('en-GB'),
-    });
     setConfirmedBookingData(newBooking);
     onConfirmBooking(newBooking);
     setStep(5);
@@ -847,9 +796,7 @@ export function BookingModal({
 
   const handleClose = () => {
     setStep(1);
-    setIsProcessingPayment(false);
     setConfirmedBookingData(null);
-    setPaymentReceipt(null);
     onClose();
   };
 
@@ -858,7 +805,7 @@ export function BookingModal({
       <div className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title">
-            {step === 5 ? 'Booking Confirmed & Paid' : step === 4 ? 'Secure Payment Gateway' : 'Book Professional Cleaning'}
+            {step === 5 ? 'Booking Request Confirmed' : step === 4 ? 'Review & Confirm Request' : 'Book Professional Cleaning'}
           </h2>
           <button onClick={handleClose} className="licht-modal-close-btn" aria-label="Close">
             ✕
@@ -891,16 +838,16 @@ export function BookingModal({
               {/* Progress Steps */}
               <div className="booking-steps-nav">
                 <div className={`booking-step-chip ${step === 1 ? 'active' : step > 1 ? 'completed' : ''}`}>
-                  1. Scope &amp; Frequency
+                  1. Scope & Frequency
                 </div>
                 <div className={`booking-step-chip ${step === 2 ? 'active' : step > 2 ? 'completed' : ''}`}>
-                  2. Schedule Date &amp; Time
+                  2. Schedule Date & Time
                 </div>
                 <div className={`booking-step-chip ${step === 3 ? 'active' : step > 3 ? 'completed' : ''}`}>
-                  3. Address &amp; Access
+                  3. Address & Access
                 </div>
                 <div className={`booking-step-chip ${step === 4 ? 'active' : ''}`}>
-                  4. Payment Gateway 🔒
+                  4. Review & Confirm
                 </div>
               </div>
 
@@ -1099,100 +1046,65 @@ export function BookingModal({
                 </div>
               )}
 
-              {/* STEP 4: PAYMENT GATEWAY SCREEN */}
+              {/* STEP 4: REVIEW & CONFIRM BOOKING (NO PAYMENT DUE TODAY) */}
               {step === 4 && (
                 <div>
-                  {isProcessingPayment ? (
-                    <div className="payment-processing-overlay">
-                      <div className="payment-spinner" />
-                      <h4 style={{ fontFamily: 'var(--font-display)', color: 'var(--navy)', marginBottom: '8px' }}>
-                        Processing Payment (£{grandTotal})
-                      </h4>
-                      <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem' }}>
-                        {processingStatus}
-                      </p>
+                  <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '16px 18px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ color: '#16a34a', fontSize: '1.15rem', fontWeight: 900 }}>✓</span>
+                      <strong style={{ color: '#15803d', fontSize: '0.98rem' }}>£0.00 Due Today — No Upfront Payment Required</strong>
                     </div>
-                  ) : (
-                    <>
-                      {/* Payment Method Tabs */}
-                      <div className="payment-methods-tabs" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                        <button
-                          type="button"
-                          className={`payment-tab-btn ${paymentMethod === 'paypal' ? 'active' : ''}`}
-                          onClick={() => setPaymentMethod('paypal')}
-                        >
-                          <span className="payment-tab-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#003087">
-                              <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.004.408 5.42.043 5.918.043h7.728c3.275 0 5.612.784 6.758 2.268 1.096 1.42 1.258 3.398.48 5.882-.015.048-.033.095-.049.143-.323 1.077-.852 1.99-1.574 2.716-.762.766-1.745 1.343-2.923 1.714-1.127.355-2.434.536-3.886.536H10.12l-1.39 8.815c-.059.414-.416.72-.834.72l-.82.014z" />
-                            </svg>
-                          </span>
-                          <span>PayPal / Card</span>
-                        </button>
+                    <p style={{ fontSize: '0.84rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
+                      Your cleaning service is confirmed with zero upfront charge. When our verified cleaner completes the job at your property, you will receive an official invoice and a secure PayPal link to settle by PayPal or Card in GBP.
+                    </p>
+                  </div>
 
-                        <button
-                          type="button"
-                          className={`payment-tab-btn ${paymentMethod === 'pay_later' ? 'active' : ''}`}
-                          onClick={() => setPaymentMethod('pay_later')}
-                        >
-                          <span className="payment-tab-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                          </span>
-                          <span>Pay After Service</span>
-                        </button>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 18px', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--slate-mid)', fontWeight: 800, marginBottom: '10px' }}>
+                      Booking Details & Access
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px', fontSize: '0.84rem' }}>
+                      <div>
+                        <span style={{ color: 'var(--slate-mid)' }}>Service: </span>
+                        <strong style={{ color: 'var(--navy)' }}>{isCartBooking ? `${cartItems.length} Services` : service?.title}</strong>
                       </div>
-
-                      {/* 1. PayPal & Card View */}
-                      {paymentMethod === 'paypal' && (
-                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ color: '#003087', fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.5px' }}>PayPal</span>
-                            </div>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--slate-mid)', fontWeight: 600 }}>Merchant: LICHT House Cleaning</span>
-                          </div>
-                          <p style={{ fontSize: '0.86rem', color: 'var(--slate-mid)', margin: '0 0 16px', lineHeight: 1.5 }}>
-                            Pay <strong>£{grandTotal}</strong> securely using your <strong>PayPal account</strong> or any <strong>Debit / Credit Card</strong>.
-                          </p>
-
-                          <PayPalButtonContainer
-                            amount={grandTotal}
-                            bookingId={preAssignedBookingId}
-                            serviceName={isCartBooking ? `${cartItems.length} Cleaning Services` : service?.title}
-                            onPaymentSuccess={handlePayPalSuccess}
-                            onError={(err) => setProcessingStatus(err)}
-                          />
+                      <div>
+                        <span style={{ color: 'var(--slate-mid)' }}>Frequency: </span>
+                        <strong>{frequency === 'weekly' ? 'Weekly' : frequency === 'fortnightly' ? 'Fortnightly' : frequency === 'monthly' ? 'Monthly' : 'One-Off'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--slate-mid)' }}>Date & Window: </span>
+                        <strong>{date} ({timeSlot})</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--slate-mid)' }}>Contact Phone: </span>
+                        <strong>{phone}</strong>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <span style={{ color: 'var(--slate-mid)' }}>Address: </span>
+                        <strong>{address}, {postcode}</strong>
+                      </div>
+                      {notes && (
+                        <div style={{ gridColumn: 'span 2' }}>
+                          <span style={{ color: 'var(--slate-mid)' }}>Access Notes: </span>
+                          <span>{notes}</span>
                         </div>
                       )}
+                    </div>
+                  </div>
 
-                      {/* 2. Pay After Service View */}
-                      {paymentMethod === 'pay_later' && (
-                        <div style={{ background: '#f0fdfa', border: '1.5px solid #99f6e4', borderRadius: '12px', padding: '20px', marginBottom: '18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <span style={{ color: '#0f766e', fontSize: '1.15rem' }}>✓</span>
-                            <strong style={{ color: '#0f766e', fontSize: '1rem' }}>Pay Upon Service Completion (£0.00 Charged Today)</strong>
-                          </div>
-                          <p style={{ fontSize: '0.86rem', color: '#134e4a', margin: '0 0 16px', lineHeight: 1.55 }}>
-                            Your appointment is confirmed immediately with <strong>£0.00 charged today</strong>. When our DBS-vetted cleaner finishes work at your property, provide them with your 4-digit verification PIN. You can then settle your <strong>£{grandTotal}</strong> balance securely online via PayPal or Card from your "My Bookings" portal.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={handlePayLaterConfirm}
-                            className="service-book-btn"
-                            style={{ width: '100%', padding: '14px', fontSize: '0.94rem', background: '#0f766e', cursor: 'pointer' }}
-                          >
-                            Confirm Booking — Pay £{grandTotal} After Service
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handlePayLaterConfirm}
+                    className="service-book-btn"
+                    style={{ width: '100%', padding: '15px', fontSize: '0.98rem', background: '#0f766e', cursor: 'pointer', fontWeight: 800 }}
+                  >
+                    Confirm Booking Request (£{grandTotal} Due After Service)
+                  </button>
                 </div>
               )}
 
-              {/* Live Price Summary Box */}
+              {/* Price Summary Box */}
               <div className="booking-pricing-breakdown">
                 <div className="price-line-row">
                   <span>Base Cleaning Service</span>
@@ -1215,7 +1127,7 @@ export function BookingModal({
                   <span>£{vatAmount}</span>
                 </div>
                 <div className="price-line-row total-row">
-                  <span>{step === 4 ? 'Amount to Authorize' : 'Estimated Total'}</span>
+                  <span>{step === 4 ? 'Total Due After Service' : 'Estimated Total'}</span>
                   <span>£{grandTotal}</span>
                 </div>
               </div>
@@ -1232,39 +1144,30 @@ export function BookingModal({
                       Back
                     </button>
                   )}
-                  {step < 4 ? (
+                  {step < 4 && (
                     <button
                       type="button"
                       onClick={handleNextStep}
                       className="modal-next-btn"
                     >
-                      {step === 3 ? 'Proceed to Payment Gateway' : 'Continue to Next Step'}
+                      {step === 3 ? 'Review & Confirm Booking' : 'Continue to Next Step'}
                     </button>
-                  ) : paymentMethod === 'paypal' ? (
-                    <div style={{ fontSize: '0.82rem', color: 'var(--slate-mid)', textAlign: 'center', margin: 'auto' }}>
-                      Choose <strong>PayPal</strong> or <strong>Debit / Credit Card</strong> above to complete checkout.
-                    </div>
-                  ) : null}
+                  )}
                 </div>
               )}
             </>
           ) : (
-            /* STEP 5: Payment Receipt & Confirmed Screen */
+            /* STEP 5: Booking Confirmation & Service PIN Screen */
             <div className="booking-success-box">
               <div className="booking-success-icon">✓</div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'var(--navy)', marginBottom: '6px' }}>
-                Booking Confirmed &amp; Payment Received!
+                Booking Request Confirmed!
               </h3>
               <p style={{ color: 'var(--slate-mid)', fontSize: '0.9rem', maxWidth: '440px', margin: '0 auto' }}>
-                Your service has been authorized and scheduled. A certified Licht cleaning supervisor has been assigned to your booking.
+                We have received your booking request! Our operations team will assign a vetted operative and confirm your appointment. Confirmation details have been emailed to <strong>{confirmedBookingData?.clientEmail}</strong>.
               </p>
 
-              <div className="payment-receipt-badge">
-                <span>✓ Payment Captured: £{confirmedBookingData?.totalPrice}</span>
-                <span style={{ fontFamily: 'monospace' }}>{paymentReceipt?.txnId}</span>
-              </div>
-
-              <div className="booking-ref-badge">
+              <div className="booking-ref-badge" style={{ marginTop: '14px' }}>
                 Booking Reference: {confirmedBookingData?.id}
               </div>
 
@@ -1279,13 +1182,13 @@ export function BookingModal({
                 boxShadow: '0 4px 14px rgba(13, 148, 136, 0.08)'
               }}>
                 <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#0f766e', fontWeight: 800, marginBottom: '6px' }}>
-                  🔑 Service Completion Verification PIN / OTP
+                  Service Completion Verification PIN / OTP
                 </div>
                 <div style={{ fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900, color: '#0f766e', letterSpacing: '8px', margin: '6px 0' }}>
                   {confirmedBookingData?.completionOtp || '5829'}
                 </div>
                 <p style={{ margin: '8px 0 0', fontSize: '0.84rem', color: '#115e59', lineHeight: 1.45 }}>
-                  <strong>How this works:</strong> When your cleaning operative arrives and finishes the service at your property, provide them with this 4-digit code. Entering this OTP authorizes and verifies that the clean was successfully completed.
+                  <strong>How this works:</strong> Provide this 4-digit PIN to your cleaning operative once the service has been satisfactorily completed at your property.
                 </p>
               </div>
 
@@ -1300,22 +1203,14 @@ export function BookingModal({
                   <strong>Location:</strong> {confirmedBookingData?.address}
                 </div>
                 <div style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
-                  <strong>Payment Method:</strong> {paymentReceipt?.methodUsed}
+                  <strong>Payment Terms:</strong> Settle after cleaning via secure PayPal email link
                 </div>
                 <div style={{ fontSize: '0.85rem' }}>
-                  <strong>Confirmed Amount:</strong> £{confirmedBookingData?.totalPrice} (inc. VAT) · Status: <strong>PAID</strong>
+                  <strong>Total Amount:</strong> £{confirmedBookingData?.totalPrice} (inc. VAT) · Status: <span style={{ color: '#d97706', fontWeight: 700 }}>Payment Due After Service (£0.00 Charged Today)</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => alert(`Receipt ${paymentReceipt?.txnId} downloaded for £${confirmedBookingData?.totalPrice}`)}
-                  className="service-cart-btn"
-                  style={{ padding: '14px 20px' }}
-                >
-                  📄 Download Receipt (PDF)
-                </button>
                 <button
                   type="button"
                   onClick={() => { handleClose(); onViewBookings(); }}

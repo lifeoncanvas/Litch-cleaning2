@@ -902,7 +902,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                               {b.paymentMethod?.includes('PayPal') ? (
                                 <div style={{ marginTop: '3px' }}>
                                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#003087', fontWeight: 800, background: '#dbeafe', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
-                                    ● PayPal Live
+                                    ● PayPal (GBP)
                                   </span>
                                 </div>
                               ) : b.paymentMethod?.includes('Pay After Service') ? (
