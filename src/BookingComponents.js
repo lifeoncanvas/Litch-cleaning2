@@ -1081,11 +1081,6 @@ export function BookingModal({
               {/* STEP 4: PAYMENT GATEWAY SCREEN */}
               {step === 4 && (
                 <div>
-                  <div className="payment-security-banner">
-                    <span>🔒 256-Bit SSL Encrypted Payment Gateway</span>
-                    <span>PCI-DSS Level 1 Compliant</span>
-                  </div>
-
                   {isProcessingPayment ? (
                     <div className="payment-processing-overlay">
                       <div className="payment-spinner" />
