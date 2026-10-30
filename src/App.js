@@ -16,6 +16,7 @@ import {
   CartDrawer,
   MyBookingsModal,
   ToastNotification,
+  PayPalPostServiceModal,
 } from './components/booking';
 import './Booking.css';
 
@@ -37,6 +38,7 @@ import {
   apiCreateBooking,
   apiCancelBooking,
   apiSubmitQuote,
+  apiFetchBookingById,
 } from './services/api';
 
 /* ==========================================================================
@@ -114,7 +116,27 @@ export default function App() {
 
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [myBookingsModalOpen, setMyBookingsModalOpen] = useState(false);
+  const [directPayBooking, setDirectPayBooking] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Handle direct PayPal payment links from email (e.g. ?pay=LICHT-BK-1234 or #pay=LICHT-BK-1234)
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const payId = urlParams.get('pay') || (window.location.hash.startsWith('#pay=') ? window.location.hash.replace('#pay=', '') : null);
+      if (payId) {
+        apiFetchBookingById(payId).then((b) => {
+          if (b) {
+            setDirectPayBooking(b);
+          } else {
+            const localList = JSON.parse(localStorage.getItem('licht_bookings') || '[]');
+            const found = localList.find((item) => item.id === payId);
+            if (found) setDirectPayBooking(found);
+          }
+        });
+      }
+    } catch (e) {}
+  }, []);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -1808,6 +1830,17 @@ export default function App() {
         onBookingPaid={handleBookingPaid}
         onBookNew={() => {
           navigateTo('home', 'services');
+        }}
+      />
+
+      {/* ── DIRECT PAYPAL PAYMENT LINK MODAL ── */}
+      <PayPalPostServiceModal
+        isOpen={Boolean(directPayBooking)}
+        onClose={() => setDirectPayBooking(null)}
+        booking={directPayBooking}
+        onPaymentSuccess={(updated) => {
+          handleBookingPaid(updated);
+          setDirectPayBooking(null);
         }}
       />
     </div>

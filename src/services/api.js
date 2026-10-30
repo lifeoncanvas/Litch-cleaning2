@@ -227,6 +227,49 @@ export const apiCreateBooking = async (bookingData) => {
   }
 };
 
+export const apiFetchBookingById = async (id) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend fetch booking by id failed:', err);
+    return null;
+  }
+};
+
+export const apiAssignCleaner = async (id, cleanerName) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/assign`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ cleaner: cleanerName }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend assign cleaner failed:', err);
+    return null;
+  }
+};
+
+export const apiSendPaymentRequest = async (id) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/request-payment`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend send payment request failed:', err);
+    return null;
+  }
+};
+
 export const apiDispatchBooking = async (id, dispatchData) => {
   try {
     const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(id)}/dispatch`, {

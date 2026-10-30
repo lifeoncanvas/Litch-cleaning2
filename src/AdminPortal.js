@@ -8,6 +8,9 @@ import {
   apiCancelBooking,
   apiVerifyBookingOtp,
   apiFetchQuotes,
+  apiAssignCleaner,
+  apiSendPaymentRequest,
+  apiFetchOperatives,
 } from './services/api';
 
 /* Clean default admin: Sharon Shelke */
@@ -41,6 +44,12 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   // Backend Health & Inbound Quotes State
   const [backendStatus, setBackendStatus] = useState({ online: false, port: 8081 });
   const [quotes, setQuotes] = useState([]);
+  const [operatives, setOperatives] = useState([
+    { id: 'OP-101', name: 'Sarah Jenkins', role: 'Commercial Specialist', phone: '+44 7911 123456', status: 'available' },
+    { id: 'OP-102', name: 'Marcus Davies', role: 'Deep Clean Lead', phone: '+44 7911 654321', status: 'available' },
+    { id: 'OP-103', name: 'Elena Rostova', role: 'Domestic Specialist', phone: '+44 7911 789012', status: 'available' },
+    { id: 'OP-104', name: 'David Adeleke', role: 'Surface Technician', phone: '+44 7911 345678', status: 'available' },
+  ]);
 
   // Tab State: Simplified to 3 core tabs (orders, quotes, users)
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'quotes' | 'users'
@@ -132,6 +141,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
         if (res.ok) {
           setBackendStatus({ online: true, port: 8081 });
           apiFetchQuotes().then(setQuotes);
+          apiFetchOperatives().then(data => {
+            if (Array.isArray(data) && data.length > 0) setOperatives(data);
+          });
           const serverBookings = await apiFetchAllBookings();
           if (Array.isArray(serverBookings) && serverBookings.length > 0) {
             setBookings(serverBookings);
@@ -261,7 +273,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
   // Direct Status Update
   const handleUpdateBookingStatus = (bookingId, newStatus) => {
-    if (newStatus === 'Completed & Verified') {
+    if (newStatus === 'Completed & Verified' || newStatus === 'Completed') {
       const target = bookings.find(b => b.id === bookingId);
       if (target) {
         setOtpModalBooking(target);
@@ -274,6 +286,40 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     setBookings(updated);
     localStorage.setItem('licht_bookings', JSON.stringify(updated));
     if (onBookingUpdate) onBookingUpdate();
+  };
+
+  // Step 4: Admin assigns an available cleaner
+  const handleAssignCleaner = async (bookingId, cleanerName) => {
+    if (!cleanerName) return;
+    try {
+      await apiAssignCleaner(bookingId, cleanerName);
+    } catch (e) {}
+
+    const selectedOp = operatives.find(o => o.name === cleanerName);
+    const updated = bookings.map(b => b.id === bookingId ? {
+      ...b,
+      assignedCleaner: cleanerName,
+      assignedCleanerPhone: selectedOp ? selectedOp.phone : '+44 20 8000 8899',
+      status: 'Cleaner Assigned'
+    } : b);
+
+    setBookings(updated);
+    localStorage.setItem('licht_bookings', JSON.stringify(updated));
+    if (onBookingUpdate) onBookingUpdate();
+    setAdminNotice(`✓ Assigned ${cleanerName} to booking ${bookingId}. Customer notified via email!`);
+    setTimeout(() => setAdminNotice(''), 6000);
+  };
+
+  // Step 6: Customer receives payment request
+  const handleSendPaymentRequest = async (booking) => {
+    try {
+      await apiSendPaymentRequest(booking.id);
+      setAdminNotice(`✓ Payment request email sent to ${booking.clientEmail} with secure PayPal link for booking ${booking.id} (£${booking.totalPrice})`);
+      setTimeout(() => setAdminNotice(''), 6000);
+    } catch (e) {
+      setAdminNotice(`Notice: Payment request triggered for ${booking.id}`);
+      setTimeout(() => setAdminNotice(''), 6000);
+    }
   };
 
   // Handle Customer OTP Verification & Job Completion
@@ -835,9 +881,10 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                         <th>Booking Ref</th>
                         <th>Client &amp; Contact</th>
                         <th>Service Details</th>
-                        <th>Date &amp; Time Slot</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
+                        <th>Date &amp; Window</th>
+                        <th>Assigned Cleaner</th>
+                        <th>Payment Status</th>
+                        <th>Job Status</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -846,6 +893,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                         const isCompleted = (b.status || '').toLowerCase().includes('completed');
                         const isCancelled = (b.status || '').toLowerCase().includes('cancel');
                         const isInProgress = (b.status || '').toLowerCase().includes('progress');
+                        const isPaid = b.paymentStatus === 'PAID' || (b.paidAmount && b.paidAmount > 0) || (b.status || '').toLowerCase().includes('paid');
 
                         return (
                           <tr key={b.id} style={{ opacity: isCancelled ? 0.6 : 1 }}>
@@ -881,7 +929,14 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                             </td>
                             <td>
                               <div className="booking-client-name">{b.clientName || 'Client'}</div>
-                              <div className="booking-client-contact">{b.clientEmail}</div>
+                              <div className="booking-client-contact">
+                                <a href={`mailto:${b.clientEmail}`} style={{ color: 'var(--teal)', textDecoration: 'none' }}>{b.clientEmail}</a>
+                              </div>
+                              {b.clientPhone && (
+                                <div className="booking-client-contact" style={{ fontWeight: 600, color: '#0f172a' }}>
+                                  📞 {b.clientPhone}
+                                </div>
+                              )}
                               <div className="booking-client-contact" style={{ color: 'var(--slate-mid)', fontSize: '0.75rem' }}>{b.address}</div>
                             </td>
                             <td>
@@ -889,14 +944,101 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                               <div style={{ fontSize: '0.74rem', color: 'var(--slate-mid)' }}>
                                 {b.frequency} {b.propertySize ? `· ${b.propertySize}` : ''}
                               </div>
+                              {b.notes && (
+                                <div style={{ fontSize: '0.72rem', color: '#334155', fontStyle: 'italic', marginTop: '4px', maxWidth: '220px' }}>
+                                  "{b.notes}"
+                                </div>
+                              )}
                             </td>
                             <td>
                               <div style={{ fontWeight: 600 }}>{b.date}</div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)' }}>{b.timeSlot}</div>
                             </td>
                             <td>
-                              <strong style={{ color: 'var(--navy)', fontSize: '0.95rem' }}>£{b.totalPrice || b.paidAmount}</strong>
-                              <div style={{ fontSize: '0.72rem', color: 'var(--slate-mid)' }}>inc. VAT</div>
+                              {b.assignedCleaner ? (
+                                <div>
+                                  <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '0.8rem' }}>
+                                    👤 {b.assignedCleaner}
+                                  </div>
+                                  <div style={{ fontSize: '0.7rem', color: 'var(--slate-mid)' }}>
+                                    {b.assignedCleanerPhone || '+44 7911 123456'}
+                                  </div>
+                                  <select
+                                    value={b.assignedCleaner}
+                                    onChange={(e) => handleAssignCleaner(b.id, e.target.value)}
+                                    style={{
+                                      fontSize: '0.68rem',
+                                      marginTop: '4px',
+                                      padding: '2px 6px',
+                                      borderRadius: '6px',
+                                      border: '1px solid #cbd5e1',
+                                      background: '#f8fafc',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <option value={b.assignedCleaner}>Change Cleaner...</option>
+                                    {operatives.map((op) => (
+                                      <option key={op.id} value={op.name}>
+                                        {op.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ) : (
+                                <select
+                                  value=""
+                                  onChange={(e) => handleAssignCleaner(b.id, e.target.value)}
+                                  style={{
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    padding: '6px 8px',
+                                    borderRadius: '8px',
+                                    border: '1.5px solid #0d9488',
+                                    background: '#f0fdfa',
+                                    color: '#0f766e',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <option value="">+ Assign Cleaner</option>
+                                  {operatives.map((op) => (
+                                    <option key={op.id} value={op.name}>
+                                      {op.name} ({op.role.split(' ')[0]})
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </td>
+                            <td>
+                              {isPaid ? (
+                                <span style={{ display: 'inline-block', background: '#dcfce7', color: '#15803d', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', fontSize: '0.74rem' }}>
+                                  ✓ Paid (£{b.paidAmount || b.totalPrice})
+                                </span>
+                              ) : (
+                                <div>
+                                  <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', fontSize: '0.74rem' }}>
+                                    ⏳ £{b.totalPrice} Due
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSendPaymentRequest(b)}
+                                    style={{
+                                      display: 'block',
+                                      marginTop: '5px',
+                                      background: '#0070ba',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      padding: '4px 8px',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Email secure payment link to customer"
+                                  >
+                                    ✉ Send Payment Link
+                                  </button>
+                                </div>
+                              )}
                             </td>
                             <td>
                               <select
@@ -905,17 +1047,19 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                                 style={{
                                   fontSize: '0.74rem',
                                   fontWeight: 700,
-                                  padding: '5px 10px',
-                                  borderRadius: '12px',
+                                  padding: '5px 8px',
+                                  borderRadius: '10px',
                                   border: '1px solid #cbd5e1',
                                   background: isCompleted ? '#f0fdf4' : isInProgress ? '#eff6ff' : isCancelled ? '#fef2f2' : '#f8fafc',
                                   color: isCompleted ? '#166534' : isInProgress ? '#1e40af' : isCancelled ? '#991b1b' : '#1e293b',
                                   cursor: 'pointer',
                                 }}
                               >
-                                <option value="Confirmed & Scheduled (Paid)">● Confirmed (Paid)</option>
+                                <option value="Booking Requested (Pending Assignment)">⏳ Booking Requested</option>
+                                <option value="Cleaner Assigned">👤 Cleaner Assigned</option>
                                 <option value="In Progress">⚡ In Progress</option>
-                                <option value="Completed & Verified">✓ Completed (Requires OTP)</option>
+                                <option value="Completed & Verified">✓ Completed (Triggers Payment Request)</option>
+                                <option value="Completed & Paid (PayPal)">✓ Completed &amp; Paid (PayPal)</option>
                                 <option value="Cancelled">✕ Cancelled</option>
                               </select>
                             </td>

@@ -10,4 +10,5 @@ export {
   BookingModal,
   CartDrawer,
   MyBookingsModal,
+  PayPalPostServiceModal,
 } from '../../BookingComponents';

@@ -720,6 +720,8 @@ export function BookingModal({
     return tomorrow.toISOString().split('T')[0];
   });
   const [timeSlot, setTimeSlot] = useState('morning'); // morning, afternoon, evening
+  const [clientName, setClientName] = useState(user?.name || '');
+  const [clientEmail, setClientEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '+44 20 8000 0000');
   const [address, setAddress] = useState(user?.address || '14 Berkeley Square, Mayfair');
   const [postcode, setPostcode] = useState('W1J 6BQ');
@@ -768,6 +770,8 @@ export function BookingModal({
       transactionId: txnId,
       paymentMethod: 'PayPal / Card',
       paidAmount: grandTotal,
+      paymentStatus: 'PAID',
+      paymentLink: `https://lichtmarketinglimited.org/?pay=${preAssignedBookingId}`,
       serviceName: isCartBooking
         ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
         : service.title,
@@ -780,8 +784,9 @@ export function BookingModal({
       address: `${address}, ${postcode}`,
       notes,
       totalPrice: grandTotal,
-      clientName: user?.name || 'Verified Client',
-      clientEmail: user?.email || 'info@lichtmarketinglimited.org',
+      clientName: clientName || user?.name || 'Customer',
+      clientEmail: clientEmail || user?.email || 'info@lichtmarketinglimited.org',
+      clientPhone: phone,
       createdAt: new Date().toLocaleDateString('en-GB'),
       status: 'Confirmed & Scheduled (Paid)',
       completionOtp: preAssignedOtp,
@@ -806,6 +811,8 @@ export function BookingModal({
       transactionId: txnId,
       paymentMethod: 'Pay After Service (PayPal / Card)',
       paidAmount: 0.0,
+      paymentStatus: 'PENDING_PAYMENT',
+      paymentLink: `https://lichtmarketinglimited.org/?pay=${preAssignedBookingId}`,
       serviceName: isCartBooking
         ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
         : service.title,
@@ -818,10 +825,11 @@ export function BookingModal({
       address: `${address}, ${postcode}`,
       notes,
       totalPrice: grandTotal,
-      clientName: user?.name || 'Verified Client',
-      clientEmail: user?.email || 'info@lichtmarketinglimited.org',
+      clientName: clientName || user?.name || 'Customer',
+      clientEmail: clientEmail || user?.email || 'info@lichtmarketinglimited.org',
+      clientPhone: phone,
       createdAt: new Date().toLocaleDateString('en-GB'),
-      status: 'Confirmed (Pay After Service)',
+      status: 'Booking Requested (Pending Assignment)',
       completionOtp: preAssignedOtp,
       otpVerified: false,
     };
@@ -1017,37 +1025,38 @@ export function BookingModal({
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <div className="form-group">
-                      <label className="form-label">Contact Name</label>
+                      <label className="form-label">Full Name *</label>
                       <input
                         type="text"
                         className="form-input"
-                        value={user?.name || ''}
-                        disabled
-                        style={{ background: '#f8fafc' }}
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        placeholder="e.g. Alexander Thorne"
+                        required
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Phone Number *</label>
+                      <label className="form-label">Email Address *</label>
+                      <input
+                        type="email"
+                        className="form-input"
+                        value={clientEmail}
+                        onChange={(e) => setClientEmail(e.target.value)}
+                        placeholder="e.g. alexander@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label">UK Phone Number *</label>
                       <input
                         type="tel"
                         className="form-input"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+44 20 8000 0000"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
-                    <div className="form-group">
-                      <label className="form-label">Street Address *</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="e.g. 14 Berkeley Square"
                         required
                       />
                     </div>
@@ -1065,14 +1074,26 @@ export function BookingModal({
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Access Instructions / Key Code (Optional)</label>
+                    <label className="form-label">UK Street Address *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="e.g. 14 Berkeley Square, London"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Cleaning Requirements &amp; Access Notes</label>
                     <textarea
                       rows={3}
                       className="form-input"
                       style={{ resize: 'none' }}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="e.g. Key safe code 4892, check in with building security, alarm deactivated."
+                      placeholder="e.g. Deep clean kitchen and bathrooms, key safe code 4892, pet on premises."
                     />
                   </div>
                 </div>
