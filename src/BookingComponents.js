@@ -467,8 +467,9 @@ export function AuthModal({
    App Name: LICHT House Cleaning | Client ID: BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ
    Currency: GBP | Intent: CAPTURE | Webhook ID: 45S68093S3920431N
    ========================================================================== */
+export const PAYPAL_LIVE_CLIENT_ID = 'BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE';
 export const PAYPAL_SANDBOX_CLIENT_ID = 'BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ';
-export const PAYPAL_CLIENT_ID = PAYPAL_SANDBOX_CLIENT_ID;
+export const PAYPAL_CLIENT_ID = PAYPAL_LIVE_CLIENT_ID;
 
 let paypalSdkPromise = null;
 let currentLoadedClientId = null;
