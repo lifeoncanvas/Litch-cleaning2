@@ -11,27 +11,27 @@ export const VALUES_DATA = [
   {
     num: '01',
     title: 'Professionalism',
-    text: 'Trained, uniformed, and courteous staff delivering meticulous cleaning with consistent care and precision.',
+    text: 'Trained, uniformed, and courteous staff who take care over the details.',
   },
   {
     num: '02',
     title: 'Reliability',
-    text: 'Prompt attendance, dependable scheduling, and guaranteed replacement coverage so your spaces remain spotless.',
+    text: 'We aim for punctual visits and dependable scheduling, and arrange cover where we can to keep things on track.',
   },
   {
     num: '03',
-    title: 'Uncompromising Quality',
-    text: 'Strict quality control checklists, supervisor audits, and hospital-grade products ensuring exceptional hygiene.',
+    title: 'Quality Focus',
+    text: 'Clear checklists, supervisor check-ins, and professional products to help keep hygiene standards high.',
   },
   {
     num: '04',
-    title: 'Total Integrity',
-    text: 'Transparent quotations, clear service agreements, and ethical operations with fully vetted personnel.',
+    title: 'Integrity',
+    text: 'Transparent quotations, clear service agreements, and ethical operations with a carefully selected team.',
   },
   {
     num: '05',
     title: 'Genuine Care',
-    text: 'We treat every home and workplace with deep respect, using eco-safe solutions that safeguard health.',
+    text: 'We treat every home and workplace with deep respect, choosing eco-conscious products where possible.',
   },
   {
     num: '06',
@@ -62,12 +62,12 @@ export const PROCESS_DATA = [
   {
     step: '04',
     title: 'Expert Execution',
-    desc: 'Our trained, vetted cleaners execute the plan using professional methods and equipment.',
+    desc: 'Our trained cleaners carry out the plan using professional methods and equipment.',
   },
   {
     step: '05',
     title: 'Quality Assurance',
-    desc: 'Systematic inspection and ongoing feedback loops to guarantee standards are consistently met.',
+    desc: 'Regular checks and ongoing feedback help us keep standards where you want them.',
   },
 ];
 

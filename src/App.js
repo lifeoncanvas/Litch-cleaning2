@@ -19,6 +19,7 @@ import {
   PayPalPostServiceModal,
 } from './components/booking';
 import './Booking.css';
+import './AppleSections.css';
 
 // Pages
 import AboutPage from './pages/AboutPage';
@@ -268,21 +269,15 @@ export default function App() {
       })();
       const isAdminAccount = ['sharonshelke1@gmail.com', 'admin@lichtmarketinglimited.org', 'info@lichtmarketinglimited.org', ...dynamicAdmins].includes(emailLower);
 
-      if (res && res.success && res.user) {
-        loggedUser = res.user;
-        if (isAdminAccount) {
-          loggedUser.role = 'ROLE_ADMIN';
-        }
-      } else {
-        loggedUser = {
-          id: 'usr_' + Date.now(),
-          name: emailLower === 'sharonshelke1@gmail.com' ? 'Sharon Shelke' : credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          email: credentials.email,
-          role: isAdminAccount ? 'ROLE_ADMIN' : 'ROLE_CLIENT',
-          phone: '+44 20 8000 0000',
-          address: '14 Berkeley Square, London',
-          company: isAdminAccount ? 'Licht Marketing Limited' : 'Corporate Partner',
-        };
+      if (!res) {
+        return { success: false, message: 'Could not reach the sign-in server. Please try again shortly.' };
+      }
+      if (!res.success || !res.user) {
+        return { success: false, message: res.message || 'Incorrect email or password.' };
+      }
+      loggedUser = res.user;
+      if (isAdminAccount) {
+        loggedUser.role = 'ROLE_ADMIN';
       }
       setUser(loggedUser);
       localStorage.setItem('licht_user', JSON.stringify(loggedUser));
@@ -300,8 +295,9 @@ export default function App() {
       setAuthModalOpen(false);
       showToast(`Welcome back, ${loggedUser.name}! Sign-in notification dispatched to ${loggedUser.email}.`);
       executePendingAction(loggedUser);
+      return { success: true };
     } catch (e) {
-      showToast('Error during login. Using local session.');
+      return { success: false, message: 'Error during login. Please try again.' };
     }
   };
 
@@ -334,27 +330,21 @@ export default function App() {
   const handleRegister = async (data) => {
     try {
       const res = await apiRegister(data);
-      let newUser;
-      if (res && res.success && res.user) {
-        newUser = res.user;
-        showToast(res.message || `Account created! Welcome email dispatched from info@lichtmarketinglimited.org.`);
-      } else {
-        newUser = {
-          id: 'usr_' + Date.now(),
-          name: data.name,
-          email: data.email,
-          phone: data.phone || '+44 20 8000 0000',
-          address: 'Central London, UK',
-          company: 'Corporate / Domestic Partner',
-        };
-        showToast(`Account created for ${newUser.name}! Welcome email dispatched from info@lichtmarketinglimited.org.`);
+      if (!res) {
+        return { success: false, message: 'Could not reach the registration server. Please try again shortly.' };
       }
+      if (!res.success || !res.user) {
+        return { success: false, message: res.message || 'Could not create your account.' };
+      }
+      const newUser = res.user;
+      showToast(res.message || `Account created! Welcome email dispatched from info@lichtmarketinglimited.org.`);
       setUser(newUser);
       localStorage.setItem('licht_user', JSON.stringify(newUser));
       setAuthModalOpen(false);
       executePendingAction(newUser);
+      return { success: true };
     } catch (e) {
-      showToast('Registration fallback active.');
+      return { success: false, message: 'Error during registration. Please try again.' };
     }
   };
 
@@ -530,8 +520,8 @@ export default function App() {
   if (currentPage === 'admin') {
     if (!isAdmin) {
       return (
-        <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', background: '#f8fafc' }}>
-          <div style={{ maxWidth: '440px', background: '#fff', padding: '36px', borderRadius: '18px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', background: 'var(--bg-offwhite)' }}>
+          <div style={{ maxWidth: '440px', background: '#fff', padding: '36px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-light)' }}>
             <div style={{ display: 'inline-flex', padding: '14px', background: 'rgba(16, 38, 74, 0.06)', borderRadius: '50%', color: 'var(--navy)', marginBottom: '8px' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -590,7 +580,7 @@ export default function App() {
   return (
     <div className="licht-editorial-app">
       {/* ── 1. FIXED FLOATING NAVIGATION BAR ── */}
-      <header className={`header-wrapper ${scrolled ? 'scrolled' : ''}`}>
+      <header className={`header-wrapper ${scrolled ? 'scrolled' : ''} ${currentPage === 'home' && !scrolled ? 'nav-over-hero' : ''}`}>
         <nav className="nav-bar" aria-label="Main Navigation">
           {/* Brand Logo on the left */}
           <button
@@ -599,12 +589,19 @@ export default function App() {
             title="Licht Marketing Home"
             style={{ border: 'none', cursor: 'pointer' }}
           >
-            {/* EXACT LICHT MARKETING LOGO — 100% UNTOUCHED ORIGINAL */}
-            <img
-              src="/licht-logo.png"
-              alt="LICHT MARKETING - Home & Corporate Cleaning"
-              className="brand-logo-img"
-            />
+            {/* Original LM emblem + live text so the tagline can be sized up */}
+            <span className="brand-logo-lockup">
+              <img
+                src="/licht-emblem.png"
+                alt=""
+                aria-hidden="true"
+                className="brand-logo-emblem"
+              />
+              <span className="brand-logo-text">
+                <span className="brand-logo-title">LICHT MARKETING</span>
+                <span className="brand-logo-sub">Home &amp; Corporate Cleaning</span>
+              </span>
+            </span>
           </button>
 
           {/* Desktop Navigation Links */}
@@ -908,15 +905,14 @@ export default function App() {
                   <div>
                     <div className="nova-kicker">STANDARDS, NATURALLY</div>
                     <h1 className="nova-headline">
-                      Meet Licht.<br />
-                      Cleaning That<br />
-                      Moves With You.
+                      Clean Spaces.<br />
+                      Easy Days.
                     </h1>
                     <button
-                      onClick={() => navigateTo('home', 'quote')}
+                      onClick={() => navigateTo('home', 'services')}
                       className="nova-cta-btn"
                     >
-                      Get Early Access
+                      Book Now
                     </button>
                   </div>
 
@@ -925,22 +921,22 @@ export default function App() {
                       type="button"
                       onClick={() => navigateTo('home', 'process')}
                       className="nova-glass-stat"
-                      title="Explore Our 5-Step Process"
+                      title="See how we work"
                     >
-                      <div className="nova-stat-num">5-Step</div>
+                      <div className="nova-stat-num">Tailored</div>
                       <div className="nova-stat-footer">
-                        <span>Process</span>
+                        <span>Cleaning Plans</span>
                       </div>
                     </button>
                     <button
                       type="button"
                       onClick={() => navigateTo('home', 'details-matter')}
                       className="nova-glass-stat"
-                      title="Explore The Details Matter (Core Principles)"
+                      title="See what we care about"
                     >
-                      <div className="nova-stat-num">100%</div>
+                      <div className="nova-stat-num">Care</div>
                       <div className="nova-stat-footer">
-                        <span>Details Matter</span>
+                        <span>In Every Detail</span>
                       </div>
                     </button>
                   </div>
@@ -1007,8 +1003,8 @@ export default function App() {
                           x="70"
                           y="65"
                           textAnchor="middle"
-                          fontFamily="Outfit, sans-serif"
-                          fontWeight="800"
+                          fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+                          fontWeight="700"
                           fontSize="16"
                           fill="#10264A"
                         >
@@ -1036,16 +1032,16 @@ export default function App() {
                   <div>
                     <span className="editorial-kicker-label">SHAPING PRISTINE SPACES</span>
                     <div className="editorial-main-headline">
-                      <div>CLEAN SPACES.</div>
+                      <div>Clean spaces.</div>
                       <div className="editorial-headline-line-2">
-                        <span>COMPLETE CONFIDENCE.</span>
+                        <span>Complete confidence.</span>
                         <span className="editorial-toggle-pill">
                           <span className="editorial-toggle-dot" />
                           <span className="editorial-toggle-dot dot-teal" />
                         </span>
                       </div>
                       <div className="editorial-headline-line-3">
-                        DELIVERING EXCEPTIONAL HYGIENE
+                        Delivering exceptional hygiene
                       </div>
                     </div>
                   </div>
@@ -1115,97 +1111,39 @@ export default function App() {
               <div className="center-editorial-header">
                 <div className="center-headline-row">
                   <div className="center-headline-text">
-                    WE CLEAN.<br />
-                    <span className="center-headline-muted">YOU RELAX.</span>
+                    We clean.<br />
+                    <span className="center-headline-muted">You relax.</span>
                   </div>
                 </div>
                 <p className="center-subtext">
-                  Comprehensive cleaning solutions engineered for corporate hygiene, seamless scheduling, and pristine environments.
+                  Cleaning for offices, homes, and care settings — planned around you.
                 </p>
               </div>
 
-              <div className="dark-service-row">
-                {/* Card 1: Corporate Vacuuming & Surface Care */}
-                <div className="dark-service-card" onClick={() => handleInitiateBooking(SERVICES_DATA[0])} style={{ cursor: 'pointer' }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1581579186913-45ac3e6efe93?auto=format&fit=crop&w=800&q=80"
-                    alt="Cleaner vacuuming modern corporate office floor"
-                    className="dark-card-bg-img"
-                  />
-                  <div className="dark-card-gradient" />
-                  <div className="dark-card-top">
-                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg></div>
-                    <span className="dark-card-num">01</span>
-                  </div>
-                  <div className="dark-card-bottom">
-                    <h3 className="dark-card-title">CORPORATE &amp; OFFICE</h3>
-                    <p className="dark-card-desc">Scheduled workplace cleaning tailored to corporate headquarters and dynamic offices.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
-                  </div>
-                </div>
-
-                {/* Card 2: Residential Kitchen & Living Clean */}
-                <div className="dark-service-card" onClick={() => handleInitiateBooking(SERVICES_DATA[1])} style={{ cursor: 'pointer' }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=800&q=80"
-                    alt="Cleaner wiping down modern kitchen surfaces"
-                    className="dark-card-bg-img"
-                  />
-                  <div className="dark-card-gradient" />
-                  <div className="dark-card-top">
-                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg></div>
-                    <span className="dark-card-num">02</span>
-                  </div>
-                  <div className="dark-card-bottom">
-                    <h3 className="dark-card-title">HOME &amp; RESIDENTIAL</h3>
-                    <p className="dark-card-desc">Meticulous housekeeping, deep kitchen sanitisation, and routine domestic care.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
-                  </div>
-                </div>
-
-                {/* Card 3: Care Living Infection Control */}
-                <div className="dark-service-card" onClick={() => handleInitiateBooking(SERVICES_DATA[3])} style={{ cursor: 'pointer' }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=800&q=80"
-                    alt="Healthcare cleaner in gloves disinfecting touchpoints"
-                    className="dark-card-bg-img"
-                  />
-                  <div className="dark-card-gradient" />
-                  <div className="dark-card-top">
-                    <div className="dark-card-icon-pill">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        <line x1="12" y1="8" x2="12" y2="14" />
-                        <line x1="9" y1="11" x2="15" y2="11" />
-                      </svg>
-                    </div>
-                    <span className="dark-card-num">03</span>
-                  </div>
-                  <div className="dark-card-bottom">
-                    <h3 className="dark-card-title">CARE &amp; HEALTHCARE</h3>
-                    <p className="dark-card-desc">Infection control and hospital-standard hygiene for clinical and assisted living.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
-                  </div>
-                </div>
-
-                {/* Card 4: Specialist Floor Buffing */}
-                <div className="dark-service-card" onClick={() => handleInitiateBooking(SERVICES_DATA[7])} style={{ cursor: 'pointer' }}>
-                  <img
-                    src="/service_floor.jpg"
-                    alt="Cleaner operating commercial floor buffer machine"
-                    className="dark-card-bg-img"
-                  />
-                  <div className="dark-card-gradient" />
-                  <div className="dark-card-top">
-                    <div className="dark-card-icon-pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg></div>
-                    <span className="dark-card-num">04</span>
-                  </div>
-                  <div className="dark-card-bottom">
-                    <h3 className="dark-card-title">SPECIALIST &amp; POST-BUILD</h3>
-                    <p className="dark-card-desc">Commercial floor restoration, steam extraction, and post-construction sparkle cleaning.</p>
-                    <div className="dark-card-arrow-circle">↗</div>
-                  </div>
-                </div>
+              <div className="ap-tiles">
+                {[
+                  { svc: 0, eyebrow: 'Workplaces', title: 'Corporate & Office', desc: 'Scheduled cleaning shaped around your working day.', img: '/hero.jpg', alt: 'Cleaning team working in a modern open-plan office' },
+                  { svc: 1, eyebrow: 'Homes', title: 'Home & Residential', desc: 'Regular housekeeping and deeper kitchen and bathroom cleans.', img: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80', alt: 'Cleaner wiping down modern kitchen surfaces' },
+                  { svc: 3, eyebrow: 'Care settings', title: 'Care & Healthcare', desc: 'Careful hygiene routines for care homes and supported living.', img: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=900&q=80', alt: 'Cleaner putting on protective gloves' },
+                  { svc: 7, eyebrow: 'Specialist', title: 'Specialist & Post-Build', desc: 'Floor care, steam cleaning, and after-build cleans.', img: '/service_floor.jpg', alt: 'Cleaner operating a commercial floor machine' },
+                ].map(tile => (
+                  <button
+                    key={tile.title}
+                    type="button"
+                    className="ap-tile"
+                    onClick={() => handleInitiateBooking(SERVICES_DATA[tile.svc])}
+                    aria-label={`Book ${tile.title} cleaning`}
+                  >
+                    <img src={tile.img} alt={tile.alt} className="ap-tile-img" loading="lazy" />
+                    <span className="ap-tile-shade" aria-hidden="true" />
+                    <span className="ap-tile-copy">
+                      <span className="ap-eyebrow">{tile.eyebrow}</span>
+                      <span className="ap-tile-title">{tile.title}</span>
+                      <span className="ap-tile-desc">{tile.desc}</span>
+                    </span>
+                    <span className="ap-plus" aria-hidden="true">+</span>
+                  </button>
+                ))}
               </div>
             </div>
           </section>
@@ -1216,10 +1154,10 @@ export default function App() {
               <div className="center-editorial-header">
                 <span className="editorial-kicker-label">TAILORED SOLUTIONS</span>
                 <h2 className="editorial-main-headline" style={{ marginTop: '8px' }}>
-                  CLEANING THAT FITS YOUR SPACE.
+                  Cleaning that fits your space.
                 </h2>
                 <p className="center-subtext">
-                  From recurring corporate contracts to meticulous domestic deep cleans, our verified teams deliver consistent excellence.
+                  From regular office contracts to one-off deep cleans at home. Pick a service to see the details.
                 </p>
               </div>
 
@@ -1250,56 +1188,40 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="services-editorial-grid">
+              <div className="ap-services">
                 {filteredServices.map(service => (
-                  <div key={service.id} className="service-grid-card">
-                    <div
-                      className="service-card-media"
-                      style={{ cursor: 'pointer' }}
+                  <article key={service.id} className="ap-svc">
+                    <button
+                      type="button"
+                      className="ap-svc-media"
                       onClick={() => handleInitiateBooking(service)}
-                      title={`Book ${service.title}`}
+                      aria-label={`Book ${service.title}`}
                     >
-                      <img src={service.img} alt={service.title} className="service-card-img" />
-                      <span className="service-badge-tag">{service.badge}</span>
-                    </div>
-                    <div className="service-card-body">
-                      <div>
-                        <div className="service-card-meta-row">
-                          <h3
-                            className="service-card-title"
-                            style={{ cursor: 'pointer', marginBottom: 0 }}
-                            onClick={() => handleInitiateBooking(service)}
-                          >
-                            {service.title}
-                          </h3>
-                          <span className="service-price-pill">From £{service.price}</span>
-                        </div>
-                        {service.pricingNote && (
-                          <div style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: 600, marginTop: '4px', marginBottom: '6px' }}>
-                            ℹ {service.pricingNote}
-                          </div>
-                        )}
-                        <p className="service-card-text">{service.desc}</p>
+                      <img src={service.img} alt="" className="ap-svc-img" loading="lazy" />
+                    </button>
+                    <div className="ap-svc-body">
+                      <span className="ap-eyebrow ap-eyebrow-teal">{service.badge}</span>
+                      <h3 className="ap-svc-title">{service.title}</h3>
+                      <p className="ap-svc-desc">{service.desc}</p>
+                      <div className="ap-svc-price">
+                        From <strong>£{service.price}</strong>
+                        {service.pricingNote && <span className="ap-svc-note">{service.pricingNote}</span>}
                       </div>
-                      <div className="service-card-actions">
-                        <button
-                          type="button"
-                          className="service-book-btn"
-                          onClick={() => handleInitiateBooking(service)}
-                        >
-                          Book Now
+                      <div className="ap-svc-actions">
+                        <button type="button" className="ap-btn" onClick={() => handleInitiateBooking(service)}>
+                          Book now
                         </button>
                         <button
                           type="button"
-                          className="service-cart-btn"
+                          className="ap-link"
                           onClick={() => handleAddToCart(service)}
                           title="Add service to cart"
                         >
-                          + Cart
+                          Add to cart <span aria-hidden="true">›</span>
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             </div>
@@ -1318,17 +1240,17 @@ export default function App() {
                   />
                   <div className="feature-float-badge">
                     <div className="float-badge-title">Contract Reliability</div>
-                    <div className="float-badge-sub">Fully vetted, uniformed staff with supervisory audits.</div>
+                    <div className="float-badge-sub">Uniformed, carefully selected staff with regular check-ins.</div>
                   </div>
                 </div>
                 <div className="feature-panel-text">
                   <span className="panel-kicker">CORPORATE CLEANING</span>
                   <h2 className="panel-headline">
-                    PROFESSIONAL SPACES.<br />
-                    PROFESSIONAL CARE.
+                    Professional spaces.<br />
+                    Professional care.
                   </h2>
                   <p className="panel-description">
-                    Reliable cleaning services tailored to your workplace and business requirements. We support modern offices, financial institutions, and commercial facilities with discreet, uncompromising service.
+                    Reliable cleaning services tailored to your workplace and business requirements. We support modern offices, financial institutions, and commercial facilities with discreet, attentive service.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('corporate')}>
                     Request a Corporate Quote
@@ -1341,11 +1263,11 @@ export default function App() {
                 <div className="feature-panel-text">
                   <span className="panel-kicker">HOME CLEANING</span>
                   <h2 className="panel-headline">
-                    A CLEANER HOME.<br />
-                    A BETTER FEELING.
+                    A cleaner home.<br />
+                    A better feeling.
                   </h2>
                   <p className="panel-description">
-                    Thoughtful, reliable cleaning for the spaces you call home. Experience the comfort of a spotless living room, pristine kitchen, and revitalised bathrooms serviced by background-checked cleaning professionals.
+                    Thoughtful, reliable cleaning for the spaces you call home. Enjoy a fresher living room, kitchen, and bathroom, cared for by friendly, carefully selected cleaning professionals.
                   </p>
                   <a href="#quote" className="panel-cta-btn" onClick={() => setQuoteTab('general')}>
                     Explore Home Cleaning
@@ -1359,7 +1281,7 @@ export default function App() {
                   />
                   <div className="feature-float-badge">
                     <div className="float-badge-title">Domestic Peace of Mind</div>
-                    <div className="float-badge-sub">Eco-friendly materials, verified background checks.</div>
+                    <div className="float-badge-sub">Eco-conscious products where possible, carefully selected staff.</div>
                   </div>
                 </div>
               </div>
@@ -1372,21 +1294,21 @@ export default function App() {
               <div className="center-editorial-header">
                 <span className="editorial-kicker-label" style={{ color: 'var(--teal)' }}>CLIENT PORTFOLIO</span>
                 <h2 className="editorial-main-headline" style={{ color: 'white', marginTop: '8px' }}>
-                  SECTORS WE SERVE.
+                  Sectors we serve.
                 </h2>
                 <p className="center-subtext" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Tailored protocols, sector-specific certifications, and precision hygiene across every environment.
+                  Cleaning approaches tailored to the needs of each type of space.
                 </p>
               </div>
 
-              <div className="sectors-grid">
+              <div className="ap-sectors">
                 {SECTORS_DATA.map((sector, idx) => (
-                  <div key={idx} className="sector-card">
-                    <img src={sector.img} alt={`${sector.name} professional cleaning`} className="sector-bg-img" />
-                    <div className="sector-gradient" />
-                    <div className="sector-content">
-                      <div className="sector-tag">{sector.tag}</div>
-                      <h3 className="sector-name">{sector.name}</h3>
+                  <div key={idx} className="ap-sector">
+                    <img src={sector.img} alt={`${sector.name} cleaning`} className="ap-sector-img" loading="lazy" />
+                    <span className="ap-sector-shade" aria-hidden="true" />
+                    <div className="ap-sector-copy">
+                      <span className="ap-eyebrow">{sector.tag}</span>
+                      <h3 className="ap-sector-name">{sector.name}</h3>
                     </div>
                   </div>
                 ))}
@@ -1400,10 +1322,10 @@ export default function App() {
               <div className="center-editorial-header">
                 <span className="editorial-kicker-label">CORE PRINCIPLES</span>
                 <h2 className="editorial-main-headline" style={{ marginTop: '8px' }}>
-                  THE DETAILS MATTER.
+                  The details matter.
                 </h2>
                 <p className="center-subtext">
-                  We believe true professionalism lies in the subtle nuances — the uncompromised corners, the verified staff, and the consistent reliability.
+                  We believe true professionalism lies in the subtle nuances — the corners that are easy to miss, a team you can trust, and a steady, dependable routine.
                 </p>
               </div>
 
@@ -1425,10 +1347,10 @@ export default function App() {
               <div className="center-editorial-header">
                 <span className="editorial-kicker-label">SEAMLESS ONBOARDING</span>
                 <h2 className="editorial-main-headline" style={{ marginTop: '8px' }}>
-                  OUR PROCESS.
+                  Our process.
                 </h2>
                 <p className="center-subtext">
-                  A structured five-stage delivery pathway from initial survey to ongoing hygiene verification.
+                  A simple five-step approach, from the first visit to ongoing check-ins.
                 </p>
               </div>
 
@@ -1450,7 +1372,7 @@ export default function App() {
               <div className="center-editorial-header">
                 <span className="editorial-kicker-label">GET IN TOUCH</span>
                 <h2 className="editorial-main-headline" style={{ marginTop: '8px' }}>
-                  LET'S TALK ABOUT YOUR SPACE.
+                  Let's talk about your space.
                 </h2>
                 <p className="center-subtext">
                   Submit your details below for a fast, transparent, and non-obligatory quote tailored to your environment.
@@ -1482,7 +1404,7 @@ export default function App() {
                         Thank You! Your Enquiry Has Been Received.
                       </h3>
                       <p style={{ fontSize: '0.95rem' }}>
-                        A dedicated client manager from <strong>Licht Marketing</strong> will review your space details and contact you within 2 business hours.
+                        A dedicated client manager from <strong>Licht Marketing</strong> will review your space details and get back to you as soon as possible.
                       </p>
                       <button
                         className="nav-cta-btn"
@@ -1644,19 +1566,19 @@ export default function App() {
               <div className="standards-badge-cluster">
                 <div className="standard-badge-item">
                   <span className="badge-check">✓</span>
-                  <span className="badge-text">COSHH Certified &amp; Compliant</span>
+                  <span className="badge-text">Following COSHH Guidance</span>
                 </div>
                 <div className="standard-badge-item">
                   <span className="badge-check">✓</span>
-                  <span className="badge-text">£10M Public &amp; Employers Liability</span>
+                  <span className="badge-text">Insurance Details on Request</span>
                 </div>
                 <div className="standard-badge-item">
                   <span className="badge-check">✓</span>
-                  <span className="badge-text">Enhanced DBS Vetted Cleaners</span>
+                  <span className="badge-text">Carefully Selected Cleaners</span>
                 </div>
                 <div className="standard-badge-item">
                   <span className="badge-check">✓</span>
-                  <span className="badge-text">Rigorous Health &amp; Safety Audits</span>
+                  <span className="badge-text">Health &amp; Safety Focused</span>
                 </div>
               </div>
 
@@ -1684,11 +1606,13 @@ export default function App() {
         <div className="editorial-container">
           <div className="footer-top-row">
             <div className="footer-logo-box">
-              {/* EXACT ORIGINAL LOGO */}
-              <img
-                src="/licht-logo.png"
-                alt="LICHT MARKETING Logo"
-              />
+              <span className="brand-logo-lockup" aria-label="Licht Marketing – Home & Corporate Cleaning">
+                <img src="/licht-emblem.png" alt="" aria-hidden="true" className="brand-logo-emblem" />
+                <span className="brand-logo-text">
+                  <span className="brand-logo-title">LICHT MARKETING</span>
+                  <span className="brand-logo-sub">Home &amp; Corporate Cleaning</span>
+                </span>
+              </span>
             </div>
             <div className="footer-tagline">
               Professional Cleaning. Exceptional Standards.
@@ -1699,7 +1623,7 @@ export default function App() {
             <div>
               <div className="footer-col-title">About Licht Marketing</div>
               <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: '16px' }}>
-                Licht Marketing is a premier home and corporate cleaning company dedicated to pristine hygiene, uncompromising standards, and reliable contract delivery.
+                Licht Marketing is a home and corporate cleaning company focused on good hygiene, high standards, and dependable service.
               </p>
               <button
                 onClick={() => navigateTo('about')}

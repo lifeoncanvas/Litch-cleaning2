@@ -1,0 +1,425 @@
+/* ══════════════════════════════════════════════════════════════
+   Apple-style redesign: service tiles, services grid, sectors
+   Loaded after App.css so these rules take precedence.
+   ══════════════════════════════════════════════════════════════ */
+.ap-tiles,
+.ap-services,
+.ap-sectors {
+  --ap-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ap-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.ap-eyebrow-teal {
+  color: var(--teal);
+}
+
+/* ── 1. Service tiles ("We clean. You relax.") ── */
+.we-clean-section {
+  background: #f5f5f7;
+  border-top: none;
+}
+
+.ap-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.ap-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4.2;
+  border: none;
+  padding: 0;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #1d1d1f;
+  cursor: pointer;
+  text-align: left;
+  color: #ffffff;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.45s var(--ap-ease), box-shadow 0.45s var(--ap-ease);
+}
+
+.ap-tile:hover {
+  transform: scale(1.015);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+}
+
+.ap-tile:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+.ap-tile-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ap-ease);
+}
+
+.ap-tile:hover .ap-tile-img {
+  transform: scale(1.05);
+}
+
+.ap-tile-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.18) 42%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.ap-tile-copy {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ap-tile-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+.ap-tile-desc {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.86);
+  max-width: 26ch;
+}
+
+.ap-plus {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1;
+  color: #ffffff;
+  background: rgba(40, 40, 45, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.3s var(--ap-ease), transform 0.3s var(--ap-ease);
+}
+
+.ap-tile:hover .ap-plus {
+  background: var(--teal);
+  transform: rotate(90deg);
+}
+
+/* ── 2. Services grid ("Cleaning that fits your space") ── */
+.services-full-section {
+  background: #ffffff;
+}
+
+.ap-services {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.ap-svc {
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f7;
+  border-radius: 28px;
+  padding: 14px;
+  transition: transform 0.45s var(--ap-ease), box-shadow 0.45s var(--ap-ease), background 0.45s var(--ap-ease);
+}
+
+.ap-svc:hover {
+  background: #ffffff;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(16, 38, 74, 0.1);
+}
+
+.ap-svc-media {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 18px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: #e8e8ed;
+}
+
+.ap-svc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.8s var(--ap-ease);
+}
+
+.ap-svc:hover .ap-svc-img {
+  transform: scale(1.04);
+}
+
+.ap-svc-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px 10px 8px;
+}
+
+.ap-svc-title {
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #1d1d1f;
+  margin: 6px 0 8px;
+}
+
+.ap-svc-desc {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #6e6e73;
+  margin: 0 0 16px;
+}
+
+.ap-svc-price {
+  margin-top: auto;
+  font-size: 0.92rem;
+  color: #1d1d1f;
+}
+
+.ap-svc-price strong {
+  font-weight: 700;
+}
+
+.ap-svc-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #86868b;
+}
+
+.ap-svc-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.ap-btn {
+  border: none;
+  cursor: pointer;
+  background: var(--navy);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 980px;
+  transition: background 0.25s var(--ap-ease);
+}
+
+.ap-btn:hover {
+  background: var(--teal);
+}
+
+.ap-link {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--teal);
+}
+
+.ap-link:hover {
+  text-decoration: underline;
+}
+
+/* Apple-style segmented filter */
+.services-full-section .services-filter-bar {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 48px;
+  padding: 4px;
+  gap: 2px;
+  background: #f5f5f7;
+  border-radius: 980px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.services-full-section .filter-pill {
+  border: none;
+  background: transparent;
+  color: #1d1d1f;
+  letter-spacing: 0;
+  font-weight: 500;
+  padding: 9px 18px;
+}
+
+.services-full-section .filter-pill:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+.services-full-section .filter-pill.active {
+  background: #ffffff;
+  color: #1d1d1f;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 3. Sectors ── */
+.sectors-section {
+  background: #000000;
+}
+
+.ap-sectors {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 56px;
+}
+
+.ap-sector {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #1d1d1f;
+}
+
+.ap-sector-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ap-ease);
+}
+
+.ap-sector:hover .ap-sector-img {
+  transform: scale(1.05);
+}
+
+.ap-sector-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+.ap-sector-copy {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 20px;
+  color: #ffffff;
+}
+
+.ap-sector-name {
+  margin: 4px 0 0;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .ap-tiles,
+  .ap-services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ap-sectors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  /* Horizontal swipe row, like a card shelf */
+  .ap-tiles {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 14px;
+    margin: 0 -16px;
+    padding: 4px 16px 16px;
+    scrollbar-width: none;
+  }
+  .ap-tiles::-webkit-scrollbar {
+    display: none;
+  }
+  .ap-tile {
+    flex: 0 0 78%;
+    scroll-snap-align: start;
+    border-radius: 24px;
+  }
+  .ap-tile-copy {
+    top: 22px;
+    left: 22px;
+    right: 22px;
+  }
+  .ap-tile-title {
+    font-size: 1.4rem;
+  }
+  .ap-services {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .ap-sectors {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 36px;
+  }
+  .ap-sector {
+    border-radius: 18px;
+  }
+  .ap-sector-copy {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+  }
+  .ap-sector-name {
+    font-size: 0.95rem;
+  }
+  .services-full-section .services-filter-bar {
+    border-radius: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-tile,
+  .ap-tile-img,
+  .ap-svc,
+  .ap-svc-img,
+  .ap-sector-img,
+  .ap-plus {
+    transition: none;
+  }
+}

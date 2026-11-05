@@ -615,7 +615,13 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       <header className="admin-header">
         <div className="admin-header-left">
           <div className="admin-nav-logo-box" onClick={onExit} style={{ cursor: 'pointer' }} title="Back to Licht Home">
-            <img src="/licht-logo.png" alt="LICHT MARKETING" className="admin-header-logo" />
+            <span className="brand-logo-lockup admin-logo-lockup" aria-label="Licht Marketing">
+              <img src="/licht-emblem.png" alt="" aria-hidden="true" className="brand-logo-emblem" />
+              <span className="brand-logo-text">
+                <span className="brand-logo-title">LICHT MARKETING</span>
+                <span className="brand-logo-sub">Home &amp; Corporate Cleaning</span>
+              </span>
+            </span>
           </div>
           <span className="admin-portal-tag">Operations Admin</span>
           <button onClick={onExit} className="admin-exit-btn" title="Back to main website">

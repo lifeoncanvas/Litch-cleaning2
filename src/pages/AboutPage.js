@@ -24,9 +24,9 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
         <section className="about-ref-hero-grid" aria-label="About Licht Marketing">
           <div className="about-ref-hero-left">
             <h1 className="about-ref-title">
-              THE STANDARD OF<br />
-              EXCEPTIONAL<br />
-              CLEANING
+              The standard of<br />
+              exceptional<br />
+              cleaning
             </h1>
 
             <div className="about-ref-list-kicker">OUR CORE DISCIPLINES</div>
@@ -132,7 +132,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
 
               {/* Floating Accreditation Pill */}
               <div className="ref-floating-search-pill">
-                <span>🔍 Accredited Hygiene Operations | London &amp; UK</span>
+                <span>🔍 Professional Hygiene Care | London &amp; UK</span>
                 <span style={{ cursor: 'pointer', opacity: 0.6 }}>✕</span>
               </div>
 
@@ -142,7 +142,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
                   <span>📞 Direct Operations Team</span>
                 </div>
                 <div className="ref-bottom-pill">
-                  <span>🛡️ 100% DBS Vetted</span>
+                  <span>🛡️ Carefully Vetted Team</span>
                 </div>
               </div>
             </div>
@@ -164,11 +164,11 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
             {/* 4 Satellite Pillar Cards */}
             <div className="why-orbit-card card-tl">
               <div className="card-top-header">
-                <h3 className="card-orbit-title">Qualified Personnel</h3>
+                <h3 className="card-orbit-title">Trained Personnel</h3>
                 <span className="card-step-num">01</span>
               </div>
               <p className="card-orbit-desc">
-                100% directly employed, background-checked, and rigorously trained in modern hygiene protocols and corporate etiquette.
+                Our team is carefully selected and trained in modern hygiene practices and professional conduct, so you can feel comfortable having us in your space.
               </p>
             </div>
 
@@ -178,7 +178,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
                 <span className="card-step-num">02</span>
               </div>
               <p className="card-orbit-desc">
-                Multi-point digital checklists, regular supervisory audits, and transparent reporting ensuring contractual SLAs are surpassed.
+                Clear checklists, regular check-ins, and open communication help us keep standards consistent from one visit to the next.
               </p>
             </div>
 
@@ -188,17 +188,17 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
                 <span className="card-step-num">03</span>
               </div>
               <p className="card-orbit-desc">
-                Punctual attendance with guaranteed replacement cover in place so your home or office is never left unserviced.
+                We aim to arrive on time and arrange cover where we can, keeping your schedule running smoothly.
               </p>
             </div>
 
             <div className="why-orbit-card card-br">
               <div className="card-top-header">
-                <h3 className="card-orbit-title">Certified COSHH Standards</h3>
+                <h3 className="card-orbit-title">Safe Products &amp; Practices</h3>
                 <span className="card-step-num">04</span>
               </div>
               <p className="card-orbit-desc">
-                Hospital-grade disinfection paired with non-toxic, eco-responsible formulations that protect indoor air quality.
+                We follow COSHH guidance and choose cleaning products with care, favouring gentler, eco-conscious options where possible.
               </p>
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
             <div className="mosaic-stacked-col">
               <div className="mosaic-card mosaic-short-card">
                 <img
-                  src="https://images.unsplash.com/photo-1581579186913-45ac3e6efe93?auto=format&fit=crop&w=800&q=80"
+                  src="/hero.jpg"
                   alt="Industrial carpet vacuuming"
                   className="mosaic-img"
                 />
@@ -307,7 +307,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
                 Explore Full Service Portfolio →
               </div>
               <p style={{ fontSize: '0.82rem', color: 'var(--slate-mid)', marginTop: '8px' }}>
-                Bespoke cleaning plans engineered for modern corporate workplaces and luxury private residences.
+                Cleaning plans shaped around your workplace or home.
               </p>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
           <div className="circular-highlight-grid">
             <div className="circular-hl-left">
               <h2 className="circular-hl-title">
-                TAILORED<br />CLEANING PLANS
+                Tailored<br />cleaning plans
               </h2>
 
               <div className="circular-hl-pills">
@@ -342,7 +342,7 @@ export default function AboutPage({ onNavigate, onInitiateBooking }) {
 
             <div className="circular-hl-right">
               <p className="circular-hl-desc">
-                We engineer individualized cleaning specifications calibrated to the footfall, surface materials, and regulatory standards of your environment — ensuring immaculate presentation and documented hygiene compliance.
+                We shape each cleaning plan around how your space is used — its footfall, surfaces, and any standards that apply — so it suits your needs rather than a one-size-fits-all routine.
               </p>
 
               <button

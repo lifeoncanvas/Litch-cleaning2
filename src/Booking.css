@@ -111,7 +111,7 @@
 .licht-modal-title {
   font-family: var(--font-display);
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
   margin: 0;
 }
@@ -128,7 +128,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .licht-modal-close-btn:hover {
@@ -174,7 +174,7 @@
   font-weight: 700;
   color: var(--slate-mid);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .auth-tab-btn.active {
@@ -201,7 +201,7 @@
 }
 
 .demo-login-title {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.92rem;
   margin-bottom: 2px;
   display: flex;
@@ -218,14 +218,13 @@
   padding: 9px 18px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   white-space: nowrap;
   box-shadow: 0 4px 14px var(--teal-glow);
 }
 
 .demo-quick-btn:hover {
   background: #118191;
-  transform: translateY(-1px);
 }
 
 .form-group {
@@ -271,14 +270,13 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: var(--transition-ui);
   margin-top: 10px;
 }
 
 .form-submit-btn:hover {
   background: var(--teal);
   box-shadow: 0 8px 20px var(--teal-glow);
-  transform: translateY(-1px);
 }
 
 /* ── 4. Service Card Buttons & Price ── */
@@ -291,7 +289,7 @@
 
 .service-price-pill {
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--teal);
   background: rgba(21, 153, 172, 0.1);
   padding: 4px 10px;
@@ -317,7 +315,7 @@
   padding: 11px 18px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -327,7 +325,6 @@
 .service-book-btn:hover {
   background: var(--teal);
   box-shadow: 0 6px 18px var(--teal-glow);
-  transform: translateY(-1px);
 }
 
 .service-cart-btn {
@@ -339,7 +336,7 @@
   padding: 10px 14px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   white-space: nowrap;
 }
 
@@ -375,7 +372,7 @@
 .booking-preview-title {
   font-family: var(--font-display);
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
   margin-bottom: 4px;
 }
@@ -432,7 +429,7 @@
   padding: 12px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .frequency-card-btn.selected {
@@ -470,7 +467,7 @@
   font-weight: 700;
   color: var(--navy);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .slot-choice-btn.selected {
@@ -501,7 +498,7 @@
   padding-top: 10px;
   margin-top: 10px;
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
 }
 
@@ -530,7 +527,7 @@
   color: var(--navy);
   font-family: monospace;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 8px 18px;
   border-radius: var(--radius-pill);
   margin: 12px 0 20px;
@@ -580,7 +577,7 @@
 .cart-drawer-title {
   font-family: var(--font-display);
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
   margin: 0;
   display: flex;
@@ -629,7 +626,7 @@
 }
 
 .cart-item-price {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
   font-size: 0.92rem;
 }
@@ -667,7 +664,7 @@
   padding: 8px 16px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   position: relative;
 }
 
@@ -681,7 +678,7 @@
   background: var(--teal);
   color: white;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
 }
@@ -695,7 +692,7 @@
   padding: 8px 18px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .nav-signin-btn:hover {
@@ -732,7 +729,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .nav-bookings-btn {
@@ -744,7 +741,7 @@
   padding: 7px 12px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .nav-bookings-btn:hover {
@@ -774,7 +771,7 @@
   padding: 18px 20px;
   margin-bottom: 16px;
   background: var(--bg-offwhite);
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .booking-history-card:hover {
@@ -792,13 +789,13 @@
 .booking-card-ref {
   font-family: monospace;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
 }
 
 .booking-status-tag {
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 4px 10px;
@@ -810,7 +807,7 @@
 .booking-card-title {
   font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--navy);
   margin-bottom: 6px;
 }
@@ -859,7 +856,7 @@
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--navy);
@@ -888,7 +885,7 @@
   display: flex;
   gap: 6px;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--slate-mid);
   pointer-events: none;
 }
@@ -918,13 +915,12 @@
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .apple-pay-simulate-btn:hover {
   background: #222222;
-  transform: translateY(-2px);
 }
 
 .corporate-invoice-box {
@@ -1055,7 +1051,7 @@
   white-space: nowrap;
   flex-shrink: 0;
   width: auto !important;
-  transition: all 0.2s ease;
+  transition: var(--transition-ui);
 }
 
 .modal-back-btn:hover {
@@ -1082,14 +1078,13 @@
   flex: 1;
   min-width: 0;
   text-align: center;
-  transition: all 0.25s ease;
+  transition: var(--transition-ui);
   box-shadow: 0 4px 14px rgba(21, 153, 172, 0.25);
 }
 
 .modal-next-btn:hover {
   background: #117d8d;
   box-shadow: 0 6px 20px rgba(21, 153, 172, 0.4);
-  transform: translateY(-1px);
 }
 
 .modal-pay-btn {
@@ -1110,13 +1105,12 @@
   flex: 1;
   min-width: 0;
   text-align: center;
-  transition: all 0.25s ease;
+  transition: var(--transition-ui);
   box-shadow: 0 6px 20px rgba(21, 153, 172, 0.35);
 }
 
 .modal-pay-btn:hover {
   filter: brightness(1.1);
-  transform: translateY(-1px);
 }
 
 @media (max-width: 600px) {

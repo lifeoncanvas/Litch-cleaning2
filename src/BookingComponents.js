@@ -19,6 +19,7 @@ import {
   apiCreatePayPalOrder,
   apiCapturePayPalOrder,
 } from './services/api';
+import { useSwipeToDismiss } from './motion/useSwipeToDismiss';
 
 /* ==========================================================================
    1. TOAST NOTIFICATION COMPONENT
@@ -77,13 +78,19 @@ export function AuthModal({
         setError('Please enter both email and password.');
         return;
       }
-      onLogin({ email, password });
+      setIsLoading(true);
+      const res = await onLogin({ email, password });
+      setIsLoading(false);
+      if (res && !res.success) setError(res.message);
     } else if (mode === 'register') {
       if (!name.trim() || !email.trim() || !password.trim()) {
         setError('Please complete all required fields.');
         return;
       }
-      onRegister({ name, email, password, phone });
+      setIsLoading(true);
+      const res = await onRegister({ name, email, password, phone });
+      setIsLoading(false);
+      if (res && !res.success) setError(res.message);
     } else if (mode === 'forgot') {
       const targetEmail = (forgotEmail || email).trim();
       if (!targetEmail) {
@@ -920,7 +927,7 @@ export function BookingModal({
                     {isCartBooking ? `Cart Checkout (${cartItems.length} Services)` : service?.title}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
-                    Base Rate: £{basePrice} · Fully insured and DBS vetted teams
+                    Base Rate: £{basePrice} · Trained, carefully selected teams
                   </div>
                 </div>
               </div>
@@ -1254,7 +1261,7 @@ export function BookingModal({
                 Booking Request Confirmed!
               </h3>
               <p style={{ color: 'var(--slate-mid)', fontSize: '0.9rem', maxWidth: '440px', margin: '0 auto' }}>
-                We have received your booking request! Our operations team will assign a vetted operative and confirm your appointment. Confirmation details have been emailed to <strong>{confirmedBookingData?.clientEmail}</strong>.
+                We have received your booking request! Our operations team will assign a cleaner and confirm your appointment. Confirmation details have been emailed to <strong>{confirmedBookingData?.clientEmail}</strong>.
               </p>
 
               <div className="booking-ref-badge" style={{ marginTop: '14px' }}>
@@ -1338,6 +1345,9 @@ export function CartDrawer({
   onClearCart,
   onProceedCheckout,
 }) {
+  const panelRef = useRef(null);
+  useSwipeToDismiss(panelRef, { enabled: isOpen, onDismiss: onClose });
+
   if (!isOpen) return null;
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price || 150) * (item.quantity || 1), 0);
@@ -1346,7 +1356,7 @@ export function CartDrawer({
 
   return (
     <div className="cart-drawer-overlay" onClick={onClose}>
-      <div className="cart-drawer-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="cart-drawer-panel" ref={panelRef} onClick={(e) => e.stopPropagation()}>
         <div className="cart-drawer-header">
           <h3 className="cart-drawer-title">
             <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span> Cleaning Cart ({cart.length})
@@ -1604,7 +1614,7 @@ export function MyBookingsModal({
               <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📅</div>
               <h3 style={{ color: 'var(--navy)', marginBottom: '8px' }}>No Cleaning Bookings Found</h3>
               <p style={{ fontSize: '0.88rem', marginBottom: '24px' }}>
-                You have not booked any cleaning services yet. Select from our accredited commercial and domestic services.
+                You have not booked any cleaning services yet. Browse our commercial and domestic services to get started.
               </p>
               <button
                 onClick={() => { onClose(); onBookNew(); }}
@@ -1737,7 +1747,7 @@ export function MyBookingsModal({
                             <span>🛡️</span> Service Completed &amp; Authenticated On-Site
                           </div>
                           <div style={{ fontSize: '0.74rem', color: '#047857', marginTop: '2px' }}>
-                            Security OTP <code>{b.completionOtp || '5829'}</code> was verified by the DBS-vetted operative.
+                            Security OTP <code>{b.completionOtp || '5829'}</code> was verified by your cleaner.
                           </div>
                         </div>
                         <span style={{
@@ -2089,7 +2099,7 @@ export function MyBookingsModal({
             </div>
 
             <p style={{ fontSize: '0.85rem', color: 'var(--slate-mid)', marginTop: 0, marginBottom: '18px' }}>
-              How did our DBS-vetted operative perform for <strong>{feedbackBooking.serviceName}</strong>?
+              How did our cleaner do for <strong>{feedbackBooking.serviceName}</strong>?
             </p>
 
             <form onSubmit={handleFeedbackSubmit}>
