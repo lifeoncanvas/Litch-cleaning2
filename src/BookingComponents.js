@@ -3,7 +3,7 @@
  * @description Comprehensive client booking system for Licht Marketing.
  *              Includes:
  *              1. ToastNotification: Floating feedback alerts
- *              2. AuthModal: Client sign in, registration, and 1-click verified demo login
+ *              2. AuthModal: Client sign in, registration, and password reset
  *              3. BookingModal: 5-step booking flow with integrated 256-bit payment gateway
  *              4. CartDrawer: Slide-in cart management with multi-service checkout
  *              5. MyBookingsModal: Customer appointment dashboard with status tracking
@@ -19,6 +19,50 @@ import {
   apiCreatePayPalOrder,
   apiCapturePayPalOrder,
 } from './services/api';
+import { calculateBookingPrice, cartBaseTotal, formatGBP, MAX_CART_QUANTITY, VAT_RATE } from './utils/pricing';
+import { hasRealText, isValidEmail, isValidUkPhone, validateBookingContact, formatUkPostcode, isPlaceholderContact } from './utils/validation';
+
+/** YYYY-MM-DD in the user's local time zone (toISOString() is UTC and is wrong around midnight). */
+function localIsoDate(daysFromToday = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysFromToday);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function secureRandomInt(maxExclusive) {
+  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+    const buf = new Uint32Array(1);
+    window.crypto.getRandomValues(buf);
+    return buf[0] % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+/** e.g. LICHT-BK-7KQ2M9XD — 8 chars from a 31-symbol alphabet (~850 billion combinations). */
+function newClientReference() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 8; i += 1) s += alphabet[secureRandomInt(alphabet.length)];
+  return `LICHT-BK-${s}`;
+}
+
+/** 4-digit completion PIN (server should generate and own this). */
+function newCompletionPin() {
+  return String(1000 + secureRandomInt(9000));
+}
+
+/** Close a modal on Escape while it is open. */
+function useEscapeToClose(isOpen, onClose) {
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape' && onClose) onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+}
 
 /* ==========================================================================
    1. TOAST NOTIFICATION COMPONENT
@@ -45,7 +89,6 @@ export function AuthModal({
   setMode,
   message,
   onLogin,
-  onDemoLogin,
   onRegister,
   onForgotPassword,
   onResetPassword,
@@ -65,6 +108,8 @@ export function AuthModal({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  useEscapeToClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -77,13 +122,39 @@ export function AuthModal({
         setError('Please enter both email and password.');
         return;
       }
-      onLogin({ email, password });
+      setIsLoading(true);
+      const res = await onLogin({ email, password });
+      setIsLoading(false);
+      if (!res?.success) {
+        setError(res?.message || 'Incorrect email or password.');
+        return;
+      }
+      setPassword('');
     } else if (mode === 'register') {
-      if (!name.trim() || !email.trim() || !password.trim()) {
+      if (!hasRealText(name) || !email.trim() || !password.trim()) {
         setError('Please complete all required fields.');
         return;
       }
-      onRegister({ name, email, password, phone });
+      if (!isValidEmail(email)) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters long.');
+        return;
+      }
+      if (phone.trim() && !isValidUkPhone(phone)) {
+        setError('Please enter a valid UK phone number, or leave it blank.');
+        return;
+      }
+      setIsLoading(true);
+      const res = await onRegister({ name: name.trim(), email: email.trim(), password, phone: phone.trim() });
+      setIsLoading(false);
+      if (!res?.success) {
+        setError(res?.message || 'We could not create your account. Please try again.');
+        return;
+      }
+      setPassword('');
     } else if (mode === 'forgot') {
       const targetEmail = (forgotEmail || email).trim();
       if (!targetEmail) {
@@ -112,8 +183,8 @@ export function AuthModal({
         setError('Please enter the security verification code and new password.');
         return;
       }
-      if (newPassword.length < 6) {
-        setError('Password must be at least 6 characters long.');
+      if (newPassword.length < 8) {
+        setError('Password must be at least 8 characters long.');
         return;
       }
       if (newPassword !== confirmPassword) {
@@ -152,7 +223,7 @@ export function AuthModal({
 
   return (
     <div className="licht-modal-overlay" onClick={onClose}>
-      <div className="licht-modal-box" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" className="licht-modal-box" onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title">
             {getModalTitle()}
@@ -369,7 +440,7 @@ export function AuthModal({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">New Password (min 6 characters) *</label>
+                  <label className="form-label">New Password (min 8 characters) *</label>
                   <input
                     type="password"
                     required
@@ -401,7 +472,7 @@ export function AuthModal({
               className="form-submit-btn"
               style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             >
-              {isLoading ? 'Processing Dispatch...' : (
+              {isLoading ? 'Please wait…' : (
                 mode === 'login' ? 'Sign In & Continue' :
                 mode === 'register' ? 'Create Account & Continue' :
                 mode === 'forgot' ? 'Dispatch Security Code via Email' :
@@ -463,18 +534,15 @@ export function AuthModal({
 }
 
 /* ==========================================================================
-   PAYPAL PAYMENT GATEWAY & SMART BUTTONS (SANDBOX INTEGRATION)
+   PAYPAL PAYMENT GATEWAY & SMART BUTTONS (client ID and orders come from the backend)
    App Name: LICHT House Cleaning | Client ID: BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ
    Currency: GBP | Intent: CAPTURE | Webhook ID: 45S68093S3920431N
    ========================================================================== */
-export const PAYPAL_LIVE_CLIENT_ID = 'BAAQ19iQI1yAbaq1W3b8UExMuZlNMOOiEP3BO5IF7r-T1PjgTpTxFVGGEMK4W1lKGK2Kd2c6Y9X1pwfnTE';
-export const PAYPAL_SANDBOX_CLIENT_ID = 'BAAULNaisDn8M8rhxHPGOXZP8f3AfIDVn1zxs1i12Ql0qvjk8Avtx3RM9sijhsQ1QLhKXvP3SSjtSWuLcQ';
-export const PAYPAL_CLIENT_ID = PAYPAL_LIVE_CLIENT_ID;
 
 let paypalSdkPromise = null;
 let currentLoadedClientId = null;
 
-export const loadPayPalSdk = (clientId = PAYPAL_CLIENT_ID, currency = 'GBP') => {
+export const loadPayPalSdk = (clientId, currency = 'GBP') => {
   if (typeof window !== 'undefined' && window.paypal && currentLoadedClientId === clientId) {
     return Promise.resolve(window.paypal);
   }
@@ -522,7 +590,7 @@ export const loadPayPalSdk = (clientId = PAYPAL_CLIENT_ID, currency = 'GBP') => 
   return paypalSdkPromise;
 };
 
-export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymentSuccess, onError }) {
+export function PayPalButtonContainer({ bookingId, onPaymentSuccess, onError }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -532,7 +600,8 @@ export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymen
 
     apiGetPayPalConfig()
       .then((cfg) => {
-        const clientId = cfg?.clientId || PAYPAL_CLIENT_ID;
+        if (!cfg?.clientId) throw new Error('Online payment is temporarily unavailable');
+        const clientId = cfg.clientId;
         const currency = cfg?.currency || 'GBP';
         return loadPayPalSdk(clientId, currency);
       })
@@ -551,95 +620,36 @@ export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymen
                 label: 'paypal',
                 height: 44,
               },
-              createOrder: async (data, actions) => {
+              // The order is created by OUR server, which reads the amount from the
+              // booking in the database. The browser never sends or sets the amount.
+              createOrder: async () => {
                 if (onError) onError(null);
-
-                // 1. First attempt: create order via backend Spring Boot API
                 try {
-                  const res = await apiCreatePayPalOrder(amount, bookingId, serviceName);
-                  if (res && res.orderId) {
-                    return res.orderId;
-                  }
-                } catch (backendErr) {
-                  console.warn('Backend PayPal order creation offline/unavailable, using direct PayPal SDK order creation:', backendErr.message);
+                  const res = await apiCreatePayPalOrder(bookingId);
+                  if (res && (res.orderId || res.id)) return res.orderId || res.id;
+                  throw new Error('The payment server did not return an order.');
+                } catch (err) {
+                  if (onError) onError(`Online payment is temporarily unavailable: ${err.message}`);
+                  throw err;
                 }
-
-                // 2. Resilient Fallback: direct PayPal client SDK order creation
-                if (actions && actions.order && actions.order.create) {
-                  try {
-                    const formattedAmount = (parseFloat(amount) || 0).toFixed(2);
-                    const orderId = await actions.order.create({
-                      intent: 'CAPTURE',
-                      purchase_units: [
-                        {
-                          reference_id: bookingId || `LICHT-REF-${Date.now()}`,
-                          description: `Cleaning Service: ${serviceName || 'Cleaning Service'} (Ref: ${bookingId || 'Direct'})`,
-                          custom_id: bookingId || '',
-                          amount: {
-                            currency_code: 'GBP',
-                            value: formattedAmount,
-                          },
-                        },
-                      ],
-                    });
-                    return orderId;
-                  } catch (sdkErr) {
-                    console.error('PayPal SDK createOrder error:', sdkErr);
-                    if (onError) onError(sdkErr.message || 'PayPal order creation failed.');
-                    throw sdkErr;
-                  }
-                }
-
-                const err = new Error('Could not initialize PayPal order');
-                if (onError) onError(err.message);
-                throw err;
               },
-              onApprove: async (data, actions) => {
+              // Capture is also done by our server, which verifies the payment with
+              // PayPal and marks the booking paid. We only show success if it says so.
+              onApprove: async (data) => {
+                if (onError) onError(null);
                 try {
-                  if (onError) onError(null);
-                  let captureRes = null;
-
-                  // 1. Attempt backend capture first
-                  try {
-                    captureRes = await apiCapturePayPalOrder(
-                      data.orderID,
-                      bookingId,
-                      bookingId ? 'POST_SERVICE' : 'BOOKING'
-                    );
-                  } catch (backendErr) {
-                    console.warn('Backend PayPal capture endpoint unavailable, falling back to PayPal SDK capture:', backendErr.message);
-                  }
-
-                  // 2. Resilient Fallback: PayPal client SDK capture
+                  const captureRes = await apiCapturePayPalOrder(data.orderID, bookingId, 'POST_SERVICE');
                   if (!captureRes || captureRes.status !== 'COMPLETED') {
-                    if (actions && actions.order && actions.order.capture) {
-                      const details = await actions.order.capture();
-                      const captureItem = details?.purchase_units?.[0]?.payments?.captures?.[0];
-                      captureRes = {
-                        status: details?.status || 'COMPLETED',
-                        orderId: details?.id || data.orderID,
-                        captureId: captureItem?.id || details?.id || data.orderID,
-                        transactionId: captureItem?.id || details?.id,
-                        payerEmail: details?.payer?.email_address || '',
-                        payerName: `${details?.payer?.name?.given_name || ''} ${details?.payer?.name?.surname || ''}`.trim(),
-                        amount: captureItem?.amount?.value || details?.purchase_units?.[0]?.amount?.value || amount,
-                        currency: captureItem?.amount?.currency_code || 'GBP',
-                        paidAt: new Date().toISOString(),
-                        bookingId: bookingId,
-                      };
-                    }
+                    throw new Error(captureRes?.message || 'Payment was not completed.');
                   }
-
-                  if (onPaymentSuccess) {
-                    onPaymentSuccess(captureRes || {
-                      status: 'COMPLETED',
-                      orderId: data.orderID,
-                      captureId: data.orderID,
-                    });
-                  }
+                  if (onPaymentSuccess) onPaymentSuccess(captureRes);
                 } catch (err) {
                   console.error('PayPal capture error:', err);
-                  if (onError) onError(err.message || 'Payment capture failed. Please try again.');
+                  if (onError) {
+                    onError(
+                      `We could not confirm your payment (${err.message}). If money has left your account, please contact us quoting order ${data.orderID} — do not pay again.`
+                    );
+                  }
                 }
               },
               onError: (err) => {
@@ -662,19 +672,19 @@ export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymen
     return () => {
       isCancelled = true;
     };
-  }, [amount, bookingId, serviceName, onError, onPaymentSuccess]);
+  }, [bookingId, onError, onPaymentSuccess]);
 
   return (
     <div className="paypal-smart-container">
       {loading && (
         <div style={{ textAlign: 'center', padding: '16px 10px', color: 'var(--slate-mid)', fontSize: '0.82rem' }}>
           <div className="payment-spinner" style={{ width: '28px', height: '28px', margin: '0 auto 8px' }} />
-          Connecting to secure PayPal Live Gateway...
+          Connecting to PayPal…
         </div>
       )}
       {loadError && (
         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', fontSize: '0.8rem', marginBottom: '12px' }}>
-          ⚠️ PayPal Notice: {loadError}. You can also choose Credit/Debit Card or Pay After Service.
+          ⚠️ {loadError}. Please try again later or contact us to pay by another method.
         </div>
       )}
       <div ref={containerRef} />
@@ -687,8 +697,11 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
   const [paidSuccess, setPaidSuccess] = useState(false);
   const [txnDetails, setTxnDetails] = useState(null);
 
+  useEscapeToClose(isOpen && Boolean(booking), onClose);
+
   if (!isOpen || !booking) return null;
 
+  // Only called after OUR server has confirmed the capture (status COMPLETED).
   const handleSuccess = (res) => {
     setPaidSuccess(true);
     setTxnDetails(res);
@@ -696,7 +709,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
       onPaymentSuccess(res.booking || {
         ...booking,
         status: 'Completed & Paid (PayPal)',
-        paidAmount: booking.totalPrice,
+        paidAmount: Number(res.amount) || booking.totalPrice,
         paymentMethod: 'PayPal',
         transactionId: res.captureId,
       });
@@ -705,7 +718,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
 
   return (
     <div className="licht-modal-overlay" onClick={onClose}>
-      <div className="licht-modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" className="licht-modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem' }}>
             <span style={{ color: '#003087', fontWeight: 900 }}>P</span>
@@ -721,7 +734,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 ✓
               </div>
               <h3 style={{ color: 'var(--navy)', marginBottom: '8px', fontSize: '1.25rem' }}>
-                Payment of £{booking.totalPrice} Captured!
+                Payment of {formatGBP(txnDetails?.amount || booking.totalPrice)} Received
               </h3>
               <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
                 Your service balance has been settled via PayPal. An official VAT invoice has been emailed to <strong>{booking.clientEmail}</strong>.
@@ -729,7 +742,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
               <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '20px', fontSize: '0.82rem', textAlign: 'left' }}>
                 <div><strong>Booking Ref:</strong> {booking.id}</div>
                 <div style={{ marginTop: '4px' }}><strong>Capture ID:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--teal)' }}>{txnDetails?.captureId || booking.transactionId}</span></div>
-                <div style={{ marginTop: '4px' }}><strong>Amount:</strong> £{booking.totalPrice} (inc. VAT)</div>
+                <div style={{ marginTop: '4px' }}><strong>Amount:</strong> {formatGBP(txnDetails?.amount || booking.totalPrice)} (inc. VAT)</div>
               </div>
               <button
                 type="button"
@@ -757,7 +770,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '10px', marginTop: '10px' }}>
                   <span style={{ fontWeight: 800, color: 'var(--navy)' }}>Total Balance Due:</span>
-                  <span style={{ fontWeight: 900, color: '#16a34a', fontSize: '1.15rem' }}>£{booking.totalPrice}</span>
+                  <span style={{ fontWeight: 900, color: '#16a34a', fontSize: '1.15rem' }}>{formatGBP(booking.totalPrice)}</span>
                 </div>
               </div>
 
@@ -772,9 +785,7 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
               </div>
 
               <PayPalButtonContainer
-                amount={booking.totalPrice}
                 bookingId={booking.id}
-                serviceName={booking.serviceName}
                 onPaymentSuccess={handleSuccess}
                 onError={setErrorMsg}
               />
@@ -800,99 +811,134 @@ export function BookingModal({
 }) {
   const isCartBooking = !service && cartItems.length > 0;
 
-  // 5-Step Flow: 1: Scope & Freq, 2: Schedule, 3: Address, 4: Payment Gateway, 5: Confirmed Receipt
+  // 5-Step Flow: 1: Scope & Freq, 2: Schedule, 3: Address, 4: Review, 5: Confirmed Receipt
   const [step, setStep] = useState(1);
   const [frequency, setFrequency] = useState('one-off'); // one-off, weekly, fortnightly, monthly
-  const [propertySize, setPropertySize] = useState('standard'); // compact, standard, large
-  const [date, setDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  });
+  // Default to compact so the opening estimate matches the "From £" price and the cart total.
+  const [propertySize, setPropertySize] = useState('compact'); // compact, standard, large
+  const [date, setDate] = useState(() => localIsoDate(1));
   const [timeSlot, setTimeSlot] = useState('morning'); // morning, afternoon, evening
-  const [clientName, setClientName] = useState(user?.name || '');
-  const [clientEmail, setClientEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState(user?.phone || '+44 20 8000 0000');
-  const [address, setAddress] = useState(user?.address || '14 Berkeley Square, Mayfair');
-  const [postcode, setPostcode] = useState('W1J 6BQ');
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [postcode, setPostcode] = useState('');
   const [notes, setNotes] = useState('');
 
-  const [isProcessingPayment] = useState(false);
-
-  const [preAssignedBookingId] = useState(() => 'LICHT-BK-' + Math.floor(1000 + Math.random() * 9000));
-  const [preAssignedOtp] = useState(() => '' + Math.floor(1000 + Math.random() * 9000));
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [formError, setFormError] = useState('');
   const [confirmedBookingData, setConfirmedBookingData] = useState(null);
 
-  if (!isOpen) return null;
-
-  // Price calculations
-  const basePrice = isCartBooking
-    ? cartItems.reduce((sum, item) => sum + (item.price || 150) * (item.quantity || 1), 0)
-    : (service?.price || 150);
-
-  const sizeAddon = propertySize === 'compact' ? 0 : propertySize === 'standard' ? 40 : 90;
-  const rawSubtotal = basePrice + sizeAddon;
-
-  // Frequency discounts
-  const discountRate = frequency === 'weekly' ? 0.15 : frequency === 'fortnightly' ? 0.10 : frequency === 'monthly' ? 0.05 : 0;
-  const discountAmount = Math.round(rawSubtotal * discountRate);
-  const netTotal = rawSubtotal - discountAmount;
-  const vatAmount = Math.round(netTotal * 0.20);
-  const grandTotal = netTotal + vatAmount;
-
-  const handleNextStep = () => {
-    if (step < 3) {
-      setStep(step + 1);
-    } else if (step === 3) {
-      // Proceed to Step 4: Review & Confirm Screen
-      setStep(4);
-    }
-  };
-
-  const handlePayLaterConfirm = () => {
-    const txnId = 'DUE-AFTER-SERVICE';
-    const newBooking = {
-      id: preAssignedBookingId,
-      transactionId: txnId,
-      paymentMethod: 'PayPal (Post-Service)',
-      paidAmount: 0.0,
-      paymentStatus: 'PENDING_PAYMENT',
-      paymentLink: `https://lichtmarketinglimited.org/?pay=${preAssignedBookingId}`,
-      serviceName: isCartBooking
-        ? `${cartItems.length} Cleaning Services (${cartItems.map(i => i.title).join(', ')})`
-        : service.title,
-      serviceId: service?.id || 'multi_cart',
-      serviceImg: service?.img || cartItems[0]?.img || '/service_office.jpg',
-      frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Deep Clean',
-      propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
-      date,
-      timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
-      address: `${address}, ${postcode}`,
-      notes,
-      totalPrice: grandTotal,
-      clientName: clientName || user?.name || 'Customer',
-      clientEmail: clientEmail || user?.email || 'info@lichtmarketinglimited.org',
-      clientPhone: phone,
-      createdAt: new Date().toLocaleDateString('en-GB'),
-      status: 'Booking Requested (Pending Assignment)',
-      completionOtp: preAssignedOtp,
-      otpVerified: false,
-    };
-
-    setConfirmedBookingData(newBooking);
-    onConfirmBooking(newBooking);
-    setStep(5);
-  };
+  // Fresh form every time the modal opens (so one service's choices don't leak into the next).
+  useEffect(() => {
+    if (!isOpen) return;
+    setStep(1);
+    setFrequency('one-off');
+    setPropertySize('compact');
+    setDate(localIsoDate(1));
+    setTimeSlot('morning');
+    setClientName(user?.name || '');
+    setClientEmail(user?.email || '');
+    // The backend stores placeholder values when a customer skips these at sign-up; never pre-fill them.
+    setPhone(isPlaceholderContact(user?.phone) ? '' : user.phone);
+    setAddress(isPlaceholderContact(user?.address) ? '' : user.address);
+    setPostcode(user?.postcode || '');
+    setNotes('');
+    setFormError('');
+    setIsProcessingPayment(false);
+    setConfirmedBookingData(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, service?.id]);
 
   const handleClose = () => {
+    if (isProcessingPayment) return;
     setStep(1);
     setConfirmedBookingData(null);
     onClose();
   };
 
+  useEscapeToClose(isOpen, handleClose);
+
+  if (!isOpen) return null;
+
+  // Price calculations (pence-accurate, shared with the cart)
+  const basePrice = isCartBooking ? cartBaseTotal(cartItems) : (service?.price || 0);
+  const {
+    sizeAddon,
+    discountRate,
+    discountAmount,
+    vatAmount,
+    grandTotal,
+  } = calculateBookingPrice(basePrice, propertySize, frequency);
+
+  const handleNextStep = () => {
+    setFormError('');
+    if (step === 2 && (!date || date < localIsoDate(0))) {
+      setFormError('Please choose a date from today onwards.');
+      return;
+    }
+    if (step === 3) {
+      const problem = validateBookingContact({ clientName, clientEmail, phone, address, postcode });
+      if (problem) {
+        setFormError(problem);
+        return;
+      }
+      setPostcode(formatUkPostcode(postcode));
+    }
+    if (step < 4) setStep(step + 1);
+  };
+
+  const handlePayLaterConfirm = async () => {
+    if (isProcessingPayment) return;
+    setFormError('');
+    const tempReference = newClientReference();
+    const newBooking = {
+      // Temporary client reference — the server should assign the final booking ID,
+      // PIN and total (recalculated from serviceId/frequency/propertySize).
+      id: tempReference,
+      clientReference: tempReference,
+      paymentMethod: 'PayPal (Post-Service)',
+      paidAmount: 0,
+      paymentStatus: 'PENDING_PAYMENT',
+      serviceName: isCartBooking
+        ? `${cartItems.length} Cleaning Services (${cartItems.map(i => `${i.title} ×${i.quantity || 1}`).join(', ')})`
+        : service.title,
+      serviceId: service?.id || 'multi_cart',
+      cartItems: isCartBooking ? cartItems.map(i => ({ serviceId: i.serviceId, quantity: i.quantity || 1 })) : undefined,
+      serviceImg: service?.img || cartItems[0]?.img || '/service_office.jpg',
+      frequencyCode: frequency,
+      propertySizeCode: propertySize,
+      frequency: frequency === 'weekly' ? 'Weekly Contract' : frequency === 'fortnightly' ? 'Fortnightly Service' : frequency === 'monthly' ? 'Monthly Service' : 'One-Off Clean',
+      propertySize: propertySize === 'compact' ? 'Compact Space (<1,500 sq ft)' : propertySize === 'standard' ? 'Standard Premises (1,500-3,500 sq ft)' : 'Large Complex (3,500+ sq ft)',
+      date,
+      timeSlot: timeSlot === 'morning' ? 'Morning Window (08:00 – 12:00)' : timeSlot === 'afternoon' ? 'Afternoon Window (12:00 – 16:00)' : 'Evening Shift (18:00 – 22:00)',
+      address: `${address.trim()}, ${formatUkPostcode(postcode)}`,
+      notes: notes.trim(),
+      totalPrice: grandTotal,
+      clientName: clientName.trim(),
+      clientEmail: clientEmail.trim(),
+      clientPhone: phone.trim(),
+      createdAt: new Date().toLocaleDateString('en-GB'),
+      status: 'Booking Requested (Pending Assignment)',
+      completionOtp: newCompletionPin(),
+      otpVerified: false,
+    };
+
+    setIsProcessingPayment(true);
+    try {
+      const saved = await onConfirmBooking(newBooking);
+      setConfirmedBookingData(saved || newBooking);
+      setStep(5);
+    } catch (err) {
+      setFormError(`Your booking has NOT been placed: ${err.message}`);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   return (
     <div className="licht-modal-overlay" onClick={handleClose}>
-      <div className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title">
             {step === 5 ? 'Booking Request Confirmed' : step === 4 ? 'Review & Confirm Request' : 'Book Professional Cleaning'}
@@ -920,7 +966,7 @@ export function BookingModal({
                     {isCartBooking ? `Cart Checkout (${cartItems.length} Services)` : service?.title}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-mid)' }}>
-                    Base Rate: £{basePrice} · Fully insured and DBS vetted teams
+                    Base Rate: {formatGBP(basePrice)} · Fully insured and DBS vetted teams
                   </div>
                 </div>
               </div>
@@ -1021,7 +1067,7 @@ export function BookingModal({
                       type="date"
                       className="form-input"
                       value={date}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={localIsoDate(0)}
                       onChange={(e) => setDate(e.target.value)}
                     />
                   </div>
@@ -1093,7 +1139,8 @@ export function BookingModal({
                         className="form-input"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+44 20 8000 0000"
+                        placeholder="e.g. 07700 900123"
+                        maxLength={20}
                         required
                       />
                     </div>
@@ -1145,7 +1192,7 @@ export function BookingModal({
                       <strong style={{ color: '#15803d', fontSize: '0.98rem' }}>£0.00 Due Today — No Upfront Payment Required</strong>
                     </div>
                     <p style={{ fontSize: '0.84rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
-                      Your cleaning service is confirmed with zero upfront charge. When our verified cleaner completes the job at your property, you will receive an official invoice and a secure PayPal link to settle by PayPal or Card in GBP.
+                      Nothing is charged today. Once you confirm, our team will assign a vetted cleaner. When the cleaner completes the job at your property, you will receive an official invoice and a secure PayPal link to settle by PayPal or Card in GBP.
                     </p>
                   </div>
 
@@ -1186,10 +1233,12 @@ export function BookingModal({
                   <button
                     type="button"
                     onClick={handlePayLaterConfirm}
+                    disabled={isProcessingPayment}
+                    aria-busy={isProcessingPayment}
                     className="service-book-btn"
-                    style={{ width: '100%', padding: '15px', fontSize: '0.98rem', background: '#0f766e', cursor: 'pointer', fontWeight: 800 }}
+                    style={{ width: '100%', padding: '15px', fontSize: '0.98rem', background: '#0f766e', cursor: isProcessingPayment ? 'wait' : 'pointer', opacity: isProcessingPayment ? 0.7 : 1, fontWeight: 800 }}
                   >
-                    Confirm Booking Request (£{grandTotal} Due After Service)
+                    {isProcessingPayment ? 'Placing your booking…' : <>Confirm Booking Request ({formatGBP(grandTotal)} Due After Service)</>}
                   </button>
                 </div>
               )}
@@ -1198,29 +1247,35 @@ export function BookingModal({
               <div className="booking-pricing-breakdown">
                 <div className="price-line-row">
                   <span>Base Cleaning Service</span>
-                  <span>£{basePrice}</span>
+                  <span>{formatGBP(basePrice)}</span>
                 </div>
                 {sizeAddon > 0 && (
                   <div className="price-line-row">
                     <span>Premises Scale Adjustment</span>
-                    <span>+£{sizeAddon}</span>
+                    <span>+{formatGBP(sizeAddon)}</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
                   <div className="price-line-row" style={{ color: 'var(--teal)' }}>
-                    <span>Frequency Discount ({discountRate * 100}%)</span>
-                    <span>-£{discountAmount}</span>
+                    <span>Frequency Discount ({Math.round(discountRate * 100)}%)</span>
+                    <span>-{formatGBP(discountAmount)}</span>
                   </div>
                 )}
                 <div className="price-line-row">
-                  <span>VAT (20%)</span>
-                  <span>£{vatAmount}</span>
+                  <span>VAT ({Math.round(VAT_RATE * 100)}%)</span>
+                  <span>{formatGBP(vatAmount)}</span>
                 </div>
                 <div className="price-line-row total-row">
                   <span>{step === 4 ? 'Total Due After Service' : 'Estimated Total'}</span>
-                  <span>£{grandTotal}</span>
+                  <span>{formatGBP(grandTotal)}</span>
                 </div>
               </div>
+
+              {formError && (
+                <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '11px 14px', borderRadius: '10px', margin: '12px 0', fontSize: '0.88rem' }}>
+                  {formError}
+                </div>
+              )}
 
               {/* Step Navigation Buttons */}
               {!isProcessingPayment && (
@@ -1228,7 +1283,7 @@ export function BookingModal({
                   {step > 1 && (
                     <button
                       type="button"
-                      onClick={() => setStep(step - 1)}
+                      onClick={() => { setFormError(''); setStep(step - 1); }}
                       className="modal-back-btn"
                     >
                       Back
@@ -1275,7 +1330,7 @@ export function BookingModal({
                   Service Completion Verification PIN / OTP
                 </div>
                 <div style={{ fontFamily: 'monospace', fontSize: '2.5rem', fontWeight: 900, color: '#0f766e', letterSpacing: '8px', margin: '6px 0' }}>
-                  {confirmedBookingData?.completionOtp || '5829'}
+                  {confirmedBookingData?.completionOtp || '—'}
                 </div>
                 <p style={{ margin: '8px 0 0', fontSize: '0.84rem', color: '#115e59', lineHeight: 1.45 }}>
                   <strong>How this works:</strong> Provide this 4-digit PIN to your cleaning operative once the service has been satisfactorily completed at your property.
@@ -1338,15 +1393,16 @@ export function CartDrawer({
   onClearCart,
   onProceedCheckout,
 }) {
+  useEscapeToClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price || 150) * (item.quantity || 1), 0);
-  const vat = Math.round(subtotal * 0.20);
-  const total = subtotal + vat;
+  // Same calculation the booking modal opens with (compact size, one-off), so the totals match.
+  const { basePrice: subtotal, vatAmount: vat, grandTotal: total } = calculateBookingPrice(cartBaseTotal(cart), 'compact', 'one-off');
 
   return (
     <div className="cart-drawer-overlay" onClick={onClose}>
-      <div className="cart-drawer-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="cart-drawer-panel" role="dialog" aria-modal="true" aria-label="Cleaning cart" onClick={(e) => e.stopPropagation()}>
         <div className="cart-drawer-header">
           <h3 className="cart-drawer-title">
             <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span> Cleaning Cart ({cart.length})
@@ -1382,13 +1438,15 @@ export function CartDrawer({
                   <div className="cart-item-title">{item.title}</div>
                   <div className="cart-item-freq">{item.frequency || 'One-off Clean'}</div>
                   <div className="cart-item-price">
-                    £{item.price * item.quantity}
+                    {formatGBP((item.price || 0) * (item.quantity || 1))}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <button
                     onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    disabled={item.quantity <= 1}
+                    aria-label={`Decrease quantity of ${item.title}`}
                     style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid var(--border-medium)', background: '#fff', cursor: 'pointer' }}
                   >
                     -
@@ -1398,6 +1456,8 @@ export function CartDrawer({
                   </span>
                   <button
                     onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                    disabled={item.quantity >= MAX_CART_QUANTITY}
+                    aria-label={`Increase quantity of ${item.title}`}
                     style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid var(--border-medium)', background: '#fff', cursor: 'pointer' }}
                   >
                     +
@@ -1408,6 +1468,7 @@ export function CartDrawer({
                   onClick={() => onRemoveItem(item.id)}
                   className="cart-item-remove-btn"
                   title="Remove item"
+                  aria-label={`Remove ${item.title} from cart`}
                 >
                   ✕
                 </button>
@@ -1420,16 +1481,19 @@ export function CartDrawer({
           <div className="cart-drawer-footer">
             <div style={{ marginBottom: '14px' }}>
               <div className="price-line-row">
-                <span>Subtotal</span>
-                <span>£{subtotal}</span>
+                <span>Subtotal (base rates)</span>
+                <span>{formatGBP(subtotal)}</span>
               </div>
               <div className="price-line-row">
                 <span>VAT (20%)</span>
-                <span>£{vat}</span>
+                <span>{formatGBP(vat)}</span>
               </div>
               <div className="price-line-row total-row">
-                <span>Total</span>
-                <span>£{total}</span>
+                <span>Estimated Total</span>
+                <span>{formatGBP(total)}</span>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--slate-mid)', marginTop: '6px', lineHeight: 1.4 }}>
+                Final price depends on the property size and visit frequency you choose at the next step.
               </div>
             </div>
 
@@ -1473,6 +1537,8 @@ export function MyBookingsModal({
   const [feedbackNotice, setFeedbackNotice] = useState('');
   const [payPalModalBooking, setPayPalModalBooking] = useState(null);
 
+  useEscapeToClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const isCompletedBooking = (b) => {
@@ -1507,7 +1573,7 @@ export function MyBookingsModal({
 
   return (
     <div className="licht-modal-overlay" onClick={onClose}>
-      <div className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
+      <div role="dialog" aria-modal="true" className="licht-modal-box large-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
         <div className="licht-modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '1.4rem' }}>📅</span>
@@ -1785,11 +1851,11 @@ export function MyBookingsModal({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--border-light)', flexWrap: 'wrap', gap: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                         <div style={{ fontWeight: '800', color: 'var(--navy)', fontSize: '1.05rem' }}>
-                          £{b.totalPrice || b.paidAmount} <span style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', fontWeight: 'normal' }}>(inc. VAT)</span>
+                          {formatGBP(b.totalPrice || b.paidAmount)} <span style={{ fontSize: '0.72rem', color: 'var(--slate-mid)', fontWeight: 'normal' }}>(inc. VAT)</span>
                         </div>
                         {isUnpaid ? (
                           <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: '10px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde047' }}>
-                            ⏳ Payment Due (£{b.totalPrice})
+                            ⏳ Payment Due ({formatGBP(b.totalPrice)})
                           </span>
                         ) : (
                           <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: '10px', background: '#dcfce7', color: '#15803d', border: '1px solid #86efac' }}>
@@ -1823,7 +1889,7 @@ export function MyBookingsModal({
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="#003087">
                               <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.004.408 5.42.043 5.918.043h7.728c3.275 0 5.612.784 6.758 2.268 1.096 1.42 1.258 3.398.48 5.882-.015.048-.033.095-.049.143-.323 1.077-.852 1.99-1.574 2.716-.762.766-1.745 1.343-2.923 1.714-1.127.355-2.434.536-3.886.536H10.12l-1.39 8.815c-.059.414-.416.72-.834.72l-.82.014z" />
                             </svg>
-                            <span>Pay £{b.totalPrice} with PayPal</span>
+                            <span>Pay {formatGBP(b.totalPrice)} with PayPal</span>
                           </button>
                         )}
                         {isCompleted ? (
@@ -1925,7 +1991,7 @@ export function MyBookingsModal({
           style={{ zIndex: 2500 }}
         >
           <div
-            className="licht-modal-box"
+            role="dialog" aria-modal="true" className="licht-modal-box"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '560px', background: '#ffffff', padding: '0', borderRadius: '16px', overflow: 'hidden' }}
           >
@@ -2003,15 +2069,15 @@ export function MyBookingsModal({
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '6px 0', color: '#475569' }}>
                   <span>Service Subtotal (Net):</span>
-                  <span>£{((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) / 1.2).toFixed(2)}</span>
+                  <span>{formatGBP((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 0) / (1 + VAT_RATE))}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '6px 0', color: '#475569' }}>
                   <span>UK VAT (20%):</span>
-                  <span>£{((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) - (selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 180) / 1.2).toFixed(2)}</span>
+                  <span>{formatGBP((selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 0) - (selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount || 0) / (1 + VAT_RATE))}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, padding: '10px 0', borderTop: '2px solid #e2e8f0', color: '#10264A', marginTop: '4px' }}>
                   <span>Total Paid (inc. VAT):</span>
-                  <span>£{selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount}</span>
+                  <span>{formatGBP(selectedReceiptBooking.totalPrice || selectedReceiptBooking.paidAmount)}</span>
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#64748b', textAlign: 'right' }}>
                   Payment Method: {selectedReceiptBooking.paymentMethod || 'Visa / Mastercard Secure Escrow'}
@@ -2071,7 +2137,7 @@ export function MyBookingsModal({
           style={{ zIndex: 2500 }}
         >
           <div
-            className="licht-modal-box"
+            role="dialog" aria-modal="true" className="licht-modal-box"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '480px', padding: '24px' }}
           >

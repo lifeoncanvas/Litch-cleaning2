@@ -11,6 +11,8 @@ import {
   apiAssignCleaner,
   apiSendPaymentRequest,
   apiFetchOperatives,
+  checkBackendHealth,
+  getAuthToken,
 } from './services/api';
 
 /* Clean default admin: Sharon Shelke */
@@ -28,16 +30,20 @@ const INITIAL_USERS = [
 
 export default function AdminPortal({ onExit, onBookingUpdate }) {
   // Authentication State
+  // Restore an admin session only if a server-issued token is also present.
+  // (The backend must still verify the token and admin role on every request.)
   const [adminUser, setAdminUser] = useState(() => {
     try {
       const stored = localStorage.getItem('licht_admin_auth');
-      return stored ? JSON.parse(stored) : null;
+      if (!stored || !getAuthToken()) return null;
+      const parsed = JSON.parse(stored);
+      return parsed && (parsed.role === 'ROLE_ADMIN' || parsed.role === 'ADMIN') ? parsed : null;
     } catch (e) {
       return null;
     }
   });
 
-  const [adminEmail, setAdminEmail] = useState('sharonshelke1@gmail.com');
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
@@ -120,6 +126,10 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
   const [adminNotice, setAdminNotice] = useState('');
+  const showAdminError = (msg) => {
+    setAdminNotice(`⚠ ${msg}`);
+    setTimeout(() => setAdminNotice((curr) => (curr === `⚠ ${msg}` ? '' : curr)), 9000);
+  };
 
   // OTP Verification Modal State
   const [otpModalBooking, setOtpModalBooking] = useState(null);
@@ -136,24 +146,28 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     } catch (e) {}
 
     const checkHealth = async () => {
+      const health = await checkBackendHealth();
+      if (!health.online) {
+        setBackendStatus({ online: false, port: 8081 });
+        showAdminError('Booking server is offline. Data shown may be out of date and changes cannot be saved.');
+        return;
+      }
+      setBackendStatus({ online: true, port: 8081 });
       try {
-        const res = await fetch('http://localhost:8081/api/health');
-        if (res.ok) {
-          setBackendStatus({ online: true, port: 8081 });
-          apiFetchQuotes().then(setQuotes);
-          apiFetchOperatives().then(data => {
-            if (Array.isArray(data) && data.length > 0) setOperatives(data);
-          });
-          const serverBookings = await apiFetchAllBookings();
-          if (Array.isArray(serverBookings) && serverBookings.length > 0) {
-            setBookings(serverBookings);
-            localStorage.setItem('licht_bookings', JSON.stringify(serverBookings));
-          }
-        } else {
-          setBackendStatus({ online: false, port: 8081 });
+        const [serverBookings, serverQuotes, serverOperatives] = await Promise.all([
+          apiFetchAllBookings(),
+          apiFetchQuotes(),
+          apiFetchOperatives().catch(() => []),
+        ]);
+        if (Array.isArray(serverBookings)) {
+          setBookings(serverBookings);
+          localStorage.setItem('licht_bookings', JSON.stringify(serverBookings));
         }
+        if (Array.isArray(serverQuotes)) setQuotes(serverQuotes);
+        if (Array.isArray(serverOperatives) && serverOperatives.length > 0) setOperatives(serverOperatives);
       } catch (err) {
         setBackendStatus({ online: false, port: 8081 });
+        showAdminError(`Could not load live data: ${err.message}`);
       }
     };
     checkHealth();
@@ -223,11 +237,15 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       status: 'Confirmed & Scheduled (Paid)',
     };
 
+    let savedBooking;
     try {
-      await apiCreateBooking(newBooking);
-    } catch (err) {}
+      savedBooking = await apiCreateBooking(newBooking);
+    } catch (err) {
+      alert(`Booking was NOT saved: ${err.message}`);
+      return;
+    }
 
-    const updated = [newBooking, ...bookings];
+    const updated = [savedBooking && savedBooking.id ? savedBooking : newBooking, ...bookings];
     setBookings(updated);
     localStorage.setItem('licht_bookings', JSON.stringify(updated));
 
@@ -255,7 +273,10 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
 
     try {
       await apiCancelBooking(bookingId);
-    } catch (e) {}
+    } catch (e) {
+      showAdminError(`Could not cancel ${bookingId}: ${e.message}`);
+      return;
+    }
 
     const updated = bookings.map(b => b.id === bookingId ? { ...b, status: 'Cancelled' } : b);
     setBookings(updated);
@@ -291,16 +312,21 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
   // Step 4: Admin assigns an available cleaner
   const handleAssignCleaner = async (bookingId, cleanerName) => {
     if (!cleanerName) return;
+    let saved;
     try {
-      await apiAssignCleaner(bookingId, cleanerName);
-    } catch (e) {}
+      saved = await apiAssignCleaner(bookingId, cleanerName);
+    } catch (e) {
+      showAdminError(`Could not assign ${cleanerName} to ${bookingId}: ${e.message}`);
+      return;
+    }
 
     const selectedOp = operatives.find(o => o.name === cleanerName);
     const updated = bookings.map(b => b.id === bookingId ? {
       ...b,
+      ...(saved && saved.id ? saved : {}),
       assignedCleaner: cleanerName,
-      assignedCleanerPhone: selectedOp ? selectedOp.phone : '+44 20 8000 8899',
-      status: 'Cleaner Assigned'
+      assignedCleanerPhone: selectedOp ? selectedOp.phone : '',
+      status: (saved && saved.status) || 'Cleaner Assigned'
     } : b);
 
     setBookings(updated);
@@ -317,8 +343,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
       setAdminNotice(`✓ Payment request email sent to ${booking.clientEmail} with secure PayPal link for booking ${booking.id} (£${booking.totalPrice})`);
       setTimeout(() => setAdminNotice(''), 6000);
     } catch (e) {
-      setAdminNotice(`Notice: Payment request triggered for ${booking.id}`);
-      setTimeout(() => setAdminNotice(''), 6000);
+      showAdminError(`Payment request NOT sent for ${booking.id}: ${e.message}`);
     }
   };
 
@@ -328,17 +353,17 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
     if (!otpModalBooking) return;
     setOtpError('');
 
-    const expected = otpModalBooking.completionOtp;
-    const isMatch = expected && expected.trim() === enteredOtp.trim();
-
-    if (!isMatch) {
-      setOtpError('Invalid OTP! Please enter the 4-digit verification code provided by the customer.');
+    if (!/^\d{4,6}$/.test(enteredOtp.trim())) {
+      setOtpError('Please enter the verification code provided by the customer.');
       return;
     }
 
-    try {
-      await apiVerifyBookingOtp(otpModalBooking.id, enteredOtp);
-    } catch (err) {}
+    // The server is the only judge of whether the PIN is correct.
+    const res = await apiVerifyBookingOtp(otpModalBooking.id, enteredOtp.trim());
+    if (!res || !res.success) {
+      setOtpError(res?.message || 'Invalid PIN. Please check the code with the customer.');
+      return;
+    }
 
     const updated = bookings.map(b =>
       b.id === otpModalBooking.id
@@ -569,7 +594,7 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
                 type="email"
                 required
                 className="admin-form-input"
-                placeholder="sharonshelke1@gmail.com"
+                placeholder="admin@lichtmarketinglimited.org"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
               />
@@ -678,7 +703,9 @@ export default function AdminPortal({ onExit, onBookingUpdate }) {
           className={`admin-tab-btn ${activeTab === 'quotes' ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('quotes');
-            apiFetchQuotes().then(setQuotes);
+            apiFetchQuotes()
+              .then((q) => setQuotes(Array.isArray(q) ? q : []))
+              .catch((e) => showAdminError(`Could not load quotes: ${e.message}`));
           }}
         >
           <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Inbound Quotes</span>

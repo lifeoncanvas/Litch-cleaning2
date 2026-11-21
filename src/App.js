@@ -22,6 +22,7 @@ import './Booking.css';
 
 // Pages
 import AboutPage from './pages/AboutPage';
+import LegalPage from './pages/LegalPage';
 import AdminPortal from './pages/AdminPage';
 
 // Data Catalogs
@@ -31,7 +32,6 @@ import { VALUES_DATA, PROCESS_DATA, TESTIMONIALS_DATA } from './data/contentData
 // Spring Boot Backend API Integration
 import {
   apiLogin,
-  apiDemoLogin,
   apiRegister,
   apiLogout,
   apiFetchMyBookings,
@@ -40,17 +40,21 @@ import {
   apiSubmitQuote,
   apiFetchBookingById,
 } from './services/api';
+import { MAX_CART_QUANTITY } from './utils/pricing';
+import { validateQuoteForm } from './utils/validation';
 
 /* ==========================================================================
    MAIN APP CONTROLLER COMPONENT
    ========================================================================== */
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'about'
+  const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'about' | 'privacy' | 'terms' | 'admin'
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [serviceFilter, setServiceFilter] = useState('all');
   const [quoteTab, setQuoteTab] = useState('general'); // 'general' | 'corporate'
   const [submittedForm, setSubmittedForm] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
+  const [quoteSubmitting, setQuoteSubmitting] = useState(false);
 
   // User Authentication State (Persisted in localStorage)
   const [user, setUser] = useState(() => {
@@ -62,22 +66,9 @@ export default function App() {
     }
   });
 
-  // Administrator Access Gate (Sharon Shelke + any user promoted to Admin)
-  const isAdmin = Boolean(
-    user && user.email && (
-      user.email.toLowerCase().trim() === 'sharonshelke1@gmail.com' ||
-      user.role === 'ROLE_ADMIN' ||
-      user.role === 'ADMIN' ||
-      (() => {
-        try {
-          const customAdmins = JSON.parse(localStorage.getItem('licht_admin_emails') || '[]');
-          return Array.isArray(customAdmins) && customAdmins.map(e => (e || '').toLowerCase().trim()).includes(user.email.toLowerCase().trim());
-        } catch {
-          return false;
-        }
-      })()
-    )
-  );
+  // Administrator UI gate. The role comes only from the server's login response.
+  // This only hides/shows UI — the backend MUST enforce admin rights on every admin endpoint.
+  const isAdmin = Boolean(user && (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN'));
 
   // Cleaning Cart State (Persisted in localStorage)
   const [cart, setCart] = useState(() => {
@@ -125,13 +116,12 @@ export default function App() {
       const urlParams = new URLSearchParams(window.location.search);
       const payId = urlParams.get('pay') || (window.location.hash.startsWith('#pay=') ? window.location.hash.replace('#pay=', '') : null);
       if (payId) {
+        // Payment links must always load the booking (and amount) from the server.
         apiFetchBookingById(payId).then((b) => {
           if (b) {
             setDirectPayBooking(b);
           } else {
-            const localList = JSON.parse(localStorage.getItem('licht_bookings') || '[]');
-            const found = localList.find((item) => item.id === payId);
-            if (found) setDirectPayBooking(found);
+            showToast('We could not find that payment link. Please contact us or use the link in your latest email.');
           }
         });
       }
@@ -172,6 +162,11 @@ export default function App() {
         setCurrentPage('about');
         document.title = 'About Us | Licht Home and Corporate Cleaning';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (hash === '#privacy' || hash === '#terms') {
+        const page = hash.slice(1);
+        setCurrentPage(page);
+        document.title = `${page === 'privacy' ? 'Privacy Policy' : 'Terms of Service'} | Licht Home and Corporate Cleaning`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setCurrentPage('home');
         document.title = 'Licht Home and Corporate Cleaning';
@@ -198,11 +193,9 @@ export default function App() {
   // Fetch client bookings from backend when user is logged in
   useEffect(() => {
     if (user?.email) {
-      apiFetchMyBookings(user.email).then((fetched) => {
-        if (fetched && fetched.length > 0) {
-          setBookings(fetched);
-          localStorage.setItem('licht_bookings', JSON.stringify(fetched));
-        }
+      apiFetchMyBookings(user.email).then(({ bookings: fetched, fromCache }) => {
+        setBookings(fetched);
+        if (!fromCache) localStorage.setItem('licht_bookings', JSON.stringify(fetched));
       });
     }
   }, [user]);
@@ -215,11 +208,11 @@ export default function App() {
       window.history.pushState({}, '', '/admin');
       window.location.hash = '#/admin';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (page === 'about') {
+    } else if (page === 'about' || page === 'privacy' || page === 'terms') {
       if (window.location.pathname === '/admin') {
         window.history.pushState({}, '', '/');
       }
-      window.location.hash = '#about';
+      window.location.hash = `#${page}`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (window.location.pathname === '/admin') {
@@ -253,109 +246,36 @@ export default function App() {
     setPendingAction(null);
   };
 
-  // Authentication Handlers (Connected to Spring Boot REST API with offline fallback)
-  const handleLogin = async (credentials) => {
-    try {
-      const res = await apiLogin(credentials.email, credentials.password);
-      let loggedUser;
-      const emailLower = (credentials.email || '').trim().toLowerCase();
-      const dynamicAdmins = (() => {
-        try {
-          return JSON.parse(localStorage.getItem('licht_admin_emails') || '[]').map(e => (e || '').toLowerCase().trim());
-        } catch {
-          return [];
-        }
-      })();
-      const isAdminAccount = ['sharonshelke1@gmail.com', 'admin@lichtmarketinglimited.org', 'info@lichtmarketinglimited.org', ...dynamicAdmins].includes(emailLower);
-
-      if (res && res.success && res.user) {
-        loggedUser = res.user;
-        if (isAdminAccount) {
-          loggedUser.role = 'ROLE_ADMIN';
-        }
-      } else {
-        loggedUser = {
-          id: 'usr_' + Date.now(),
-          name: emailLower === 'sharonshelke1@gmail.com' ? 'Sharon Shelke' : credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          email: credentials.email,
-          role: isAdminAccount ? 'ROLE_ADMIN' : 'ROLE_CLIENT',
-          phone: '+44 20 8000 0000',
-          address: '14 Berkeley Square, London',
-          company: isAdminAccount ? 'Licht Marketing Limited' : 'Corporate Partner',
-        };
-      }
-      setUser(loggedUser);
-      localStorage.setItem('licht_user', JSON.stringify(loggedUser));
-
-      if (isAdminAccount) {
-        const adminAuthObj = {
-          name: loggedUser.name,
-          role: 'Operations Director',
-          email: loggedUser.email,
-          loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        localStorage.setItem('licht_admin_auth', JSON.stringify(adminAuthObj));
-      }
-
-      setAuthModalOpen(false);
-      showToast(`Welcome back, ${loggedUser.name}! Sign-in notification dispatched to ${loggedUser.email}.`);
-      executePendingAction(loggedUser);
-    } catch (e) {
-      showToast('Error during login. Using local session.');
+  // Authentication Handlers — a session is created ONLY when the server accepts the credentials.
+  // Each returns { success, message } so the AuthModal can show the error.
+  const startSession = (serverUser) => {
+    setUser(serverUser);
+    localStorage.setItem('licht_user', JSON.stringify(serverUser));
+    if (serverUser.role === 'ROLE_ADMIN' || serverUser.role === 'ADMIN') {
+      localStorage.setItem('licht_admin_auth', JSON.stringify(serverUser));
     }
+    setAuthModalOpen(false);
+    executePendingAction(serverUser);
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      const res = await apiDemoLogin();
-      let demoUser;
-      if (res && res.success && res.user) {
-        demoUser = res.user;
-      } else {
-        demoUser = {
-          id: 'usr_demo_882',
-          name: 'Alex Vance',
-          email: 'alex.vance@ventureoffices.co.uk',
-          phone: '+44 20 7946 0912',
-          address: '45 Marylebone High Street, London W1U 5AA',
-          company: 'Venture Offices Group',
-        };
-      }
-      setUser(demoUser);
-      localStorage.setItem('licht_user', JSON.stringify(demoUser));
-      setAuthModalOpen(false);
-      showToast('Signed in as Alex Vance (Verified Client)');
-      executePendingAction(demoUser);
-    } catch (e) {
-      showToast('Demo login fallback active.');
+  const handleLogin = async (credentials) => {
+    const res = await apiLogin((credentials.email || '').trim(), credentials.password);
+    if (!res || !res.success || !res.user) {
+      return { success: false, message: res?.message || 'Incorrect email or password.' };
     }
+    startSession(res.user);
+    showToast(`Welcome back, ${res.user.name || res.user.email}!`);
+    return { success: true };
   };
 
   const handleRegister = async (data) => {
-    try {
-      const res = await apiRegister(data);
-      let newUser;
-      if (res && res.success && res.user) {
-        newUser = res.user;
-        showToast(res.message || `Account created! Welcome email dispatched from info@lichtmarketinglimited.org.`);
-      } else {
-        newUser = {
-          id: 'usr_' + Date.now(),
-          name: data.name,
-          email: data.email,
-          phone: data.phone || '+44 20 8000 0000',
-          address: 'Central London, UK',
-          company: 'Corporate / Domestic Partner',
-        };
-        showToast(`Account created for ${newUser.name}! Welcome email dispatched from info@lichtmarketinglimited.org.`);
-      }
-      setUser(newUser);
-      localStorage.setItem('licht_user', JSON.stringify(newUser));
-      setAuthModalOpen(false);
-      executePendingAction(newUser);
-    } catch (e) {
-      showToast('Registration fallback active.');
+    const res = await apiRegister({ ...data, email: (data.email || '').trim() });
+    if (!res || !res.success || !res.user) {
+      return { success: false, message: res?.message || 'We could not create your account. Please try again.' };
     }
+    startSession(res.user);
+    showToast(res.message || `Account created. Welcome, ${res.user.name || ''}!`);
+    return { success: true };
   };
 
   const handleSignOut = () => {
@@ -363,6 +283,10 @@ export default function App() {
     setUser(null);
     localStorage.removeItem('licht_user');
     localStorage.removeItem('licht_admin_auth');
+    localStorage.removeItem('licht_cart');
+    localStorage.removeItem('licht_bookings');
+    setCart([]);
+    setBookings([]);
     showToast('Signed out successfully.');
   };
 
@@ -395,7 +319,7 @@ export default function App() {
       if (existing) {
         updated = prevCart.map((item) =>
           item.serviceId === service.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: Math.min(MAX_CART_QUANTITY, item.quantity + 1) }
             : item
         );
       } else {
@@ -424,9 +348,13 @@ export default function App() {
   };
 
   const handleUpdateCartQuantity = (id, newQty) => {
+    const qty = Math.max(1, Math.min(MAX_CART_QUANTITY, Number(newQty) || 1));
+    if (Number(newQty) > MAX_CART_QUANTITY) {
+      showToast(`Maximum ${MAX_CART_QUANTITY} visits per service online — please request a quote for larger contracts.`);
+    }
     setCart((prevCart) => {
       const updated = prevCart.map((item) =>
-        item.id === id ? { ...item, quantity: newQty } : item
+        item.id === id ? { ...item, quantity: qty } : item
       );
       localStorage.setItem('licht_cart', JSON.stringify(updated));
       return updated;
@@ -461,22 +389,21 @@ export default function App() {
     setBookingModalOpen(true);
   };
 
+  /**
+   * Saves the booking on the server. Returns the server's booking (with its own
+   * reference, total and PIN) or throws — the BookingModal only shows the
+   * confirmation screen when this resolves.
+   */
   const handleConfirmBooking = async (newBooking) => {
-    try {
-      const savedBooking = await apiCreateBooking(newBooking);
-      const bookingToAdd = savedBooking || newBooking;
-      setBookings((prev) => {
-        const updated = [bookingToAdd, ...prev.filter((b) => b.id !== bookingToAdd.id)];
-        localStorage.setItem('licht_bookings', JSON.stringify(updated));
-        return updated;
-      });
-    } catch (e) {
-      setBookings((prev) => {
-        const updated = [newBooking, ...prev];
-        localStorage.setItem('licht_bookings', JSON.stringify(updated));
-        return updated;
-      });
+    const savedBooking = await apiCreateBooking(newBooking);
+    if (!savedBooking || !savedBooking.id) {
+      throw new Error('The server did not confirm your booking. Please try again.');
     }
+    setBookings((prev) => {
+      const updated = [savedBooking, ...prev.filter((b) => b.id !== savedBooking.id)];
+      localStorage.setItem('licht_bookings', JSON.stringify(updated));
+      return updated;
+    });
 
     // If it was a cart checkout booking, clear cart
     if (!selectedServiceForBooking && cart.length > 0) {
@@ -484,7 +411,8 @@ export default function App() {
       localStorage.removeItem('licht_cart');
     }
 
-    showToast(`Booking ${newBooking.id} confirmed and saved to backend!`);
+    showToast(`Booking ${savedBooking.id} received.`);
+    return savedBooking;
   };
 
   const handleBookingPaid = (updatedBooking) => {
@@ -493,13 +421,16 @@ export default function App() {
       localStorage.setItem('licht_bookings', JSON.stringify(updated));
       return updated;
     });
-    showToast(`Payment of £${updatedBooking.paidAmount || updatedBooking.totalPrice} captured via PayPal! Reference: ${updatedBooking.id}`);
+    showToast(`Payment received. Reference: ${updatedBooking.id}`);
   };
 
   const handleCancelBooking = async (bookingId) => {
     try {
       await apiCancelBooking(bookingId);
-    } catch (e) {}
+    } catch (e) {
+      showToast(`Could not cancel ${bookingId}: ${e.message}`);
+      return;
+    }
     setBookings((prev) => {
       const updated = prev.map((b) => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b));
       localStorage.setItem('licht_bookings', JSON.stringify(updated));
@@ -515,18 +446,34 @@ export default function App() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (quoteSubmitting) return;
+    setQuoteError('');
+
+    const problem = validateQuoteForm(formData, quoteTab);
+    if (problem) {
+      setQuoteError(problem);
+      return;
+    }
+
+    setQuoteSubmitting(true);
     try {
-      await apiSubmitQuote(formData);
-    } catch (err) {}
-    setSubmittedForm(true);
-    showToast('Quote request submitted and sent to backend API!');
+      await apiSubmitQuote({ ...formData, name: formData.name.trim(), email: formData.email.trim(), enquiryType: quoteTab });
+      setSubmittedForm(true);
+      showToast('Thank you — your enquiry has been sent.');
+    } catch (err) {
+      setQuoteError(
+        `Sorry, your enquiry could not be sent (${err.message}). Please try again, or email info@lichtmarketinglimited.org.`
+      );
+    } finally {
+      setQuoteSubmitting(false);
+    }
   };
 
   const filteredServices = serviceFilter === 'all'
     ? SERVICES_DATA
     : SERVICES_DATA.filter(s => s.category === serviceFilter);
 
-  // Render Admin Portal if navigating to /admin (Protected: Only sharonshelke1@gmail.com)
+  // Render Admin Portal if navigating to /admin (UI gate only — the backend enforces admin rights)
   if (currentPage === 'admin') {
     if (!isAdmin) {
       return (
@@ -540,13 +487,13 @@ export default function App() {
             </div>
             <h2 style={{ color: '#10264A', fontSize: '1.4rem', marginTop: '14px', marginBottom: '8px' }}>Restricted Operations Portal</h2>
             <p style={{ color: '#64748b', fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '22px' }}>
-              This portal is strictly restricted to administrator <strong>sharonshelke1@gmail.com</strong>.
+              This area is restricted to Licht Marketing administrators.
             </p>
             <button
               onClick={() => {
                 navigateTo('home');
                 setAuthMode('login');
-                setAuthMessage('Sign in with sharonshelke1@gmail.com to access Operations Admin');
+                setAuthMessage('Sign in with your administrator account to access Operations Admin');
                 setAuthModalOpen(true);
               }}
               style={{
@@ -886,7 +833,9 @@ export default function App() {
       </header>
 
       {/* ── 2. CONDITIONAL PAGE RENDERING: ABOUT US vs HOME ── */}
-      {currentPage === 'about' ? (
+      {currentPage === 'privacy' || currentPage === 'terms' ? (
+        <LegalPage page={currentPage} onNavigate={navigateTo} />
+      ) : currentPage === 'about' ? (
         <AboutPage onNavigate={navigateTo} onInitiateBooking={handleInitiateBooking} />
       ) : (
         /* ── HOME PAGE CONTENT ── */
@@ -1493,13 +1442,15 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleFormSubmit}>
+                    <form onSubmit={handleFormSubmit} noValidate>
                       <div className="form-grid-2">
                         <div className="form-group">
-                          <label className="form-label">Full Name *</label>
+                          <label className="form-label" htmlFor="quote-name">Full Name *</label>
                           <input
                             type="text"
+                            id="quote-name"
                             name="name"
+                            maxLength={80}
                             required
                             placeholder="e.g. Alexander Thorne"
                             className="form-input"
@@ -1509,12 +1460,14 @@ export default function App() {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">
+                          <label className="form-label" htmlFor="quote-company">
                             {quoteTab === 'corporate' ? 'Company / Organisation *' : 'Company / Organisation (Optional)'}
                           </label>
                           <input
                             type="text"
+                            id="quote-company"
                             name="company"
+                            maxLength={120}
                             required={quoteTab === 'corporate'}
                             placeholder={quoteTab === 'corporate' ? 'e.g. Apex Global Ltd' : 'Optional'}
                             className="form-input"
@@ -1526,10 +1479,12 @@ export default function App() {
 
                       <div className="form-grid-2">
                         <div className="form-group">
-                          <label className="form-label">Email Address *</label>
+                          <label className="form-label" htmlFor="quote-email">Email Address *</label>
                           <input
                             type="email"
+                            id="quote-email"
                             name="email"
+                            maxLength={120}
                             required
                             placeholder="e.g. alexander@example.com"
                             className="form-input"
@@ -1539,10 +1494,12 @@ export default function App() {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">Phone Number *</label>
+                          <label className="form-label" htmlFor="quote-phone">Phone Number *</label>
                           <input
                             type="tel"
+                            id="quote-phone"
                             name="phone"
+                            maxLength={20}
                             required
                             placeholder="e.g. +44 20 8000 0000"
                             className="form-input"
@@ -1554,10 +1511,12 @@ export default function App() {
 
                       <div className="form-grid-2">
                         <div className="form-group">
-                          <label className="form-label">Postcode / Location *</label>
+                          <label className="form-label" htmlFor="quote-postcode">Postcode / Location *</label>
                           <input
                             type="text"
+                            id="quote-postcode"
                             name="postcode"
+                            maxLength={60}
                             required
                             placeholder="e.g. SW1A 1AA or City Centre"
                             className="form-input"
@@ -1567,8 +1526,9 @@ export default function App() {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">Service Required *</label>
+                          <label className="form-label" htmlFor="quote-serviceType">Service Required *</label>
                           <select
+                            id="quote-serviceType"
                             name="serviceType"
                             className="form-select"
                             value={formData.serviceType}
@@ -1588,8 +1548,9 @@ export default function App() {
 
                       <div className="form-grid-2">
                         <div className="form-group">
-                          <label className="form-label">Frequency *</label>
+                          <label className="form-label" htmlFor="quote-frequency">Frequency *</label>
                           <select
+                            id="quote-frequency"
                             name="frequency"
                             className="form-select"
                             value={formData.frequency}
@@ -1605,10 +1566,12 @@ export default function App() {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">Property / Facility Size</label>
+                          <label className="form-label" htmlFor="quote-propertySize">Property / Facility Size</label>
                           <input
                             type="text"
+                            id="quote-propertySize"
                             name="propertySize"
+                            maxLength={80}
                             placeholder="e.g. 3-Bed House or 4,500 sq ft Office"
                             className="form-input"
                             value={formData.propertySize}
@@ -1618,9 +1581,11 @@ export default function App() {
                       </div>
 
                       <div className="form-group full-width">
-                        <label className="form-label">Specific Details / Space Requirements</label>
+                        <label className="form-label" htmlFor="quote-message">Specific Details / Space Requirements</label>
                         <textarea
-                          name="message"
+                          id="quote-message"
+                            name="message"
+                            maxLength={2000}
                           placeholder="Please mention any special access requirements, key focus areas, preferred cleaning hours (e.g. before 8 AM or after 6 PM), or specific instructions..."
                           className="form-textarea"
                           value={formData.message}
@@ -1628,9 +1593,19 @@ export default function App() {
                         />
                       </div>
 
-                      <button type="submit" className="form-submit-btn">
-                        Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request
+                      {quoteError && (
+                        <div className="form-error-banner" role="alert" style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", padding: "12px 14px", borderRadius: "10px", marginBottom: "14px", fontSize: "0.9rem" }}>
+                          {quoteError}
+                        </div>
+                      )}
+
+                      <button type="submit" className="form-submit-btn" disabled={quoteSubmitting} aria-busy={quoteSubmitting}>
+                        {quoteSubmitting ? "Sending…" : <>Submit {quoteTab === 'corporate' ? 'Corporate Contract' : 'Cleaning'} Request</>}
                       </button>
+                      <p className="quote-privacy-note">
+                        We use your details only to respond to your enquiry. See our{' '}
+                        <button type="button" onClick={() => navigateTo('privacy')}>Privacy Policy</button>.
+                      </p>
                     </form>
                   )}
                 </div>
@@ -1759,8 +1734,8 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <button onClick={() => navigateTo('about')} className="footer-link-item">About Licht Marketing</button>
-              <a href="#privacy" className="footer-link-item">Privacy Policy</a>
-              <a href="#terms" className="footer-link-item">Terms of Service</a>
+              <button onClick={() => navigateTo('privacy')} className="footer-link-item">Privacy Policy</button>
+              <button onClick={() => navigateTo('terms')} className="footer-link-item">Terms of Service</button>
               <a href="#compliance" className="footer-link-item">Health &amp; Safety Compliance</a>
             </div>
           </div>
@@ -1784,7 +1759,6 @@ export default function App() {
         setMode={setAuthMode}
         message={authMessage}
         onLogin={handleLogin}
-        onDemoLogin={handleDemoLogin}
         onRegister={handleRegister}
         onNavigateAdmin={() => {
           setAuthModalOpen(false);
