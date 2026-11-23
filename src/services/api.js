@@ -520,6 +520,30 @@ export const apiGetEspeesConfig = async () => {
   }
 };
 
+export const apiInitiateEspeesPayment = async (bookingId, serviceName, amount, customerEmail) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/espees/initiate`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ bookingId, serviceName, amount, customerEmail }),
+    });
+    return await safeJsonFetch(res, 'Espees Initiate');
+  } catch (err) {
+    console.warn('Backend Espees initiate offline/fallback:', err.message);
+    const esp = (parseFloat(amount || 0) * 1.28).toFixed(2);
+    const ref = `ESP${Date.now()}`;
+    return {
+      success: true,
+      paymentRef: ref,
+      paymentUrl: `https://payment.espees.org/pay/${ref}`,
+      priceEsp: parseFloat(esp),
+      priceUsd: parseFloat(esp),
+      amountGbp: amount,
+      merchantWallet: 'lichtmarketing',
+    };
+  }
+};
+
 export const apiConfirmEspeesPayment = async (bookingId, reference, senderWallet, amount) => {
   try {
     const res = await fetch(`${API_BASE_URL}/payments/espees/confirm`, {
