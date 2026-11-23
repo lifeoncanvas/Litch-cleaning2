@@ -18,6 +18,7 @@ import {
   apiGetPayPalConfig,
   apiCreatePayPalOrder,
   apiCapturePayPalOrder,
+  apiConfirmEspeesPayment,
 } from './services/api';
 
 /* ==========================================================================
@@ -683,11 +684,34 @@ export function PayPalButtonContainer({ amount, bookingId, serviceName, onPaymen
 }
 
 export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSuccess }) {
+  const [paymentMethod, setPaymentMethod] = useState('paypal'); // 'paypal' | 'espees'
   const [errorMsg, setErrorMsg] = useState(null);
   const [paidSuccess, setPaidSuccess] = useState(false);
   const [txnDetails, setTxnDetails] = useState(null);
 
+  // Espees state
+  const [espeesSender, setEspeesSender] = useState('');
+  const [espeesRef, setEspeesRef] = useState('');
+  const [isSubmittingEspees, setIsSubmittingEspees] = useState(false);
+  const [copiedWallet, setCopiedWallet] = useState(false);
+
   if (!isOpen || !booking) return null;
+
+  const espRate = 1.25;
+  const espAmount = (parseFloat(booking.totalPrice || 0) * espRate).toFixed(2);
+  const merchantWallet = 'lichtmarketing';
+
+  const handleCopyWallet = () => {
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(merchantWallet);
+        setCopiedWallet(true);
+        setTimeout(() => setCopiedWallet(false), 2500);
+      }
+    } catch (e) {
+      console.warn('Clipboard copy failed:', e);
+    }
+  };
 
   const handleSuccess = (res) => {
     setPaidSuccess(true);
@@ -695,20 +719,47 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
     if (onPaymentSuccess) {
       onPaymentSuccess(res.booking || {
         ...booking,
-        status: 'Completed & Paid (PayPal)',
+        status: res.paymentMethod?.includes('Espees') ? 'Completed & Paid (Espees)' : 'Completed & Paid (PayPal)',
         paidAmount: booking.totalPrice,
-        paymentMethod: 'PayPal',
-        transactionId: res.captureId,
+        paymentMethod: res.paymentMethod || 'PayPal',
+        transactionId: res.captureId || res.transactionId,
       });
+    }
+  };
+
+  const handleEspeesConfirm = async (e) => {
+    e.preventDefault();
+    if (!espeesRef || !espeesRef.trim()) {
+      setErrorMsg('Please enter your Espees Transaction Reference ID from your wallet transfer.');
+      return;
+    }
+    setErrorMsg(null);
+    setIsSubmittingEspees(true);
+
+    try {
+      const res = await apiConfirmEspeesPayment(
+        booking.id,
+        espeesRef.trim(),
+        espeesSender.trim(),
+        booking.totalPrice
+      );
+      handleSuccess(res);
+    } catch (err) {
+      console.error('Espees confirmation error:', err);
+      setErrorMsg(err.message || 'Could not verify Espees payment. Please check your reference and try again.');
+    } finally {
+      setIsSubmittingEspees(false);
     }
   };
 
   return (
     <div className="licht-modal-overlay" onClick={onClose}>
-      <div className="licht-modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+      <div className="licht-modal-box" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
         <div className="licht-modal-header">
           <h2 className="licht-modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem' }}>
-            <span style={{ color: '#003087', fontWeight: 900 }}>P</span>
+            <span style={{ color: paymentMethod === 'espees' ? '#b45309' : '#003087', fontWeight: 900 }}>
+              {paymentMethod === 'espees' ? '🪙' : 'P'}
+            </span>
             <span>LICHT House Cleaning — Settle Balance</span>
           </h2>
           <button onClick={onClose} className="licht-modal-close-btn" aria-label="Close">✕</button>
@@ -724,12 +775,22 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 Payment of £{booking.totalPrice} Captured!
               </h3>
               <p style={{ color: 'var(--slate-mid)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
-                Your service balance has been settled via PayPal. An official VAT invoice has been emailed to <strong>{booking.clientEmail}</strong>.
+                Your service balance has been settled via <strong>{txnDetails?.paymentMethod || (paymentMethod === 'espees' ? 'Espees' : 'PayPal')}</strong>. An official VAT invoice has been dispatched to <strong>{booking.clientEmail}</strong>.
               </p>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '20px', fontSize: '0.82rem', textAlign: 'left' }}>
+              <div style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '20px', fontSize: '0.82rem', textAlign: 'left' }}>
                 <div><strong>Booking Ref:</strong> {booking.id}</div>
-                <div style={{ marginTop: '4px' }}><strong>Capture ID:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--teal)' }}>{txnDetails?.captureId || booking.transactionId}</span></div>
-                <div style={{ marginTop: '4px' }}><strong>Amount:</strong> £{booking.totalPrice} (inc. VAT)</div>
+                <div style={{ marginTop: '4px' }}>
+                  <strong>Transaction / Ref ID:</strong>{' '}
+                  <span style={{ fontFamily: 'monospace', color: 'var(--teal)', fontWeight: 700 }}>
+                    {txnDetails?.captureId || txnDetails?.transactionId || booking.transactionId}
+                  </span>
+                </div>
+                <div style={{ marginTop: '4px' }}>
+                  <strong>Method:</strong> {txnDetails?.paymentMethod || (paymentMethod === 'espees' ? 'Espees Digital Wallet' : 'PayPal')}
+                </div>
+                <div style={{ marginTop: '4px' }}>
+                  <strong>Amount:</strong> £{booking.totalPrice} {paymentMethod === 'espees' ? `(${espAmount} ESP)` : ''} (inc. VAT)
+                </div>
               </div>
               <button
                 type="button"
@@ -742,7 +803,8 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
             </div>
           ) : (
             <>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '18px' }}>
+              {/* Service & Balance Summary */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
                   <span style={{ color: 'var(--slate-mid)' }}>Service:</span>
                   <strong style={{ color: 'var(--navy)' }}>{booking.serviceName}</strong>
@@ -757,8 +819,61 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '10px', marginTop: '10px' }}>
                   <span style={{ fontWeight: 800, color: 'var(--navy)' }}>Total Balance Due:</span>
-                  <span style={{ fontWeight: 900, color: '#16a34a', fontSize: '1.15rem' }}>£{booking.totalPrice}</span>
+                  <span style={{ fontWeight: 900, color: '#16a34a', fontSize: '1.15rem' }}>
+                    £{booking.totalPrice}{' '}
+                    {paymentMethod === 'espees' && (
+                      <span style={{ fontSize: '0.85rem', color: '#b45309', fontWeight: 700 }}>
+                        ({espAmount} ESP)
+                      </span>
+                    )}
+                  </span>
                 </div>
+              </div>
+
+              {/* Payment Method Switcher Tabs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setPaymentMethod('paypal'); setErrorMsg(null); }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: paymentMethod === 'paypal' ? '2px solid #0070ba' : '1px solid #cbd5e1',
+                    background: paymentMethod === 'paypal' ? '#f0f9ff' : '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    color: paymentMethod === 'paypal' ? '#0070ba' : '#475569',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span>🅿️</span> PayPal &amp; Cards
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPaymentMethod('espees'); setErrorMsg(null); }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: paymentMethod === 'espees' ? '2px solid #d97706' : '1px solid #cbd5e1',
+                    background: paymentMethod === 'espees' ? '#fffbeb' : '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    color: paymentMethod === 'espees' ? '#b45309' : '#475569',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span>🪙</span> Pay with Espees
+                </button>
               </div>
 
               {errorMsg && (
@@ -767,17 +882,120 @@ export function PayPalPostServiceModal({ isOpen, onClose, booking, onPaymentSucc
                 </div>
               )}
 
-              <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '0.78rem', color: 'var(--slate-mid)' }}>
-                🔒 256-Bit Secure PayPal & Card Checkout (GBP) · LICHT House Cleaning
-              </div>
+              {/* TAB 1: PAYPAL & DEBIT/CREDIT CARD */}
+              {paymentMethod === 'paypal' && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '0.78rem', color: 'var(--slate-mid)' }}>
+                    🔒 256-Bit Secure PayPal & Card Checkout (GBP) · LICHT House Cleaning
+                  </div>
+                  <PayPalButtonContainer
+                    amount={booking.totalPrice}
+                    bookingId={booking.id}
+                    serviceName={booking.serviceName}
+                    onPaymentSuccess={handleSuccess}
+                    onError={setErrorMsg}
+                  />
+                </div>
+              )}
 
-              <PayPalButtonContainer
-                amount={booking.totalPrice}
-                bookingId={booking.id}
-                serviceName={booking.serviceName}
-                onPaymentSuccess={handleSuccess}
-                onError={setErrorMsg}
-              />
+              {/* TAB 2: ESPEES DIGITAL CURRENCY WALLET */}
+              {paymentMethod === 'espees' && (
+                <div>
+                  <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#92400e' }}>
+                        🪙 Espees Merchant Wallet
+                      </span>
+                      <span style={{ fontSize: '0.74rem', background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                        Rate: 1 GBP = {espRate} ESP
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', padding: '10px 12px', borderRadius: '8px', border: '1px solid #fde68a', marginBottom: '10px' }}>
+                      <div>
+                        <div style={{ fontSize: '0.72rem', color: '#78350f' }}>Recipient Wallet:</div>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 900, color: '#92400e', fontSize: '1rem' }}>
+                          @{merchantWallet}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyWallet}
+                        style={{
+                          background: copiedWallet ? '#15803d' : '#b45309',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '0.76rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {copiedWallet ? '✓ Copied' : 'Copy Wallet'}
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: '0.78rem', color: '#78350f', lineHeight: 1.45 }}>
+                      <strong>How to pay:</strong>
+                      <ol style={{ paddingLeft: '18px', margin: '4px 0 0 0' }}>
+                        <li>Transfer <strong>{espAmount} ESP</strong> to <strong>@{merchantWallet}</strong> from your Espees app.</li>
+                        <li>Include your Booking Ref <strong>{booking.id}</strong> in the transfer narration.</li>
+                        <li>Enter your Reference ID below to complete settlement.</li>
+                      </ol>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleEspeesConfirm}>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                        Your Espees Username / Phone (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. @your_espees_user"
+                        value={espeesSender}
+                        onChange={(e) => setEspeesSender(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                        Espees Transaction Reference / Transfer PIN *
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. ESP-8492019"
+                        value={espeesRef}
+                        onChange={(e) => setEspeesRef(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingEspees}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: isSubmittingEspees ? '#cbd5e1' : '#b45309',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '0.95rem',
+                        cursor: isSubmittingEspees ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 4px 12px rgba(180, 83, 9, 0.25)',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {isSubmittingEspees ? 'Verifying Espees Payment...' : `Confirm & Settle Balance (${espAmount} ESP)`}
+                    </button>
+                  </form>
+                </div>
+              )}
             </>
           )}
         </div>
